@@ -173,8 +173,8 @@ const keyMaps = [
 ];
 const MAX_HP = 250;
 const fighters = [
-  { name:'BLAZE', style:0, color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
-  { name:'VOLT', style:1, color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
+  { name:'BLAZE', style:0, color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
+  { name:'VOLT', style:1, color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
 ];
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
 const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false}));
@@ -254,10 +254,11 @@ function makeCrater(x,big) {
 function resetFighter(f,index) {
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
-  f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;
+  f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
   f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
 }
 function begin(nextMode) {
+  for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);
   mode=nextMode;state='playing';menu.hidden=true;pauseLayer.hidden=true;touchControls.hidden=false;
   setAudioEnabled(audioEnabled);
   hitStop=0;
@@ -284,7 +285,9 @@ function readInput(f,index) {
   const st=padStates[index];
   if(st.connected) {
     // Belegung: Stick/D-Pad bewegen · ✕ hoch · ○ Dash · □ leicht · △ stark (Stick hoch/neutral/runter) · L1 Block · R1 Ki-Schuss · R2 Kamehameha · L2 Laden · L3/R3 Super
-    const b=st.btn;
+    // Kurze Drücke (z. B. während Hit-Stop) gehen nicht verloren: gemerkte Drücke zählen bis zum nächsten Physikschritt
+    const b=st.eff;
+    for(let k=0;k<PAD_BUTTONS;k++){b[k]=st.btn[k]|st.latch[k];st.latch[k]=0;}
     out.left=out.left||st.ax<-.35||b[14]===1;out.right=out.right||st.ax>.35||b[15]===1;
     out.up=out.up||st.ay<-.4||b[12]===1||b[0]===1;out.down=out.down||st.ay>.4||b[13]===1;
     out.dash=b[1]===1;out.punch=out.punch||b[2]===1;out.heavy=out.heavy||b[3]===1;
@@ -301,11 +304,11 @@ function readInput(f,index) {
 }
 // ---- Gamepads: feste Zuordnung Controller -> Spieler (Reihenfolge der Verbindung) ----
 const PS_RE=/dualsense|dualshock|wireless controller|054c/i;
-const HINT_PS='□ Leicht · △ Stark (+↑/↓) · R1 Ki (halten: lenken) · R2 Kamehameha · ✕ Hoch · ○ Dash · L1 Block · L2 Laden · L3 Super';
+const HINT_PS='□ Leicht · △ Stark (halten: aufladen, +↑/↓) · R1 Ki · R2 Kamehameha · ✕ Hoch · ○ Dash (nach Finisher: verfolgen) · L1 Block · L2 Laden · L3 Super';
 const HINT_KEY='F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
 const PAD_BUTTONS=17;
 const padSlots=[-1,-1];
-const padStates=[0,1].map(()=>({connected:false,id:'',ps:false,ax:0,ay:0,navDir:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS)}));
+const padStates=[0,1].map(()=>({connected:false,id:'',ps:false,ax:0,ay:0,navDir:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS),latch:new Uint8Array(PAD_BUTTONS),eff:new Uint8Array(PAD_BUTTONS)}));
 let padCount=-1,menuFocus=0,winner=-1;
 const modeButtons=Array.from(document.querySelectorAll('.menu [data-mode]'));
 function padPressed(st,k){return st.btn[k]===1&&st.prev[k]===0;}
@@ -326,7 +329,7 @@ function pollPads() {
     const g=list[gi],b=g.buttons;
     st.connected=true;count++;
     if(g.id!==st.id){st.id=g.id;st.ps=PS_RE.test(g.id);}
-    for(let k=0;k<PAD_BUTTONS;k++){const bt=b[k];st.prev[k]=st.btn[k];st.btn[k]=bt&&(bt.pressed||bt.value>.35)?1:0;}
+    for(let k=0;k<PAD_BUTTONS;k++){const bt=b[k];st.prev[k]=st.btn[k];st.btn[k]=bt&&(bt.pressed||bt.value>.35)?1:0;if(st.btn[k]&&!st.prev[k])st.latch[k]=1;}
     st.ax=g.axes[0]||0;st.ay=g.axes[1]||0;
   }
   const ps=(padStates[0].connected&&padStates[0].ps)||(padStates[1].connected&&padStates[1].ps);
@@ -368,7 +371,7 @@ function rumble(index,strong,weak,ms) {
   try{const r=a.playEffect('dual-rumble',{duration:ms,strongMagnitude:strong,weakMagnitude:weak});if(r&&r.catch)r.catch(()=>{});}catch(e){}
 }
 function pauseGame(){state='paused';stopMusic();pauseLayer.hidden=false;touchControls.hidden=true;}
-function resumeGame(){state='playing';pauseLayer.hidden=true;touchControls.hidden=false;if(audioEnabled)startMusic();}
+function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);state='playing';pauseLayer.hidden=true;touchControls.hidden=false;if(audioEnabled)startMusic();}
 function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;touchControls.hidden=true;padCount=-1;status.textContent='FLUGGEBIET 01';}
 function endMatch(w) {
   state='over';winner=w;stopMusic();touchControls.hidden=true;
@@ -436,14 +439,15 @@ function updateKamehameha(f,index,enemy,input,dt) {
       const ex=sx+dx*t,ey=sy+dy*t;
       if(Math.hypot(enemy.x-ex,enemy.y-45-ey)<36) {
         const blocked=enemy.guarding&&enemy.face===-f.face;
-        enemy.hp=Math.max(0,enemy.hp-(f.superTime>0?18:12)*(blocked?.2:1));
+        const scale=blocked?1:registerCombo(f,enemy);
+        enemy.hp=Math.max(0,enemy.hp-(f.superTime>0?18:12)*(blocked?.2:scale));
         if(blocked) {
           enemy.hitFlash=.08;enemy.vx+=f.face*45;
           burst(enemy.x,enemy.y-45,'145,220,255',9,90);
           screenShake=Math.max(screenShake,1.5);hitStop=Math.max(hitStop,.02);
           playSfx('block');
         } else {
-          enemy.stun=.22;enemy.hitFlash=.18;enemy.vx+=f.face*115;enemy.vy-=65;
+          enemy.stun=comboStun(enemy,.22);enemy.hitFlash=.18;enemy.vx+=f.face*115;enemy.vy-=65;
           impactBurst(enemy.x,enemy.y-45,f.color,false);screenShake=Math.max(screenShake,2.8);
           hitStop=Math.max(hitStop,.035);
           playSfx('hit');rumble(1-index,.4,.3,60);
@@ -456,9 +460,13 @@ function updateKamehameha(f,index,enemy,input,dt) {
     }
   }
 }
+// Combo: zählt nur, solange das Opfer noch taumelt. Gibt den Schadensfaktor zurück (sinkt pro Treffer, min. 45 %).
+function registerCombo(a,v){v.comboCount=v.stun>0?v.comboCount+1:1;a.comboHits=v.comboCount;a.comboDisplay=1.05;return Math.max(.45,1-(v.comboCount-1)*.08);}
+function comboStun(v,s){return s*Math.max(.5,1-(v.comboCount-1)*.05);}
 function damage(f,from,p) {
   const blocked=f.guarding&&f.face===-from.face;
-  f.hp-=p.power*(blocked?.18:1);
+  const scale=blocked?1:registerCombo(from,f);
+  f.hp-=p.power*(blocked?.18:scale);
   if(blocked) {
     f.hitFlash=.08;f.vx+=Math.sign(f.x-from.x||1)*65;
     burst(f.x,f.y-38,'145,220,255',10,95);
@@ -466,7 +474,7 @@ function damage(f,from,p) {
     playSfx('block');
     return;
   }
-  f.stun=.2;f.hitFlash=.18;f.comboWindow=0;f.comboQueued=false;f.comboDisplay=0;f.attackStep=0;f.punch=0;f.attackDuration=0;
+  f.stun=comboStun(f,.2);f.hitFlash=.18;f.smashHolding=false;f.comboWindow=0;f.comboQueued=false;f.comboDisplay=0;f.attackStep=0;f.punch=0;f.attackDuration=0;
   f.vx+=Math.sign(f.x-from.x||1)*(p.big?260:150);f.vy=p.big?-250:-110;
   impactBurst(f.x,f.y-38,p.color,p.big);
   hitStop=Math.max(hitStop,p.big?.095:.055);
@@ -495,7 +503,7 @@ function updateBot(f,target,input) {
 }
 function startPunch(f,step,type=0) {
   f.attackStep=step;
-  f.attackType=type;
+  f.attackType=type;f.smashPower=1;f.cancelWindow=0;
   // Typen: 0 Combo · 1 Uppercut · 2 Slam · 3 Stark mittig · 4 Rush · 5 Stark hoch · 6 Stark tief
   const heavy=type===3||type===5||type===6;
   f.heavyPowered=(heavy&&f.ki>=12)||(type===4&&f.ki>=10);
@@ -520,7 +528,7 @@ function updateFighter(f,index,dt) {
   if(!f.active)return;
   f.px=f.x;f.py=f.y;f.t+=dt;f.fire=Math.max(0,f.fire-dt);f.hitFlash=Math.max(0,f.hitFlash-dt);
   f.dashTapLeft=Math.max(0,f.dashTapLeft-dt);f.dashTapRight=Math.max(0,f.dashTapRight-dt);
-  f.dashTime=Math.max(0,f.dashTime-dt);f.dashInvuln=Math.max(0,f.dashInvuln-dt);f.dashCooldown=Math.max(0,f.dashCooldown-dt);
+  f.dashTime=Math.max(0,f.dashTime-dt);f.cancelWindow=Math.max(0,f.cancelWindow-dt);f.chaseWindow=Math.max(0,f.chaseWindow-dt);f.dashInvuln=Math.max(0,f.dashInvuln-dt);f.dashCooldown=Math.max(0,f.dashCooldown-dt);
   const previousPunch=f.punch;
   f.punch=Math.max(0,f.punch-dt);f.punchCooldown=Math.max(0,f.punchCooldown-dt);f.shotAnim=Math.max(0,f.shotAnim-dt);
   f.punchBuffer=Math.max(0,f.punchBuffer-dt);f.heavyBuffer=Math.max(0,f.heavyBuffer-dt);
@@ -544,9 +552,18 @@ function updateFighter(f,index,dt) {
   if(enemy.active&&Math.abs(enemy.x-f.x)>4)f.face=enemy.x>f.x?1:-1;
   if(f.stun>0)f.stun-=dt;
   const stunned=f.stun>0;
+  if(stunned)f.smashHolding=false;
   const backingAway=f.face>0?input.left:input.right;
   f.guarding=enemy.active&&(input.guard||(input.down&&backingAway))&&!f.charging&&!stunned&&!input.punch&&!input.heavy;
-  if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.charging&&f.dashCooldown<=0) {
+  // Verfolgungs-Dash: kurz nach einem Finisher ○ -> zum weggeschleuderten Gegner teleportieren
+  if(input.dash&&!f.dashBtnHeld&&!stunned&&f.chaseWindow>0&&enemy.active&&f.ki>=8) {
+    f.ki-=8;f.chaseWindow=0;f.dashCooldown=.3;f.smashHolding=false;
+    burst(f.x,f.y-40,f.color,14,160);
+    f.x=clamp(enemy.x-f.face*55,-worldRadius,worldRadius);f.y=Math.min(enemy.y,terrainY(f.x));
+    f.vx=enemy.vx*.8;f.vy=enemy.vy*.8;f.px=f.x;f.py=f.y;
+    enemy.stun=Math.max(enemy.stun,.28);
+    burst(f.x,f.y-40,'255,255,255',12,140);playSfx('shot');rumble(index,.2,.4,60);
+  } else if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.charging&&f.dashCooldown<=0) {
     const dashAx=(input.right?1:0)-(input.left?1:0);
     f.dashDir=dashAx||(enemy.active?-f.face:f.face);f.dashTime=.16;f.dashInvuln=.13;f.dashCooldown=.62;
   }
@@ -565,6 +582,8 @@ function updateFighter(f,index,dt) {
   if(!stunned) {
     if(f.charging) {
       f.vx=0;f.vy=0;
+    } else if(f.smashHolding) {
+      f.vx*=Math.pow(.82,dt*60);f.vy=(f.vy+260*dt)*Math.pow(.86,dt*60);
     } else {
       const ax=(input.right?1:0)-(input.left?1:0);
       if(f.dashTime>0)f.vx=f.dashDir*(f.superTime>0?900:760);
@@ -585,7 +604,7 @@ function updateFighter(f,index,dt) {
     if(input.shot&&!f.shotHeld&&f.fire<=0)spawnShot(f,index,false,input);
     f.shotHeld=input.shot;
     updateKamehameha(f,index,enemy,input,dt);
-    const punchPressed=input.punch&&!f.punchHeld,heavyPressed=input.heavy&&!f.heavyHeld;
+    const punchPressed=input.punch&&!f.punchHeld&&!f.smashHolding,heavyPressed=input.heavy&&!f.heavyHeld&&!f.smashHolding;
     if(punchPressed) {
       const forward=f.face>0?input.right:input.left;
       const airborne=f.y<terrainY(f.x)-28;
@@ -621,10 +640,24 @@ function updateFighter(f,index,dt) {
       }
     }
     if(f.heavyBuffer>0) {
+      // Hit-Cancel: hat ein leichter Schlag getroffen, darf der starke sofort starten
+      let cancelled=false;
+      if(f.cancelWindow>0&&f.punch>0&&f.attackType<=2){f.punch=0;f.punchCooldown=0;f.comboQueued=false;f.cancelWindow=0;cancelled=true;}
       if(f.punch>0&&f.comboWindow>0&&!f.comboQueued) {
         f.comboQueued=true;f.queuedAttack=4;f.queuedAttackType=f.bufferedHeavyType;f.heavyBuffer=0;
       } else if(f.punch<=0&&f.punchCooldown<=0) {
-        startPunch(f,4,f.bufferedHeavyType);f.heavyBuffer=0;
+        f.heavyBuffer=0;
+        // Noch gedrückt -> aufladen (Smash), sonst sofort zuschlagen
+        if(input.heavy&&!cancelled){f.smashHolding=true;f.smashCharge=0;}
+        else startPunch(f,4,f.bufferedHeavyType);
+      }
+    }
+    if(f.smashHolding) {
+      f.smashCharge+=dt;
+      if(!input.heavy||f.smashCharge>=1.3) {
+        const c=Math.min(1,f.smashCharge);
+        f.smashHolding=false;startPunch(f,4,f.bufferedHeavyType);f.smashPower=1+c;
+        if(c>=1){burst(f.x,f.y-45,'255,255,255',16,190);screenShake=Math.max(screenShake,3);}
       }
     }
     const attackProgress=f.attackDuration>0?1-f.punch/f.attackDuration:0;
@@ -638,9 +671,11 @@ function updateFighter(f,index,dt) {
         f.punchHit=true;
         const finisher=f.attackStep===3||f.attackType>=3;
         const baseDamage=f.attackType===4?(f.heavyPowered?17:11):f.attackType===5||f.attackType===6?(f.heavyPowered?18:12):f.attackType===3?(f.heavyPowered?19:13):f.attackType===1?12:f.attackType===2?14:f.attackStep===3?17:f.attackStep===2?10:7;
-        const damage=baseDamage*(f.superTime>0?1.35:1);
         const blocked=enemy.guarding&&enemy.face===-f.face;
-        enemy.hp=Math.max(0,enemy.hp-damage*(blocked?.12:1));
+        const scale=blocked?1:registerCombo(f,enemy);
+        const damage=baseDamage*(f.superTime>0?1.35:1)*f.smashPower;
+        const kb=1+(f.smashPower-1)*.6;
+        enemy.hp=Math.max(0,enemy.hp-damage*(blocked?.12:scale));
         enemy.hitFlash=blocked?.08:.22;
         if(blocked) {
           enemy.vx+=f.face*55;f.vx-=f.face*35;
@@ -649,9 +684,10 @@ function updateFighter(f,index,dt) {
         } else {
           const gap=Math.max(0,Math.abs(enemy.x-f.x)-44);
           f.vx+=f.face*(finisher?110:35)+f.face*Math.min(140,gap*1.1);
-          enemy.stun=finisher?.38:.23;
-          enemy.vx+=f.face*(f.attackType===4?460:f.attackType===3?390:f.attackType===5?170:f.attackType===6?320:finisher?340:f.attackStep===2?245:175);
-          enemy.vy+=f.attackType===2?245:f.attackType===6?420:-(f.attackType===5?(f.heavyPowered?520:430):f.attackType===1?275:finisher?190:f.attackStep===2?85:35);
+          enemy.stun=comboStun(enemy,f.attackType===5?.6:finisher?.38:.3);enemy.smashHolding=false;
+          enemy.vx+=kb*f.face*(f.attackType===4?460:f.attackType===3?390:f.attackType===5?170:f.attackType===6?320:finisher?340:f.attackStep===2?245:175);
+          enemy.vy+=kb*(f.attackType===2?245:f.attackType===6?420:-(f.attackType===5?(f.heavyPowered?520:430):f.attackType===1?275:finisher?190:f.attackStep===2?85:35));
+          if(finisher)f.chaseWindow=.7;else f.cancelWindow=.3;
           if(f.attackType===6&&f.heavyPowered&&enemy.y>terrainY(enemy.x)-60)makeCrater(enemy.x,false);
           enemy.comboWindow=0;enemy.comboQueued=false;enemy.comboDisplay=0;enemy.attackStep=0;enemy.punch=0;enemy.attackDuration=0;enemy.attackType=0;
         }
@@ -659,10 +695,10 @@ function updateFighter(f,index,dt) {
           f.comboWindow=0;f.comboQueued=false;f.comboDisplay=0;f.punchCooldown=Math.max(f.punchCooldown,.32);
           screenShake=Math.max(screenShake,1.3);hitStop=Math.max(hitStop,.025);
         } else {
-          f.comboHits=f.comboDisplay>0?f.comboHits+1:1;f.comboDisplay=1.05;f.comboWindow=f.attackType===0&&f.attackStep<3?.42:0;
+          f.comboWindow=f.attackType===0&&f.attackStep<3?.42:0;
           impactBurst(enemy.x,enemy.y-44,finisher?'255,235,170':f.color,finisher);
-          screenShake=Math.max(screenShake,finisher?8:4);
-          hitStop=Math.max(hitStop,finisher?.11:.06);
+          screenShake=Math.max(screenShake,(finisher?8:4)*kb);
+          hitStop=Math.max(hitStop,Math.min(.2,(finisher?.11:.06)*kb));
           playSfx('hit',finisher);
           rumble(1-index,finisher?.85:.45,finisher?.6:.35,finisher?150:70);rumble(index,.15,.3,45);
         }
@@ -866,11 +902,14 @@ function drawFighter(f,alpha) {
   const lineColor=ssj?'#ffe66d':f.color,backColor=ssj?'#c9a640':f.dark;
   const breathe=Math.sin(f.t*3.2);
   // Angriffsphasen: Ausholen (ext<0) -> Zuschlagen (ext=1) -> Halten -> Zurück
-  const atkT=!stunned&&f.punch>0&&f.attackDuration>0?1-f.punch/f.attackDuration:-1;
+  const smashing=f.smashHolding&&!stunned,smashC=smashing?Math.min(1,f.smashCharge):0;
+  if(smashing)ctx.translate(Math.sin(clock*70)*smashC*1.3,0);
+  // Beim Aufladen in der Aushol-Pose verharren (atkT .15 = volles Ausholen, noch keine Wischspur)
+  const atkT=smashing?.15:!stunned&&f.punch>0&&f.attackDuration>0?1-f.punch/f.attackDuration:-1;
   const ext=atkT<0?0:atkT<.18?-.4*ease(atkT/.18):atkT<.4?-.4+1.4*ease((atkT-.18)/.22):atkT<.68?1:1-(atkT-.68)/.32;
   const k=clamp(ext,0,1),u=clamp((ext+.4)/1.4,0,1);
   // 1 Gerade hinten · 2 Kick · 3 Uppercut · 4 Hammer · 5 Heavy · 6 Rush · 7 Jab · 8 Stark tief · 9 Stark hoch
-  const kind=atkT<0?0:f.attackType===6?8:f.attackType===5?9:f.attackType===4?6:f.attackType===3?5:f.attackType===2?4:f.attackType===1?3:f.attackStep===3?2:f.attackStep===2?1:7;
+  const kind=atkT<0?0:smashing?(f.bufferedHeavyType===6?8:f.bufferedHeavyType===5?9:5):f.attackType===6?8:f.attackType===5?9:f.attackType===4?6:f.attackType===3?5:f.attackType===2?4:f.attackType===1?3:f.attackStep===3?2:f.attackStep===2?1:7;
   let hipY=-24,neckX=2,neckY=-50+breathe*.4;
   let bkX,bkY,bfX,bfY,fkX,fkY,ffX,ffY,beX=0,beY=0,bhX,bhY,feX=0,feY=0,fhX,fhY;
   if(f.charging){hipY=-20;bkX=-9;bkY=-10;bfX=-14;bfY=0;fkX=10;fkY=-10;ffX=14;ffY=0;}
@@ -959,6 +998,15 @@ function drawFighter(f,alpha) {
   ctx.moveTo(0,hipY);ctx.quadraticCurveTo(2,(hipY+neckY)*.5,neckX,neckY);
   limb3(0,hipY,fkX,fkY,ffX,ffY);limb3(sx,sy,feX,feY,fhX,fhY);ctx.stroke();
   ctx.fillStyle=f.guarding?'#9cefff':lineColor;ctx.beginPath();ctx.arc(fhX,fhY,f.guarding?4:kind===5||kind>=8?3.3+k*2.2:3.3,0,Math.PI*2);ctx.fill();
+  // Ladekugel beim Aufladen: wächst, bei voller Ladung weißes Blitzen
+  if(smashing) {
+    const full=f.smashCharge>=1,pulse=.5+.5*Math.sin(clock*(full?40:16));
+    ctx.globalAlpha=.22+.18*pulse;ctx.fillStyle=lineColor;
+    ctx.beginPath();ctx.arc(pfX,pfY,6+smashC*11,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=full?.6+.4*pulse:.75;ctx.strokeStyle=full?'#fff':lineColor;ctx.lineWidth=full?2.5:1.6;
+    ctx.beginPath();ctx.arc(pfX,pfY,8+smashC*12,-Math.PI/2,-Math.PI/2+Math.PI*2*smashC);ctx.stroke();
+    ctx.globalAlpha=1;
+  }
   // Treffer-Funke am Höhepunkt
   if(kind&&atkT>.36&&atkT<.54) {
     const sp=(atkT-.36)/.18,r1=3+sp*5,r2=8+sp*9;
