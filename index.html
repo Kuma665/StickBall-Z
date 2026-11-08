@@ -171,9 +171,10 @@ const keyMaps = [
   { left:'KeyA', right:'KeyD', up:'KeyW', down:'KeyS', shot:'KeyG', beam:'KeyT', charge:'KeyH', punch:'KeyF', heavy:'KeyV', super:'KeyR' },
   { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', shot:'KeyK', beam:'KeyI', charge:'KeyL', punch:'KeyJ', heavy:'KeyU', super:'KeyO' }
 ];
+const MAX_HP = 250;
 const fighters = [
-  { name:'BLAZE', style:0, color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:100, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
-  { name:'VOLT', style:1, color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:100, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
+  { name:'BLAZE', style:0, color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
+  { name:'VOLT', style:1, color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
 ];
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
 const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false}));
@@ -252,9 +253,9 @@ function makeCrater(x,big) {
 }
 function resetFighter(f,index) {
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
-  f.face=index===0?1:-1;f.hp=100;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
+  f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
   f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;
-  f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
+  f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
 }
 function begin(nextMode) {
   mode=nextMode;state='playing';menu.hidden=true;pauseLayer.hidden=true;touchControls.hidden=false;
@@ -282,13 +283,13 @@ function readInput(f,index) {
   if(f.bot)return out;
   const st=padStates[index];
   if(st.connected) {
-    // Belegung: Stick/D-Pad bewegen · ✕ hoch · ○ Dash · □ Combo · △ Ki · L1 Block · R1 Beam · L2 Laden · R2 Heavy · L3/R3 Super
+    // Belegung: Stick/D-Pad bewegen · ✕ hoch · ○ Dash · □ leicht · △ stark (Stick hoch/neutral/runter) · L1 Block · R1 Ki-Schuss · R2 Kamehameha · L2 Laden · L3/R3 Super
     const b=st.btn;
     out.left=out.left||st.ax<-.35||b[14]===1;out.right=out.right||st.ax>.35||b[15]===1;
     out.up=out.up||st.ay<-.4||b[12]===1||b[0]===1;out.down=out.down||st.ay>.4||b[13]===1;
-    out.dash=b[1]===1;out.punch=out.punch||b[2]===1;out.shot=out.shot||b[3]===1;
-    out.guard=b[4]===1;out.beam=out.beam||b[5]===1;out.charge=out.charge||b[6]===1;
-    out.heavy=out.heavy||b[7]===1;out.super=out.super||b[10]===1||b[11]===1;
+    out.dash=b[1]===1;out.punch=out.punch||b[2]===1;out.heavy=out.heavy||b[3]===1;
+    out.guard=b[4]===1;out.shot=out.shot||b[5]===1;out.charge=out.charge||b[6]===1;
+    out.beam=out.beam||b[7]===1;out.super=out.super||b[10]===1||b[11]===1;
   }
   // Zielrichtung für Ki-Schüsse: Analogstick (genau) > D-Pad/Tasten; ✕ zählt nicht
   out.aimX=(keys[map.right]?1:0)-(keys[map.left]?1:0);out.aimY=(keys[map.down]?1:0)-(keys[map.up]?1:0);
@@ -300,7 +301,7 @@ function readInput(f,index) {
 }
 // ---- Gamepads: feste Zuordnung Controller -> Spieler (Reihenfolge der Verbindung) ----
 const PS_RE=/dualsense|dualshock|wireless controller|054c/i;
-const HINT_PS='✕ Hoch · □ Combo · R2 Heavy · △ Ki · R1 Beam · ○ Dash · L1 Block · L2 Laden · L3 Super · OPTIONS Pause';
+const HINT_PS='□ Leicht · △ Stark (+↑/↓) · R1 Ki (halten: lenken) · R2 Kamehameha · ✕ Hoch · ○ Dash · L1 Block · L2 Laden · L3 Super';
 const HINT_KEY='F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
 const PAD_BUTTONS=17;
 const padSlots=[-1,-1];
@@ -495,21 +496,25 @@ function updateBot(f,target,input) {
 function startPunch(f,step,type=0) {
   f.attackStep=step;
   f.attackType=type;
-  f.heavyPowered=(type===3&&f.ki>=12)||(type===4&&f.ki>=10);
-  if(type===3&&f.heavyPowered)f.ki-=12;
+  // Typen: 0 Combo · 1 Uppercut · 2 Slam · 3 Stark mittig · 4 Rush · 5 Stark hoch · 6 Stark tief
+  const heavy=type===3||type===5||type===6;
+  f.heavyPowered=(heavy&&f.ki>=12)||(type===4&&f.ki>=10);
+  if(heavy&&f.heavyPowered)f.ki-=12;
   else if(type===4&&f.heavyPowered)f.ki-=10;
-  f.attackDuration=type===3?.5:type===4?.4:type===1||type===2?.42:step===3?.46:.34;
+  f.attackDuration=heavy?.5:type===4?.4:type===1||type===2?.42:step===3?.46:.34;
   f.punch=f.attackDuration;
   f.punchHit=false;
   f.comboQueued=false;
   f.queuedAttack=0;f.queuedAttackType=0;
   f.comboWindow=0;
-  f.punchCooldown=type===3?.62:type===4?.5:.12;
+  f.punchCooldown=heavy?.62:type===4?.5:.12;
   if(type===4) {
     f.vx=f.face*(f.heavyPowered?820:670);
     f.vy*=.55;
   } else if(type===1)f.vy=Math.min(f.vy,-210);
   else if(type===2)f.vy=Math.max(f.vy,260);
+  else if(type===5)f.vy=Math.min(f.vy,-150);
+  else if(type===6&&f.y<terrainY(f.x)-28)f.vy=Math.max(f.vy,180);
 }
 function updateFighter(f,index,dt) {
   if(!f.active)return;
@@ -587,7 +592,11 @@ function updateFighter(f,index,dt) {
       f.bufferedAttackType=input.up?1:input.down?2:airborne&&forward?4:0;
       f.punchBuffer=.14;
     }
-    if(heavyPressed)f.heavyBuffer=.14;
+    if(heavyPressed) {
+      // Richtung über Stick/Tasten (✕ zählt nicht): hoch = Aufwärtshaken, runter = Tiefschlag
+      f.bufferedHeavyType=input.aimY<-.5?5:input.aimY>.5?6:3;
+      f.heavyBuffer=.14;
+    }
     if(punchPressed) {
       const specialType=f.bufferedAttackType;
       if(specialType) {
@@ -613,21 +622,22 @@ function updateFighter(f,index,dt) {
     }
     if(f.heavyBuffer>0) {
       if(f.punch>0&&f.comboWindow>0&&!f.comboQueued) {
-        f.comboQueued=true;f.queuedAttack=4;f.queuedAttackType=3;f.heavyBuffer=0;
+        f.comboQueued=true;f.queuedAttack=4;f.queuedAttackType=f.bufferedHeavyType;f.heavyBuffer=0;
       } else if(f.punch<=0&&f.punchCooldown<=0) {
-        startPunch(f,4,3);f.heavyBuffer=0;
+        startPunch(f,4,f.bufferedHeavyType);f.heavyBuffer=0;
       }
     }
     const attackProgress=f.attackDuration>0?1-f.punch/f.attackDuration:0;
     if(f.punch>0&&!f.punchHit&&attackProgress>=.38&&attackProgress<=.76) {
-      const reach=f.attackType===4?178:f.attackType===3?150:f.attackStep===3?150:f.attackStep===2?120:96;
+      const reach=f.attackType===4?178:f.attackType===3||f.attackType===6?150:f.attackType===5?135:f.attackStep===3?150:f.attackStep===2?120:96;
       const verticalDelta=enemy.y-f.y;
       const inVerticalRange=f.attackType===4?Math.abs(verticalDelta)<120:f.attackType===1?verticalDelta>-150&&verticalDelta<80:
+        f.attackType===5?verticalDelta>-175&&verticalDelta<70:f.attackType===6?verticalDelta>-45&&verticalDelta<175:
         f.attackType===2?verticalDelta>-45&&verticalDelta<160:Math.abs(verticalDelta)<(f.attackStep===3?105:82);
       if(enemy.active&&enemy.dashInvuln<=0&&(enemy.x-f.x)*f.face>-18&&(enemy.x-f.x)*f.face<reach&&inVerticalRange) {
         f.punchHit=true;
-        const finisher=f.attackStep===3||f.attackType===3||f.attackType===4;
-        const baseDamage=f.attackType===4?(f.heavyPowered?17:11):f.attackType===3?(f.heavyPowered?19:13):f.attackType===1?12:f.attackType===2?14:f.attackStep===3?17:f.attackStep===2?10:7;
+        const finisher=f.attackStep===3||f.attackType>=3;
+        const baseDamage=f.attackType===4?(f.heavyPowered?17:11):f.attackType===5||f.attackType===6?(f.heavyPowered?18:12):f.attackType===3?(f.heavyPowered?19:13):f.attackType===1?12:f.attackType===2?14:f.attackStep===3?17:f.attackStep===2?10:7;
         const damage=baseDamage*(f.superTime>0?1.35:1);
         const blocked=enemy.guarding&&enemy.face===-f.face;
         enemy.hp=Math.max(0,enemy.hp-damage*(blocked?.12:1));
@@ -640,8 +650,9 @@ function updateFighter(f,index,dt) {
           const gap=Math.max(0,Math.abs(enemy.x-f.x)-44);
           f.vx+=f.face*(finisher?110:35)+f.face*Math.min(140,gap*1.1);
           enemy.stun=finisher?.38:.23;
-          enemy.vx+=f.face*(f.attackType===4?460:f.attackType===3?390:finisher?340:f.attackStep===2?245:175);
-          enemy.vy+=f.attackType===2?245:-(f.attackType===1?275:finisher?190:f.attackStep===2?85:35);
+          enemy.vx+=f.face*(f.attackType===4?460:f.attackType===3?390:f.attackType===5?170:f.attackType===6?320:finisher?340:f.attackStep===2?245:175);
+          enemy.vy+=f.attackType===2?245:f.attackType===6?420:-(f.attackType===5?(f.heavyPowered?520:430):f.attackType===1?275:finisher?190:f.attackStep===2?85:35);
+          if(f.attackType===6&&f.heavyPowered&&enemy.y>terrainY(enemy.x)-60)makeCrater(enemy.x,false);
           enemy.comboWindow=0;enemy.comboQueued=false;enemy.comboDisplay=0;enemy.attackStep=0;enemy.punch=0;enemy.attackDuration=0;enemy.attackType=0;
         }
         if(blocked) {
@@ -669,7 +680,7 @@ function updateFighter(f,index,dt) {
   if(f.y< -2600){f.y=-2600;f.vy=Math.max(0,f.vy);}
   f.x=clamp(f.x,-worldRadius,worldRadius);
   if(f.hp<=0&&enemy.active&&mode!=='free'){f.hp=0;endMatch(1-index);return;}
-  if(f.hp<=0){f.hp=100;f.ki=50;f.x=enemy.active?enemy.x-f.face*220:f.x;f.y=terrainY(f.x)-130;f.vx=-f.vx*.3;f.vy=-100;burst(f.x,f.y,f.color,30,240);}
+  if(f.hp<=0){f.hp=MAX_HP;f.ki=50;f.x=enemy.active?enemy.x-f.face*220:f.x;f.y=terrainY(f.x)-130;f.vx=-f.vx*.3;f.vy=-100;burst(f.x,f.y,f.color,30,240);}
 }
 function updateProjectiles(dt) {
   for(let i=0;i<MAX_PROJECTILES;i++) {
@@ -858,8 +869,8 @@ function drawFighter(f,alpha) {
   const atkT=!stunned&&f.punch>0&&f.attackDuration>0?1-f.punch/f.attackDuration:-1;
   const ext=atkT<0?0:atkT<.18?-.4*ease(atkT/.18):atkT<.4?-.4+1.4*ease((atkT-.18)/.22):atkT<.68?1:1-(atkT-.68)/.32;
   const k=clamp(ext,0,1),u=clamp((ext+.4)/1.4,0,1);
-  // 1 Gerade hinten · 2 Kick · 3 Uppercut · 4 Hammer · 5 Heavy · 6 Rush · 7 Jab
-  const kind=atkT<0?0:f.attackType===4?6:f.attackType===3?5:f.attackType===2?4:f.attackType===1?3:f.attackStep===3?2:f.attackStep===2?1:7;
+  // 1 Gerade hinten · 2 Kick · 3 Uppercut · 4 Hammer · 5 Heavy · 6 Rush · 7 Jab · 8 Stark tief · 9 Stark hoch
+  const kind=atkT<0?0:f.attackType===6?8:f.attackType===5?9:f.attackType===4?6:f.attackType===3?5:f.attackType===2?4:f.attackType===1?3:f.attackStep===3?2:f.attackStep===2?1:7;
   let hipY=-24,neckX=2,neckY=-50+breathe*.4;
   let bkX,bkY,bfX,bfY,fkX,fkY,ffX,ffY,beX=0,beY=0,bhX,bhY,feX=0,feY=0,fhX,fhY;
   if(f.charging){hipY=-20;bkX=-9;bkY=-10;bfX=-14;bfY=0;fkX=10;fkY=-10;ffX=14;ffY=0;}
@@ -879,7 +890,8 @@ function drawFighter(f,alpha) {
     neckX=2-k*7;
   } else if(kind===6){bkX=-9;bkY=-15;bfX=-21;bfY=-11;fkX=-3;fkY=-17;ffX=-15;ffY=-15;neckX=2+k*4;}
   else if(kind===5){if(!airborne){ffX+=k*9;fkX+=k*6;bfX-=k*4;}neckX=2+ext*8;hipY+=k*2;}
-  else if(kind===3){neckY+=(1-u)*5;hipY+=(1-u)*3;neckX=2-u*3;}
+  else if(kind===3||kind===9){const c=kind===9?1.6:1;neckY+=(1-u)*5*c;hipY+=(1-u)*3*c;neckX=2-u*3*c;}
+  else if(kind===8){neckY+=k*9;hipY+=k*5;neckX=2+ext*9;if(!airborne){ffX+=k*8;fkX+=k*5;fkY+=k*3;bfX-=k*5;}}
   else if(kind===4){neckX=2+ext*6;neckY+=k*3;}
   else if(kind===1||kind===7)neckX=2+ext*(kind===1?6:4);
   const sx=neckX,sy=neckY+4,hx=neckX+(stunned?-3:1),hy=neckY-10;
@@ -890,6 +902,8 @@ function drawFighter(f,alpha) {
     else if(kind===1){bhX=sx+6+ext*24;bhY=sy+1;fhX=sx+9;fhY=sy+1;pfX=bhX;pfY=bhY;}
     else if(kind===2){fhX=sx+12;fhY=sy-2;bhX=sx-15;bhY=sy+9;pfX=ffX;pfY=ffY;}
     else if(kind===3){fhX=sx+9+Math.sin(u*Math.PI)*6;fhY=sy+18-u*42;bhX=sx-4;bhY=sy+16;pfX=fhX;pfY=fhY;}
+    else if(kind===9){fhX=sx+8+Math.sin(u*Math.PI)*9;fhY=sy+22-u*50;bhX=sx-14;bhY=sy+12;pfX=fhX;pfY=fhY;}
+    else if(kind===8){fhX=sx-10+u*32;fhY=sy-8+u*32;bhX=sx-16;bhY=sy-2;pfX=fhX;pfY=fhY;}
     else if(kind===4){const tx=sx+2+u*16,ty=sy-21+u*39;fhX=tx+2;fhY=ty;bhX=tx-1;bhY=ty-1;pfX=fhX;pfY=fhY;}
     else if(kind===5){fhX=sx+6+ext*30;fhY=sy+(ext<0?4:0);bhX=sx-16;bhY=sy+2;pfX=fhX;pfY=fhY;}
     else {fhX=sx+8+k*22;fhY=sy-1;bhX=sx-18;bhY=sy+6;pfX=fhX;pfY=fhY;}
@@ -906,10 +920,10 @@ function drawFighter(f,alpha) {
   // Wischspur hinter Faust/Fuß während des Zuschlagens
   if(kind&&atkT>.16&&atkT<.62) {
     ctx.globalAlpha=clamp(1-(atkT-.16)/.46,0,1)*.42;ctx.fillStyle=lineColor;ctx.strokeStyle=lineColor;
-    if(kind===2||kind===3||kind===4) {
+    if(kind===2||kind===3||kind===4||kind===8||kind===9) {
       const cx=kind===2?0:sx,cy=kind===2?hipY:sy,r=Math.hypot(pfX-cx,pfY-cy),a1=Math.atan2(pfY-cy,pfX-cx);
-      ctx.lineWidth=kind===4?7:5.5;ctx.beginPath();
-      if(kind===4)ctx.arc(cx,cy,r,-1.9,a1,false);else ctx.arc(cx,cy,r,kind===2?1.1:1.4,a1,true);
+      ctx.lineWidth=kind===4||kind>=8?7.5:5.5;ctx.beginPath();
+      if(kind===4)ctx.arc(cx,cy,r,-1.9,a1,false);else if(kind===8)ctx.arc(cx,cy,r,-2.5,a1,false);else ctx.arc(cx,cy,r,kind===2?1.1:1.4,a1,true);
       ctx.stroke();
     } else {
       const w2=kind===5?6.5:4.5;
@@ -944,7 +958,7 @@ function drawFighter(f,alpha) {
   ctx.strokeStyle=lineColor;ctx.beginPath();
   ctx.moveTo(0,hipY);ctx.quadraticCurveTo(2,(hipY+neckY)*.5,neckX,neckY);
   limb3(0,hipY,fkX,fkY,ffX,ffY);limb3(sx,sy,feX,feY,fhX,fhY);ctx.stroke();
-  ctx.fillStyle=f.guarding?'#9cefff':lineColor;ctx.beginPath();ctx.arc(fhX,fhY,f.guarding?4:kind===5?3.3+k*2.2:3.3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=f.guarding?'#9cefff':lineColor;ctx.beginPath();ctx.arc(fhX,fhY,f.guarding?4:kind===5||kind>=8?3.3+k*2.2:3.3,0,Math.PI*2);ctx.fill();
   // Treffer-Funke am Höhepunkt
   if(kind&&atkT>.36&&atkT<.54) {
     const sp=(atkT-.36)/.18,r1=3+sp*5,r2=8+sp*9;
@@ -1021,7 +1035,7 @@ function drawHud() {
     const f=fighters[i],x=i===0?22:W-212,y=18;
     ctx.fillStyle='#08101dcc';ctx.fillRect(x,y,190,43);
     ctx.fillStyle='#24334c';ctx.fillRect(x+8,y+9,174,8);
-    ctx.fillStyle=f.color;ctx.fillRect(x+8,y+9,174*clamp(f.hp/100,0,1),8);
+    ctx.fillStyle=f.color;ctx.fillRect(x+8,y+9,174*clamp(f.hp/MAX_HP,0,1),8);
     ctx.fillStyle='#263048';ctx.fillRect(x+8,y+24,174,5);
       ctx.fillStyle='#c5f36b';ctx.fillRect(x+8,y+24,174*clamp(f.ki/100,0,1),5);
     ctx.font='700 11px system-ui';ctx.fillStyle=f.color;ctx.textAlign=i===0?'left':'right';
