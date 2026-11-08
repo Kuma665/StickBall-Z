@@ -29,6 +29,7 @@ button{font:inherit}
 .mode:hover{transform:translateY(-2px);border-color:var(--cyan);background:#19283b}
 .mode.primary{border-color:transparent;background:var(--orange);color:#1c0c06}
 .mode.primary:hover{background:#ff9367}
+.mode.pad-focus{outline:2px solid var(--cyan);outline-offset:2px}
 .guide{justify-self:end;width:min(100%,360px);padding:19px;border:1px solid #34405b;border-radius:9px;background:#0a1020d9;backdrop-filter:blur(8px)}
 .guide h2{margin:0 0 12px;color:#e9efff;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
 .guide p{display:flex;justify-content:space-between;gap:10px;margin:8px 0;color:#aab8d2;font-size:12px}
@@ -171,8 +172,8 @@ const keyMaps = [
   { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', shot:'KeyK', beam:'KeyI', charge:'KeyL', punch:'KeyJ', heavy:'KeyU', super:'KeyO' }
 ];
 const fighters = [
-  { name:'RED', color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:100, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
-  { name:'BLUE', color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:100, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
+  { name:'RED', color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:100, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
+  { name:'BLUE', color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:100, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
 ];
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
 const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false}));
@@ -185,8 +186,8 @@ const stars = Array.from({length:150}, (_,i) => {
 });
 let particleCursor = 0, projectileCursor = 0;
 const inputs = [
-  {left:false,right:false,up:false,down:false,shot:false,beam:false,charge:false,punch:false,heavy:false,super:false},
-  {left:false,right:false,up:false,down:false,shot:false,beam:false,charge:false,punch:false,heavy:false,super:false}
+  {left:false,right:false,up:false,down:false,shot:false,beam:false,charge:false,punch:false,heavy:false,super:false,guard:false,dash:false},
+  {left:false,right:false,up:false,down:false,shot:false,beam:false,charge:false,punch:false,heavy:false,super:false,guard:false,dash:false}
 ];
 const skyCanvas = document.createElement('canvas');
 skyCanvas.width=W;skyCanvas.height=H;
@@ -270,31 +271,102 @@ function begin(nextMode) {
   if(mode==='free')status.textContent='FREIFLUG';
   else if(mode==='bot')status.textContent='KAMPF GEGEN KI';
   else status.textContent='LOKALER KAMPF';
-  hint.textContent=playStation?'□ Combo · L2 Heavy · Stick + Ki: lenken · Dash: doppelt tippen · R1 Beam + hoch/runter lenken · △ Ki · R2 Super':'F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
+  hint.textContent=playStation?HINT_PS:HINT_KEY;
+  winner=-1;
 }
 function readInput(f,index) {
   const map=keyMaps[index],out=inputs[index];
   out.left=!!keys[map.left];out.right=!!keys[map.right];out.up=!!keys[map.up];out.down=!!keys[map.down];
   out.shot=!!keys[map.shot];out.beam=!!keys[map.beam];out.charge=!!keys[map.charge];out.punch=!!keys[map.punch];out.heavy=!!keys[map.heavy];out.super=!!keys[map.super];
+  out.guard=false;out.dash=false;
   if(f.bot)return out;
-  const pads=navigator.getGamepads?navigator.getGamepads():null;
-  const pad=pads&&(index===0?pads[0]:pads[1]);
-  if(pad&&pad.connected) {
-    const ax=pad.axes[0]||0,ay=pad.axes[1]||0,b=pad.buttons;
-    out.left||=ax<-.35;out.right||=ax>.35;out.up||=ay<-.4||!!(b[0]&&b[0].pressed);
-    out.down||=ay>.4||!!(b[1]&&b[1].pressed);out.punch||=!!(b[2]&&b[2].pressed);
-    out.shot||=!!(b[3]&&b[3].pressed);out.charge||=!!(b[4]&&b[4].pressed);out.beam||=!!(b[5]&&b[5].pressed);
-    out.heavy||=!!(b[6]&&b[6].pressed);
-    out.super||=!!(b[7]&&b[7].pressed);
-    if(index===0) {
-      const detected=/dualsense|wireless controller|054c/i.test(pad.id);
-      if(detected!==playStation) {
-        playStation=detected;
-        hint.textContent=detected?'□ Combo · L2 Heavy · Stick + Ki: lenken · Dash: doppelt tippen · R1 Beam + hoch/runter lenken · △ Ki · R2 Super':'F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
-      }
-    }
+  const st=padStates[index];
+  if(st.connected) {
+    // Belegung: Stick/D-Pad bewegen · ✕ hoch · ○ Dash · □ Combo · △ Ki · L1 Block · R1 Beam · L2 Laden · R2 Heavy · L3/R3 Super
+    const b=st.btn;
+    out.left=out.left||st.ax<-.35||b[14]===1;out.right=out.right||st.ax>.35||b[15]===1;
+    out.up=out.up||st.ay<-.4||b[12]===1||b[0]===1;out.down=out.down||st.ay>.4||b[13]===1;
+    out.dash=b[1]===1;out.punch=out.punch||b[2]===1;out.shot=out.shot||b[3]===1;
+    out.guard=b[4]===1;out.beam=out.beam||b[5]===1;out.charge=out.charge||b[6]===1;
+    out.heavy=out.heavy||b[7]===1;out.super=out.super||b[10]===1||b[11]===1;
   }
   return out;
+}
+// ---- Gamepads: feste Zuordnung Controller -> Spieler (Reihenfolge der Verbindung) ----
+const PS_RE=/dualsense|dualshock|wireless controller|054c/i;
+const HINT_PS='✕ Hoch · □ Combo · R2 Heavy · △ Ki · R1 Beam · ○ Dash · L1 Block · L2 Laden · L3 Super · OPTIONS Pause';
+const HINT_KEY='F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
+const PAD_BUTTONS=17;
+const padSlots=[-1,-1];
+const padStates=[0,1].map(()=>({connected:false,id:'',ps:false,ax:0,ay:0,navDir:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS)}));
+let padCount=-1,menuFocus=0,winner=-1;
+const modeButtons=Array.from(document.querySelectorAll('.menu [data-mode]'));
+function padPressed(st,k){return st.btn[k]===1&&st.prev[k]===0;}
+function pollPads() {
+  const list=navigator.getGamepads?navigator.getGamepads():null;
+  let count=0;
+  for(let s=0;s<2;s++){
+    const gi=padSlots[s],g=list&&gi>=0?list[gi]:null;
+    if(!g||!g.connected)padSlots[s]=-1;
+  }
+  if(list) for(let i=0;i<list.length;i++) {
+    const g=list[i];if(!g||!g.connected||padSlots[0]===i||padSlots[1]===i)continue;
+    if(padSlots[0]<0)padSlots[0]=i;else if(padSlots[1]<0)padSlots[1]=i;
+  }
+  for(let s=0;s<2;s++) {
+    const st=padStates[s],gi=padSlots[s];
+    if(gi<0){if(st.connected){st.connected=false;st.btn.fill(0);st.prev.fill(0);}continue;}
+    const g=list[gi],b=g.buttons;
+    st.connected=true;count++;
+    if(g.id!==st.id){st.id=g.id;st.ps=PS_RE.test(g.id);}
+    for(let k=0;k<PAD_BUTTONS;k++){const bt=b[k];st.prev[k]=st.btn[k];st.btn[k]=bt&&(bt.pressed||bt.value>.35)?1:0;}
+    st.ax=g.axes[0]||0;st.ay=g.axes[1]||0;
+  }
+  const ps=(padStates[0].connected&&padStates[0].ps)||(padStates[1].connected&&padStates[1].ps);
+  if(ps!==playStation||count!==padCount) {
+    playStation=ps;padCount=count;
+    if(state==='playing'||state==='paused')hint.textContent=ps?HINT_PS:HINT_KEY;
+    else if(state==='menu'){hint.textContent=ps?HINT_PS:HINT_KEY;status.textContent=count?'CONTROLLER: '+count:'FLUGGEBIET 01';}
+  }
+  handlePadUI();
+}
+function setMenuFocus(i) {
+  menuFocus=(i+modeButtons.length)%modeButtons.length;
+  for(let k=0;k<modeButtons.length;k++)modeButtons[k].classList.toggle('pad-focus',k===menuFocus);
+}
+function handlePadUI() {
+  for(let s=0;s<2;s++) {
+    const st=padStates[s];if(!st.connected)continue;
+    const dir=st.ax>.55||st.btn[15]?1:st.ax<-.55||st.btn[14]?-1:0;
+    const nav=dir!==0&&dir!==st.navDir?dir:0;st.navDir=dir;
+    if(state==='menu') {
+      if(nav)setMenuFocus(menuFocus+nav);
+      else if(padPressed(st,0)||padPressed(st,9)){begin(modeButtons[menuFocus].dataset.mode);return;}
+    } else if(state==='playing') {
+      if(padPressed(st,9)){pauseGame();return;}
+    } else if(state==='paused') {
+      if(padPressed(st,9)||padPressed(st,0)){resumeGame();return;}
+      if(padPressed(st,1)){backToMenu();return;}
+    } else if(state==='over') {
+      if(padPressed(st,0)||padPressed(st,9)){begin(mode);return;}
+      if(padPressed(st,1)){backToMenu();return;}
+    }
+  }
+}
+function rumble(index,strong,weak,ms) {
+  const f=fighters[index],gi=padSlots[index];
+  if(gi<0||!f||f.bot||!navigator.getGamepads)return;
+  const g=navigator.getGamepads()[gi],a=g&&g.vibrationActuator;
+  if(!a||!a.playEffect)return;
+  try{const r=a.playEffect('dual-rumble',{duration:ms,strongMagnitude:strong,weakMagnitude:weak});if(r&&r.catch)r.catch(()=>{});}catch(e){}
+}
+function pauseGame(){state='paused';stopMusic();pauseLayer.hidden=false;touchControls.hidden=true;}
+function resumeGame(){state='playing';pauseLayer.hidden=true;touchControls.hidden=false;if(audioEnabled)startMusic();}
+function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;touchControls.hidden=true;padCount=-1;status.textContent='FLUGGEBIET 01';}
+function endMatch(w) {
+  state='over';winner=w;stopMusic();touchControls.hidden=true;
+  screenShake=Math.max(screenShake,9);
+  rumble(1-w,1,.8,380);rumble(w,.3,.5,160);
 }
 function spawnShot(f,index,big,input) {
   if(big)return;
@@ -365,7 +437,7 @@ function updateKamehameha(f,index,enemy,input,dt) {
           enemy.stun=.22;enemy.hitFlash=.18;enemy.vx+=f.face*115;enemy.vy-=65;
           impactBurst(enemy.x,enemy.y-45,f.color,false);screenShake=Math.max(screenShake,2.8);
           hitStop=Math.max(hitStop,.035);
-          playSfx('hit');
+          playSfx('hit');rumble(1-index,.4,.3,60);
         }
         f.beamHitCooldown=blocked?.24:.16;
       }
@@ -390,6 +462,7 @@ function damage(f,from,p) {
   impactBurst(f.x,f.y-38,p.color,p.big);
   hitStop=Math.max(hitStop,p.big?.095:.055);
   playSfx('hit',p.big);
+  rumble(f===fighters[0]?0:1,p.big?.8:.35,p.big?.6:.3,p.big?140:60);
   if(p.big)makeCrater(f.x,true);
 }
 function updateBot(f,target,input) {
@@ -458,7 +531,12 @@ function updateFighter(f,index,dt) {
   if(f.stun>0)f.stun-=dt;
   const stunned=f.stun>0;
   const backingAway=f.face>0?input.left:input.right;
-  f.guarding=enemy.active&&input.down&&backingAway&&!f.charging&&!stunned&&!input.punch&&!input.heavy;
+  f.guarding=enemy.active&&(input.guard||(input.down&&backingAway))&&!f.charging&&!stunned&&!input.punch&&!input.heavy;
+  if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.charging&&f.dashCooldown<=0) {
+    const dashAx=(input.right?1:0)-(input.left?1:0);
+    f.dashDir=dashAx||(enemy.active?-f.face:f.face);f.dashTime=.16;f.dashInvuln=.13;f.dashCooldown=.62;
+  }
+  f.dashBtnHeld=input.dash;
   if(!stunned&&!f.charging&&f.dashCooldown<=0) {
     if(input.left&&!f.dashLeftHeld) {
       if(f.dashTapLeft>0){f.dashDir=-1;f.dashTime=.16;f.dashInvuln=.13;f.dashCooldown=.62;f.dashTapLeft=0;}
@@ -546,7 +624,7 @@ function updateFighter(f,index,dt) {
         if(blocked) {
           enemy.vx+=f.face*55;f.vx-=f.face*35;
           burst(enemy.x,enemy.y-43,'145,220,255',12,105);
-          playSfx('block');
+          playSfx('block');rumble(1-index,.1,.35,50);
         } else {
           const gap=Math.max(0,Math.abs(enemy.x-f.x)-44);
           f.vx+=f.face*(finisher?110:35)+f.face*Math.min(140,gap*1.1);
@@ -564,6 +642,7 @@ function updateFighter(f,index,dt) {
           screenShake=Math.max(screenShake,finisher?8:4);
           hitStop=Math.max(hitStop,finisher?.11:.06);
           playSfx('hit',finisher);
+          rumble(1-index,finisher?.85:.45,finisher?.6:.35,finisher?150:70);rumble(index,.15,.3,45);
         }
       }
     }
@@ -578,6 +657,7 @@ function updateFighter(f,index,dt) {
   if(f.y>floor){f.y=floor;f.vy=Math.min(0,f.vy)*-.15;f.vx*=.97;}
   if(f.y< -2600){f.y=-2600;f.vy=Math.max(0,f.vy);}
   f.x=clamp(f.x,-worldRadius,worldRadius);
+  if(f.hp<=0&&enemy.active&&mode!=='free'){f.hp=0;endMatch(1-index);return;}
   if(f.hp<=0){f.hp=100;f.ki=50;f.x=enemy.active?enemy.x-f.face*220:f.x;f.y=terrainY(f.x)-130;f.vx=-f.vx*.3;f.vy=-100;burst(f.x,f.y,f.color,30,240);}
 }
 function updateProjectiles(dt) {
@@ -605,7 +685,14 @@ function updateProjectiles(dt) {
 }
 function update(dt) {
   if(state!=='playing')return;
-  if(hitStop>0){hitStop=Math.max(0,hitStop-dt);return;}
+  if(hitStop>0) {
+    hitStop=Math.max(0,hitStop-dt);
+    // Während Hit-Pause Interpolation einfrieren, sonst zittert die Darstellung
+    for(let i=0;i<2;i++){const f=fighters[i];f.px=f.x;f.py=f.y;}
+    for(let i=0;i<MAX_PROJECTILES;i++){const p=projectiles[i];p.px=p.x;p.py=p.y;}
+    previousCameraX=cameraX;previousCameraY=cameraY;previousZoom=zoom;
+    return;
+  }
   clock+=dt;updateFighter(fighters[0],0,dt);
   if(fighters[1].active) {
     updateFighter(fighters[1],1,dt);
@@ -858,7 +945,7 @@ function drawHud() {
         ctx.fillStyle='#ffe66d';ctx.fillRect(x+8,y+33,174*clamp(f.superTime/12,0,1),2);
       } else if(f.ki>=100) {
         ctx.textAlign=i===0?'left':'right';ctx.font='800 9px system-ui';ctx.fillStyle='#ffe66d';
-        ctx.fillText('R SUPER BEREIT',i===0?x+84:x+106,y+40);
+        ctx.fillText((padStates[i].connected&&padStates[i].ps?'L3':i===0?'R':'O')+' SUPER BEREIT',i===0?x+84:x+106,y+40);
       }
   }
   ctx.textAlign='center';ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
@@ -884,7 +971,15 @@ function render(alpha) {
   for(let i=0;i<MAX_PROJECTILES;i++)if(projectiles[i].active)drawProjectile(projectiles[i],alpha);
   drawFighter(fighters[0],alpha);drawFighter(fighters[1],alpha);
   ctx.restore();
-  if(state==='playing')drawHud();
+  if(state==='playing'||state==='over')drawHud();
+  if(state==='over'&&winner>=0) {
+    const wf=fighters[winner];
+    ctx.fillStyle='#050914c0';ctx.fillRect(0,H/2-38,W,76);
+    ctx.textAlign='center';ctx.font='900 28px system-ui';ctx.fillStyle=wf.color;
+    ctx.fillText(wf.name+(wf.bot?' (KI)':'')+' GEWINNT',W/2,H/2+4);
+    ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
+    ctx.fillText(playStation?'✕ Revanche  ·  ○ Menü':'Enter / Tippen: Revanche  ·  Esc: Menü',W/2,H/2+24);
+  }
   if(state==='menu') {
     for(let i=0;i<5;i++) {
       const f=fighters[i%2];if(i>1)continue;
@@ -896,6 +991,7 @@ function render(alpha) {
 function frame(now) {
   if(!lastTime)lastTime=now;
   accumulator+=Math.min(.05,(now-lastTime)/1000);lastTime=now;
+  pollPads();
   while(accumulator>=DT){update(DT);accumulator-=DT;}
   render(accumulator/DT);requestAnimationFrame(frame);
 }
@@ -904,28 +1000,25 @@ window.addEventListener('keydown',e=>{
   keys[e.code]=true;
   if(e.repeat)return;
   if(e.code==='Escape') {
-    if(state==='playing'){state='paused';stopMusic();pauseLayer.hidden=false;touchControls.hidden=true;}
-    else if(state==='paused'){state='playing';pauseLayer.hidden=true;touchControls.hidden=false;if(audioEnabled)startMusic();}
-  }
+    if(state==='playing')pauseGame();
+    else if(state==='paused')resumeGame();
+    else if(state==='over')backToMenu();
+  } else if(state==='over'&&(e.code==='Enter'||e.code==='Space'))begin(mode);
 });
+canvas.addEventListener('pointerdown',()=>{if(state==='over')begin(mode);});
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>begin(button.dataset.mode)));
 document.getElementById('soundToggle').addEventListener('click',()=>setAudioEnabled(!audioEnabled));
-document.getElementById('resume').addEventListener('click',()=>{state='playing';pauseLayer.hidden=true;touchControls.hidden=false;if(audioEnabled)startMusic();});
-document.getElementById('backMenu').addEventListener('click',()=>{state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;touchControls.hidden=true;status.textContent='FLUGGEBIET 01';});
+document.getElementById('resume').addEventListener('click',resumeGame);
+document.getElementById('backMenu').addEventListener('click',backToMenu);
 document.querySelectorAll('.touch [data-key]').forEach(button=>{
   const code=button.dataset.key;
   button.addEventListener('pointerdown',e=>{e.preventDefault();keys[code]=true;button.setPointerCapture(e.pointerId);});
   const release=()=>{keys[code]=false;};
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
 });
-window.addEventListener('gamepadconnected',e=>{
-  if(/dualsense|wireless controller|054c/i.test(e.gamepad.id)) {
-    playStation=true;hint.textContent='DualSense: □ Combo · L2 Heavy · Stick + Ki: lenken · Dash: doppelt tippen · R1 Beam + hoch/runter lenken · △ Ki · R2 Super';
-  }
-});
-window.addEventListener('gamepaddisconnected',()=>{playStation=false;});
+setMenuFocus(0);
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden)return;
   for(const k in keys)keys[k]=false;
