@@ -173,8 +173,8 @@ const keyMaps = [
 ];
 const MAX_HP = 250;
 const fighters = [
-  { name:'BLAZE', style:0, color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
-  { name:'VOLT', style:1, color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
+  { name:'BLAZE', style:0, color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, cannonHolding:false, cannonCharge:0, shotQueued:false, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
+  { name:'VOLT', style:1, color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, cannonHolding:false, cannonCharge:0, shotQueued:false, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
 ];
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
 const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false}));
@@ -254,7 +254,7 @@ function makeCrater(x,big) {
 function resetFighter(f,index) {
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
-  f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
+  f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.cannonHolding=false;f.cannonCharge=0;f.shotQueued=false;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
   f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
 }
 function begin(nextMode) {
@@ -304,7 +304,7 @@ function readInput(f,index) {
 }
 // ---- Gamepads: feste Zuordnung Controller -> Spieler (Reihenfolge der Verbindung) ----
 const PS_RE=/dualsense|dualshock|wireless controller|054c/i;
-const HINT_PS='□ Leicht · △ Stark (halten: aufladen, +↑/↓) · R1 Ki · R2 Kamehameha · ✕ Hoch · ○ Dash (nach Finisher: verfolgen) · L1 Block · L2 Laden · L3 Super';
+const HINT_PS='□ Leicht · △ Stark (halten: aufladen, +↑/↓) · R1 Ki (halten: Kanone) · R2 Kamehameha · ✕ Hoch · ○ Dash (nach Finisher: verfolgen) · L1 Block · L2 Laden · L3 Super';
 const HINT_KEY='F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
 const PAD_BUTTONS=17;
 const padSlots=[-1,-1];
@@ -378,19 +378,21 @@ function endMatch(w) {
   screenShake=Math.max(screenShake,9);
   rumble(1-w,1,.8,380);rumble(w,.3,.5,160);
 }
-function spawnShot(f,index,big,input) {
-  if(big)return;
+// Ki-Schuss: klein (7 Ki) oder große Ki-Kanone (20 Ki, c = Ladung 0..1)
+function spawnShot(f,index,big,input,c=0) {
+  if(big&&f.ki<20)big=false;
   if(!big&&f.ki<7)return;
-  f.ki-=7;f.fire=.24;f.shotAnim=.26;
-  f.guideShot=projectileCursor;
+  f.ki-=big?20:7;f.fire=big?.45:.24;f.shotAnim=.26;
   const p=projectiles[projectileCursor];projectileCursor=(projectileCursor+1)%MAX_PROJECTILES;
   let aimX=input.aimX,aimY=input.aimY;
   if(aimX*aimX+aimY*aimY<.09){aimX=f.face;aimY=0;}
   const aimLength=Math.hypot(aimX,aimY)||1;
-  p.active=true;p.owner=index;p.x=f.x+aimX/aimLength*30;p.y=f.y-42+aimY/aimLength*12;p.px=p.x;p.py=p.y;
-  p.speed=560;p.vx=aimX/aimLength*p.speed;p.vy=aimY/aimLength*p.speed;p.r=8;
-  p.life=2.1;p.power=f.superTime>0?12:8;p.color=f.color;p.big=false;
-  playSfx('shot');
+  p.r=big?15+c*11:8;p.speed=big?430:560;
+  p.active=true;p.owner=index;p.x=f.x+aimX/aimLength*(22+p.r);p.y=f.y-42+aimY/aimLength*12;p.px=p.x;p.py=p.y;
+  p.vx=aimX/aimLength*p.speed;p.vy=aimY/aimLength*p.speed;
+  p.life=big?3:2.1;p.power=(big?22+c*18:8)*(f.superTime>0?1.4:1);p.color=f.color;p.big=big;
+  if(big){burst(p.x,p.y,f.color,18,180);screenShake=Math.max(screenShake,3+c*3);if(fighters[1-index].active)f.vx-=aimX/aimLength*120;rumble(index,.3+c*.4,.4,90);}
+  playSfx(big?'beam':'shot');
 }
 function traceBeam(f) {
   const sx=f.x+f.face*21,sy=f.y-40;
@@ -552,7 +554,7 @@ function updateFighter(f,index,dt) {
   if(enemy.active&&Math.abs(enemy.x-f.x)>4)f.face=enemy.x>f.x?1:-1;
   if(f.stun>0)f.stun-=dt;
   const stunned=f.stun>0;
-  if(stunned)f.smashHolding=false;
+  if(stunned){f.smashHolding=false;f.cannonHolding=false;}
   const backingAway=f.face>0?input.left:input.right;
   f.guarding=enemy.active&&(input.guard||(input.down&&backingAway))&&!f.charging&&!stunned&&!input.punch&&!input.heavy;
   // Verfolgungs-Dash: kurz nach einem Finisher ○ -> zum weggeschleuderten Gegner teleportieren
@@ -600,8 +602,21 @@ function updateFighter(f,index,dt) {
     }
     if(input.charge)f.ki=Math.min(100,f.ki+(f.superTime>0?42:32)*dt);
     else if(f.superTime<=0)f.ki=Math.min(100,f.ki+2.4*dt);
-    // Antippen = schießen, gedrückt halten = letzten Schuss lenken
-    if(input.shot&&!f.shotHeld&&f.fire<=0)spawnShot(f,index,false,input);
+    // R1: antippen = kleiner Schuss, halten = Ki-Kanone laden, loslassen = feuern
+    // Druck während der Abklingzeit wird gemerkt und danach ausgeführt
+    if(input.shot&&!f.shotHeld)f.shotQueued=true;
+    if(f.fire<=0&&!f.cannonHolding&&(f.shotQueued||input.shot)) {
+      f.shotQueued=false;
+      if(input.shot){f.cannonHolding=true;f.cannonCharge=0;}else spawnShot(f,index,false,input);
+    }
+    if(f.cannonHolding) {
+      f.cannonCharge+=dt;
+      if(!input.shot) {
+        f.cannonHolding=false;
+        const c=clamp((f.cannonCharge-.2)/.8,0,1);
+        spawnShot(f,index,f.cannonCharge>=.2,input,c);
+      }
+    }
     f.shotHeld=input.shot;
     updateKamehameha(f,index,enemy,input,dt);
     const punchPressed=input.punch&&!f.punchHeld&&!f.smashHolding,heavyPressed=input.heavy&&!f.heavyHeld&&!f.smashHolding;
@@ -724,14 +739,6 @@ function updateProjectiles(dt) {
   for(let i=0;i<MAX_PROJECTILES;i++) {
     const p=projectiles[i];if(!p.active)continue;
     p.px=p.x;p.py=p.y;
-    // Nur der zuletzt abgefeuerte Schuss wird gelenkt – und nur solange △ gehalten wird. Sonst fliegt er gerade.
-    const aim=inputs[p.owner],owner=fighters[p.owner];
-    if(owner.guideShot===i&&aim.shot&&aim.aimX*aim.aimX+aim.aimY*aim.aimY>.09) {
-      const current=Math.atan2(p.vy,p.vx),target=Math.atan2(aim.aimY,aim.aimX);
-      const turn=Math.atan2(Math.sin(target-current),Math.cos(target-current));
-      const angle=current+clamp(turn,-9*dt,9*dt);
-      p.vx=Math.cos(angle)*p.speed;p.vy=Math.sin(angle)*p.speed;
-    }
     p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
     if(p.life<=0){p.active=false;continue;}
     const enemy=fighters[1-p.owner];
@@ -851,7 +858,9 @@ function drawFighter(f,alpha) {
   const attackTime=f.punch>0&&f.attackDuration>0?1-f.punch/f.attackDuration:0;
   const attack=f.punch>0?(attackTime<.18?attackTime/.18*.08:attackTime<.55?.08+.92*(attackTime-.18)/.37:clamp(1-(attackTime-.55)/.45,0,1)):0;
   const shot=clamp(f.shotAnim/.18,0,1);
-  const charge=clamp(f.beamCharge/.8,0,1);
+  // Ladekugel an der Hand: Kamehameha (R2) oder Ki-Kanone (R1, ab 0,2 s gehalten)
+  const cannonC=f.cannonHolding&&f.cannonCharge>=.2?.05+.95*clamp((f.cannonCharge-.2)/.8,0,1):0;
+  const charge=Math.max(clamp(f.beamCharge/.8,0,1),cannonC);
   const floor=terrainY(x);
   const ssj=f.superTime>0;
   ctx.globalAlpha=clamp(1-speed/900,.18,.55);ctx.fillStyle='#050a12';ctx.beginPath();ctx.ellipse(x,floor+5,12+speed*.012,3,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
@@ -1037,7 +1046,7 @@ function drawFighter(f,alpha) {
     ctx.fillStyle=f.color;ctx.beginPath();ctx.arc(ox,oy,9,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   }
   if(ready) {
-    const glow=.55+.35*Math.sin(clock*20),orb=7+charge*10;
+    const glow=.55+.35*Math.sin(clock*20),orb=7+charge*(cannonC>0?13:10);
     ctx.globalAlpha=.22*glow;ctx.fillStyle=ssj?'#ffe66d':f.color;ctx.beginPath();ctx.arc(punchX+3,punchY,orb*2.7,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=glow;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(punchX+3,punchY,orb*.55,0,Math.PI*2);ctx.fill();
     ctx.fillStyle=ssj?'#ffe66d':f.color;ctx.beginPath();ctx.arc(punchX+3,punchY,orb,0,Math.PI*2);ctx.fill();
@@ -1058,22 +1067,23 @@ function drawKamehameha(f) {
   const pulse=.82+.18*Math.sin(clock*55);
   const beamColor=f.superTime>0?'#ffe66d':f.color;
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
-  ctx.globalAlpha=.23;ctx.strokeStyle=beamColor;ctx.lineWidth=48*pulse;
+  ctx.globalAlpha=.23;ctx.strokeStyle=beamColor;ctx.lineWidth=56*pulse;
   ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
-  ctx.globalAlpha=.82;ctx.strokeStyle=beamColor;ctx.lineWidth=26*pulse;
+  ctx.globalAlpha=.82;ctx.strokeStyle=beamColor;ctx.lineWidth=31*pulse;
   ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
-  ctx.globalAlpha=.92;ctx.strokeStyle='#fff';ctx.lineWidth=9*pulse;
+  ctx.globalAlpha=.92;ctx.strokeStyle='#fff';ctx.lineWidth=11*pulse;
   ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
   ctx.restore();
 }
 function drawProjectile(p,alpha) {
   const x=p.px+(p.x-p.px)*alpha,y=p.py+(p.y-p.py)*alpha;
   const speed=Math.hypot(p.vx,p.vy)||1,ux=p.vx/speed,uy=p.vy/speed;
+  const tk=p.r/8;
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
   ctx.globalAlpha=.32;ctx.strokeStyle=p.color;ctx.lineWidth=p.r*1.8;
-  ctx.beginPath();ctx.moveTo(x-ux*31,y-uy*31);ctx.lineTo(x-ux*5,y-uy*5);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-ux*31*tk,y-uy*31*tk);ctx.lineTo(x-ux*5*tk,y-uy*5*tk);ctx.stroke();
   ctx.globalAlpha=.85;ctx.strokeStyle='#fff';ctx.lineWidth=p.r*.45;
-  ctx.beginPath();ctx.moveTo(x-ux*19,y-uy*19);ctx.lineTo(x-ux*3,y-uy*3);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-ux*19*tk,y-uy*19*tk);ctx.lineTo(x-ux*3*tk,y-uy*3*tk);ctx.stroke();
   ctx.globalAlpha=.25;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,p.r*2,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,p.r,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+ux*p.r*.15,y+uy*p.r*.15,p.r*.43,0,Math.PI*2);ctx.fill();
