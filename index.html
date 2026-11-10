@@ -16,7 +16,7 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;show('Pr
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 body{display:grid;place-items:center;overflow:hidden;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));background:radial-gradient(ellipse at 50% 110%,#182848 0%,var(--bg) 67%);color:var(--white)}
-.shell{width:min(1240px,calc((100dvh - 56px)*16/9),100%);display:grid;gap:12px}
+.shell{width:min(1240px,calc((100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9),100%);display:grid;gap:12px}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 3px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
 .brand{color:var(--white);font-size:12px;letter-spacing:.2em}.brand b{color:var(--orange)}
 .status{display:flex;align-items:center;gap:8px}.dot{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px #c5f36b88}
@@ -54,8 +54,9 @@ html.touch-ui .touch:not([hidden]){display:flex}
 .touch button.fire{width:38px;height:38px;border-color:#ff956b77;background:#d7492466}
 .touch .touch-pause{position:absolute;top:9%;left:50%;width:28px;height:28px;margin-left:-14px;font-size:9px;pointer-events:auto}
 .pause-card button.pad-focus{outline:2px solid var(--cyan);outline-offset:3px}
-@media(max-width:700px){body{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 58px)*16/9));gap:7px}.topbar{font-size:9px}.brand{font-size:10px}.menu{grid-template-columns:1fr;padding:5%;gap:0;background:#080d1bbd}.intro{max-width:70%}.eyebrow{margin-bottom:8px;font-size:9px}h1{font-size:clamp(38px,9vw,66px)}.lead{margin:10px 0 12px;font-size:11px}.mode{min-height:34px;padding:0 10px;font-size:10px}.guide{width:45%;padding:10px}.guide h2{margin-bottom:6px;font-size:9px}.guide p{margin:5px 0;font-size:10px}.guide .rule{margin-top:7px;padding-top:6px;font-size:9px}.hint{font-size:9px}}
+@media(max-width:700px){body{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9));gap:7px}.topbar{font-size:9px}.brand{font-size:10px}.menu{grid-template-columns:1fr;padding:5%;gap:0;background:#080d1bbd}.intro{max-width:70%}.eyebrow{margin-bottom:8px;font-size:9px}h1{font-size:clamp(38px,9vw,66px)}.lead{margin:10px 0 12px;font-size:11px}.mode{min-height:34px;padding:0 10px;font-size:10px}.guide{width:45%;padding:10px}.guide h2{margin-bottom:6px;font-size:9px}.guide p{margin:5px 0;font-size:10px}.guide .rule{margin-top:7px;padding-top:6px;font-size:9px}.hint{font-size:9px}}
 @media(max-width:520px){.menu{grid-template-columns:1fr;align-content:center;gap:12px;padding:6%}.intro{max-width:100%}.lead{max-width:290px}.guide{display:none}}
+@media(max-height:500px){body{padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9));gap:5px}.topbar{font-size:9px}.brand{font-size:10px}.hint{min-height:12px;font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 .version{position:absolute;right:10px;bottom:6px;margin:0;color:var(--muted);font-size:9px;letter-spacing:.08em;opacity:.65;pointer-events:none}
 .rotate{display:none}
@@ -69,7 +70,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-10b</p>
+        <p class="version">v2026-11-10c</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
