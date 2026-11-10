@@ -47,9 +47,15 @@ button{font:inherit}
 .pause-card h2{margin:0 0 12px;font-size:26px;letter-spacing:.08em}
 .pause-card button{margin:0 4px;padding:9px 16px;border:0;border-radius:4px;background:var(--orange);color:#160b07;font-size:12px;font-weight:800;cursor:pointer}
 .pause-card button.secondary{border:1px solid #46536e;background:#151e30;color:var(--white)}
-.touch{display:none}
+.touch{display:none;position:absolute;inset:0;justify-content:space-between;align-items:end;padding:0 8px 8px;pointer-events:none}
+html.touch-ui .touch:not([hidden]){display:flex}
+.touch-group{display:flex;gap:5px;align-items:end;pointer-events:auto}
+.touch button{width:34px;height:34px;padding:0;border:1px solid #d5e5ff44;border-radius:50%;background:#101a2b80;color:#ffffffd9;font-size:11px;font-weight:800;touch-action:none}
+.touch button.fire{width:38px;height:38px;border-color:#ff956b77;background:#d7492466}
+.touch .touch-pause{position:absolute;top:9%;left:50%;width:28px;height:28px;margin-left:-14px;font-size:9px;pointer-events:auto}
+.pause-card button.pad-focus{outline:2px solid var(--cyan);outline-offset:3px}
 @media(max-width:700px){body{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 58px)*16/9));gap:7px}.topbar{font-size:9px}.brand{font-size:10px}.menu{grid-template-columns:1fr;padding:5%;gap:0;background:#080d1bbd}.intro{max-width:70%}.eyebrow{margin-bottom:8px;font-size:9px}h1{font-size:clamp(38px,9vw,66px)}.lead{margin:10px 0 12px;font-size:11px}.mode{min-height:34px;padding:0 10px;font-size:10px}.guide{width:45%;padding:10px}.guide h2{margin-bottom:6px;font-size:9px}.guide p{margin:5px 0;font-size:10px}.guide .rule{margin-top:7px;padding-top:6px;font-size:9px}.hint{font-size:9px}}
-@media(max-width:520px){.menu{grid-template-columns:1fr;align-content:center;gap:12px;padding:6%}.intro{max-width:100%}.lead{max-width:290px}.guide{display:none}.touch{position:absolute;inset:auto 8px 8px;display:flex;justify-content:space-between;align-items:end;pointer-events:none}.touch-group{display:flex;gap:5px;align-items:end;pointer-events:auto}.touch button{width:34px;height:34px;border:1px solid #d5e5ff55;border-radius:50%;background:#101a2bbd;color:#fff;font-size:11px;font-weight:800;touch-action:none}.touch button.fire{width:38px;height:38px;border-color:#ff956b88;background:#d7492488}.touch[hidden]{display:none}}
+@media(max-width:520px){.menu{grid-template-columns:1fr;align-content:center;gap:12px;padding:6%}.intro{max-width:100%}.lead{max-width:290px}.guide{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 .version{position:absolute;right:10px;bottom:6px;margin:0;color:var(--muted);font-size:9px;letter-spacing:.08em;opacity:.65;pointer-events:none}
 .rotate{display:none}
@@ -63,7 +69,7 @@ button{font:inherit}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-10</p>
+        <p class="version">v2026-11-10b</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -92,6 +98,7 @@ button{font:inherit}
     </div>
     <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
     <div class="touch" id="touch" hidden>
+      <button class="touch-pause" id="touchPause" type="button" aria-label="Pause">❚❚</button>
       <div class="touch-group">
         <button data-key="KeyA" aria-label="Links">◀</button><button data-key="KeyW" aria-label="Hoch">▲</button>
         <button data-key="KeyS" aria-label="Runter">▼</button><button data-key="KeyD" aria-label="Rechts">▶</button>
@@ -115,7 +122,7 @@ const keys = Object.create(null);
 let dpr = 1, state = 'menu', mode = 'free', clock = 0, accumulator = 0, lastTime = 0;
 let cameraX = 0, cameraY = 260, zoom = 1, previousCameraX = 0, previousCameraY = 260, previousZoom = 1;
 let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, maxDistance = 0, screenShake = 0, hitStop = 0;
-let playStation = false;
+let padKind = '', overText = 'Enter / Tippen: Revanche  ·  Esc: Menü';
 let audioContext=null,audioMaster=null,musicTimer=0,musicStep=0,audioEnabled=true;
 const musicNotes=[0,440,0,523,587,0,523,440,0,392,0,440,523,0,392,349];
 function updateSoundButton() {
@@ -271,7 +278,7 @@ function resetFighter(f,index) {
 }
 function begin(nextMode) {
   for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);
-  mode=nextMode;state='playing';menu.hidden=true;pauseLayer.hidden=true;touchControls.hidden=false;
+  mode=nextMode;state='playing';menu.hidden=true;pauseLayer.hidden=true;updateTouch();
   setAudioEnabled(audioEnabled);
   hitStop=0;
   fighters[0].active=true;fighters[0].bot=false;
@@ -285,7 +292,7 @@ function begin(nextMode) {
   if(mode==='free')status.textContent='FREIFLUG';
   else if(mode==='bot')status.textContent='KAMPF GEGEN KI';
   else status.textContent='LOKALER KAMPF';
-  hint.textContent=playStation?HINT_PS:HINT_KEY;
+  refreshInputTexts();
   winner=-1;
 }
 function readInput(f,index) {
@@ -316,11 +323,29 @@ function readInput(f,index) {
 }
 // ---- Gamepads: feste Zuordnung Controller -> Spieler (Reihenfolge der Verbindung) ----
 const PS_RE=/dualsense|dualshock|wireless controller|054c/i;
-const HINT_PS='□ Leicht · △ Stark (halten: aufladen, +↑/↓) · R1 Ki (halten: Kanone) · R2 Kamehameha · ✕ Hoch · ○ Dash (nach Finisher: verfolgen) · L1 Block · L2 Laden · L3 Super';
+// Tastensymbole je Controller: PS -> ✕ ○ □ △ / L1 R1 L2 R2; Xbox und unbekannt -> A B X Y / LB RB LT RT
+const PAD_SYM={ps:{a:'✕',b:'○',x:'□',y:'△',l1:'L1',r1:'R1',l2:'L2',r2:'R2',l3:'L3',start:'OPTIONS'},xbox:{a:'A',b:'B',x:'X',y:'Y',l1:'LB',r1:'RB',l2:'LT',r2:'RT',l3:'LS',start:'MENU'}};
+function padSym(kind,k){return (PAD_SYM[kind]||PAD_SYM.xbox)[k];}
+function buildPadHint(kind) {
+  const s=k=>padSym(kind,k);
+  return s('x')+' Leicht · '+s('y')+' Stark (halten: aufladen, +↑/↓) · '+s('r1')+' Ki (halten: Kanone) · '+s('r2')+' Kamehameha · '+s('a')+' Hoch · '+s('b')+' Dash (nach Finisher: verfolgen) · '+s('l1')+' Block · '+s('l2')+' Laden · '+s('l3')+' Super';
+}
+function padGuideHTML(kind) {
+  const s=k=>'<kbd>'+padSym(kind,k)+'</kbd>',row=(t,k)=>'<p><span>'+t+'</span>'+k+'</p>';
+  return '<h2>Steuerung · Controller</h2>'+row('Fliegen / lenken','<kbd>Stick</kbd>')+row('Hoch fliegen',s('a'))+row('Leichte Combo · bis zu 3 Treffer',s('x'))+
+    row('Stark · halten lädt auf, ↑/↓ lenkt',s('y'))+row('Ausweich-Dash',s('b'))+row('Blocken',s('l1'))+row('Ki-Schuss · halten: Kanone',s('r1'))+
+    row('Kamehameha · halten, dann loslassen',s('r2'))+row('Ki laden',s('l2'))+row('Super-Saiyajin · bei 100 Ki',s('l3'))+
+    '<p class="rule">Stick runter + '+s('r1')+' zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. '+s('start')+' pausiert.</p>';
+}
+const TOUCH_GUIDE='<h2>Steuerung · Touch</h2><p><span>Fliegen / lenken</span><span><kbd>◀</kbd> <kbd>▲</kbd> <kbd>▼</kbd> <kbd>▶</kbd></span></p>'+
+  '<p><span>Ausweich-Dash · Richtung doppelt tippen</span><kbd>◀/▶</kbd></p><p><span>Leichte Combo</span><kbd>✊</kbd></p><p><span>Heavy · kostet 12 Ki</span><kbd>H</kbd></p>'+
+  '<p><span>Blocken · runter + vom Gegner weg</span><kbd>▼</kbd></p><p><span>Ki-Schuss</span><kbd>KI!</kbd></p><p><span>Kamehameha · halten, dann loslassen</span><kbd>KAME</kbd></p>'+
+  '<p><span>Ki laden</span><kbd>KI</kbd></p><p><span>Super-Saiyajin · bei 100 Ki</span><kbd>SSJ</kbd></p><p class="rule"><kbd>▼</kbd> + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.</p>';
+const HINT_TOUCH='◀▲▼▶ fliegen · doppelt tippen: Dash · ✊ Combo · H Heavy · KI! Schuss · KAME halten · KI laden · SSJ Super';
 const HINT_KEY='F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
 const PAD_BUTTONS=17;
 const padSlots=[-1,-1];
-const padStates=[0,1].map(()=>({connected:false,id:'',ps:false,ax:0,ay:0,navDir:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS),latch:new Uint8Array(PAD_BUTTONS),eff:new Uint8Array(PAD_BUTTONS)}));
+const padStates=[0,1].map(()=>({connected:false,id:'',kind:'xbox',ax:0,ay:0,navDir:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS),latch:new Uint8Array(PAD_BUTTONS),eff:new Uint8Array(PAD_BUTTONS)}));
 let padCount=-1,menuFocus=0,winner=-1;
 const modeButtons=Array.from(document.querySelectorAll('.menu [data-mode]'));
 function padPressed(st,k){return st.btn[k]===1&&st.prev[k]===0;}
@@ -342,18 +367,35 @@ function pollPads() {
     if(gi<0){if(st.connected){st.connected=false;st.btn.fill(0);st.prev.fill(0);if(state==='playing')pauseGame();}continue;}
     const g=list[gi],b=g.buttons;
     st.connected=true;count++;
-    if(g.id!==st.id){st.id=g.id;st.ps=PS_RE.test(g.id);}
+    if(g.id!==st.id){st.id=g.id;st.kind=PS_RE.test(g.id)?'ps':'xbox';}
     for(let k=0;k<PAD_BUTTONS;k++){const bt=b[k];st.prev[k]=st.btn[k];st.btn[k]=padFocus&&bt&&(bt.pressed||bt.value>.35)?1:0;if(st.btn[k]&&!st.prev[k])st.latch[k]=1;}
     st.ax=padFocus?g.axes[0]||0:0;st.ay=padFocus?g.axes[1]||0:0;
   }
-  const ps=(padStates[0].connected&&padStates[0].ps)||(padStates[1].connected&&padStates[1].ps);
-  if(ps!==playStation||count!==padCount) {
-    playStation=ps;padCount=count;
-    if(state==='playing'||state==='paused')hint.textContent=ps?HINT_PS:HINT_KEY;
-    else if(state==='menu'){hint.textContent=ps?HINT_PS:HINT_KEY;status.textContent=count?'CONTROLLER: '+count:'FLUGGEBIET 01';}
+  // Symbole nach Spieler-1-Controller (sonst Spieler 2); sofort umschalten bei Wechsel
+  const kind=padStates[0].connected?padStates[0].kind:padStates[1].connected?padStates[1].kind:'';
+  if(kind!==padKind||count!==padCount) {
+    padKind=kind;padCount=count;
+    refreshInputTexts();updateTouch();
+    if(state==='menu')status.textContent=count?'CONTROLLER: '+count:'FLUGGEBIET 01';
   }
   handlePadUI();
 }
+// Touch-Buttons: nur auf Touch-Geräten, nur im laufenden Spiel und nur ohne Controller für Spieler 1
+const guideEl=document.querySelector('.guide'),guideKeyHTML=guideEl.innerHTML;
+let touchUI=!!(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches);
+document.documentElement.classList.toggle('touch-ui',touchUI);
+function setTouchUI(on){if(on===touchUI)return;touchUI=on;document.documentElement.classList.toggle('touch-ui',on);refreshInputTexts();}
+window.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')setTouchUI(true);},true);
+function updateTouch(){touchControls.hidden=!(state==='playing'&&!padStates[0].connected);}
+function refreshInputTexts() {
+  hint.textContent=padKind?buildPadHint(padKind):touchUI?HINT_TOUCH:HINT_KEY;
+  guideEl.innerHTML=padKind?padGuideHTML(padKind):touchUI?TOUCH_GUIDE:guideKeyHTML;
+  overText=padKind?padSym(padKind,'a')+' Revanche  ·  '+padSym(padKind,'b')+' Menü':touchUI?'Tippen: Revanche  ·  Zurück: Menü':'Enter / Tippen: Revanche  ·  Esc: Menü';
+}
+// Pause-Menü mit Steuerkreuz/Stick: links/rechts wählt, ✕/A bestätigt, ○/B oder Options = weiter
+const pauseButtons=[document.getElementById('resume'),document.getElementById('backMenu')];
+let pauseFocus=0;
+function setPauseFocus(i){pauseFocus=(i+pauseButtons.length)%pauseButtons.length;for(let k=0;k<pauseButtons.length;k++)pauseButtons[k].classList.toggle('pad-focus',k===pauseFocus);}
 function setMenuFocus(i) {
   menuFocus=(i+modeButtons.length)%modeButtons.length;
   for(let k=0;k<modeButtons.length;k++)modeButtons[k].classList.toggle('pad-focus',k===menuFocus);
@@ -369,8 +411,9 @@ function handlePadUI() {
     } else if(state==='playing') {
       if(padPressed(st,9)){pauseGame();return;}
     } else if(state==='paused') {
-      if(padPressed(st,9)||padPressed(st,0)){resumeGame();return;}
-      if(padPressed(st,1)){backToMenu();return;}
+      if(nav)setPauseFocus(pauseFocus+nav);
+      else if(padPressed(st,0)){if(pauseFocus===0)resumeGame();else backToMenu();return;}
+      else if(padPressed(st,9)||padPressed(st,1)){resumeGame();return;}
     } else if(state==='over') {
       if(padPressed(st,0)||padPressed(st,9)){begin(mode);return;}
       if(padPressed(st,1)){backToMenu();return;}
@@ -384,11 +427,11 @@ function rumble(index,strong,weak,ms) {
   if(!a||!a.playEffect)return;
   try{const r=a.playEffect('dual-rumble',{duration:ms,strongMagnitude:strong,weakMagnitude:weak});if(r&&r.catch)r.catch(()=>{});}catch(e){}
 }
-function pauseGame(){state='paused';stopMusic();pauseLayer.hidden=false;touchControls.hidden=true;}
-function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);state='playing';pauseLayer.hidden=true;touchControls.hidden=false;if(audioEnabled)startMusic();}
-function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;touchControls.hidden=true;padCount=-1;status.textContent='FLUGGEBIET 01';}
+function pauseGame(){state='paused';setPauseFocus(0);stopMusic();pauseLayer.hidden=false;updateTouch();}
+function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);state='playing';pauseLayer.hidden=true;updateTouch();if(audioEnabled)startMusic();}
+function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent='FLUGGEBIET 01';}
 function endMatch(w) {
-  state='over';winner=w;stopMusic();touchControls.hidden=true;
+  state='over';winner=w;stopMusic();updateTouch();
   screenShake=Math.max(screenShake,9);
   rumble(1-w,1,.8,380);rumble(w,.3,.5,160);
 }
@@ -1161,7 +1204,7 @@ function drawHud() {
         ctx.fillStyle='#ffe66d';ctx.fillRect(x+8,y+33,174*clamp(f.superTime/12,0,1),2);
       } else if(f.ki>=100) {
         ctx.textAlign=i===0?'left':'right';ctx.font='800 9px system-ui';ctx.fillStyle='#ffe66d';
-        ctx.fillText((padStates[i].connected&&padStates[i].ps?'L3':i===0?'R':'O')+' SUPER BEREIT',i===0?x+84:x+106,y+40);
+        ctx.fillText((padStates[i].connected?padSym(padStates[i].kind,'l3'):i===0?(touchUI&&!padKind?'SSJ':'R'):'O')+' SUPER BEREIT',i===0?x+84:x+106,y+40);
       }
   }
   ctx.textAlign='center';ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
@@ -1194,7 +1237,7 @@ function render(alpha) {
     ctx.textAlign='center';ctx.font='900 28px system-ui';ctx.fillStyle=wf.color;
     ctx.fillText(wf.name+(wf.bot?' (KI)':'')+' GEWINNT',W/2,H/2+4);
     ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
-    ctx.fillText(playStation?'✕ Revanche  ·  ○ Menü':'Enter / Tippen: Revanche  ·  Esc: Menü',W/2,H/2+24);
+    ctx.fillText(overText,W/2,H/2+24);
   }
   if(state==='menu') {
     for(let i=0;i<5;i++) {
@@ -1233,7 +1276,8 @@ document.querySelectorAll('.touch [data-key]').forEach(button=>{
   const release=()=>{keys[code]=false;};
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
 });
-setMenuFocus(0);
+setMenuFocus(0);setPauseFocus(0);refreshInputTexts();
+document.getElementById('touchPause').addEventListener('click',()=>{if(state==='playing')pauseGame();});
 // ---- Handy-Grundausstattung: Vollbild, Zurück-Taste, Wake Lock, Fokus/Pause ----
 let historyArmed=false,wakeLock=null;
 function isFullscreen(){return !!(document.fullscreenElement||document.webkitFullscreenElement);}
