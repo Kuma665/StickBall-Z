@@ -85,7 +85,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-10i</p>
+        <p class="version">v2026-11-10j</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -114,7 +114,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
         <p><span>Spieler 2 · Combo / Heavy / Schuss</span><span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd></span></p>
         <p class="rule"><kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.</p>
       </aside><button type="button" class="set-back pad-focus" id="helpBack">ZURÜCK</button></div></div>
-    <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="pauseSettings">EINSTELLUNGEN</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
+    <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="pauseSettings">EINSTELLUNGEN</button><button class="secondary" id="pauseHelp">STEUERUNG</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
     <div class="settings" id="settings" hidden><div class="settings-card"><h2>EINSTELLUNGEN</h2>
       <div class="set-row" data-set="music"><span>Musik</span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="sfx"><span>Soundeffekte</span><button type="button" class="set-val"></button></div>
@@ -452,9 +452,9 @@ function refreshInputTexts() {
   overText=padKind?padSym(padKind,'a')+' Revanche  ·  '+padSym(padKind,'b')+' Menü':touchUI?'Tippen: Revanche  ·  Zurück: Menü':'Enter / Tippen: Revanche  ·  Esc: Menü';
 }
 // Pause-Menü mit Steuerkreuz/Stick: links/rechts wählt, ✕/A bestätigt, ○/B oder Options = weiter
-const pauseButtons=[document.getElementById('resume'),document.getElementById('pauseSettings'),document.getElementById('backMenu')];
+const pauseButtons=[document.getElementById('resume'),document.getElementById('pauseSettings'),document.getElementById('pauseHelp'),document.getElementById('backMenu')];
 let pauseFocus=0;
-function activatePauseButton(i){if(i===0)resumeGame();else if(i===1)openSettings();else backToMenu();}
+function activatePauseButton(i){if(i===0)resumeGame();else if(i===1)openSettings();else if(i===2)openHelp();else backToMenu();}
 // ---- Einstellungs-Menü (aus Hauptmenü und Pause): hoch/runter wählt, links/rechts ändert, ✕/A ändert, ○/B zurück ----
 const settingsLayer=document.getElementById('settings'),settingRows=Array.from(settingsLayer.querySelectorAll('.set-row'));
 let settingsOpen=false,settingFocus=0;
@@ -1412,6 +1412,7 @@ document.getElementById('menuSettings').addEventListener('click',openSettings);
 document.getElementById('menuHelp').addEventListener('click',openHelp);
 document.getElementById('helpBack').addEventListener('click',closeHelp);
 document.getElementById('pauseSettings').addEventListener('click',openSettings);
+document.getElementById('pauseHelp').addEventListener('click',openHelp);
 document.getElementById('touchPause').addEventListener('click',()=>{if(state==='playing')pauseGame();});
 // ---- Handy-Grundausstattung: Vollbild, Zurück-Taste, Wake Lock, Fokus/Pause ----
 let historyArmed=false,wakeLock=null;
