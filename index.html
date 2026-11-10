@@ -23,7 +23,6 @@ body{display:grid;place-items:center;overflow:hidden;padding:max(18px,env(safe-a
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 3px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
 .brand{color:var(--white);font-size:12px;letter-spacing:.2em}.brand b{color:var(--orange)}
 .status{display:flex;align-items:center;gap:8px}.dot{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px #c5f36b88}
-.sound-toggle{padding:4px 7px;border:1px solid #344263;border-radius:4px;background:#101629;color:var(--white);font-size:10px;font-weight:800;letter-spacing:normal;cursor:pointer}
 .frame{position:relative;overflow:hidden;aspect-ratio:16/9;border:1px solid #344263;border-radius:12px;background:#080d1b;box-shadow:0 28px 90px #0009,0 0 50px #202f571c}
 canvas{display:block;width:100%;height:100%}
 .menu{position:absolute;inset:0;display:grid;grid-template-columns:1.04fr .96fr;grid-template-rows:minmax(0,1fr);overflow:hidden;align-items:center;gap:4%;padding:5.5% 6%;background:linear-gradient(90deg,#070b16ed 0%,#080d1bdc 45%,#080d1b48 100%)}
@@ -67,7 +66,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
 .pause-card button.pad-focus{outline:2px solid var(--cyan);outline-offset:3px}
 @media(max-width:700px){body{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9));gap:7px}.topbar{font-size:9px}.brand{font-size:10px}.menu{grid-template-columns:1fr;padding:5%;gap:0;background:#080d1bbd}.intro{max-width:70%}.eyebrow{margin-bottom:8px;font-size:9px}h1{font-size:clamp(38px,9vw,66px)}.lead{margin:10px 0 12px;font-size:11px}.mode{min-height:34px;padding:0 10px;font-size:10px}.guide{width:45%;padding:10px}.guide h2{margin-bottom:6px;font-size:9px}.guide p{margin:5px 0;font-size:10px}.guide .rule{margin-top:7px;padding-top:6px;font-size:9px}.hint{font-size:9px}}
 @media(max-width:520px){.menu{grid-template-columns:1fr;align-content:center;gap:12px;padding:6%}.intro{max-width:100%}.lead{max-width:290px}.guide{display:none}}
-@media(max-height:500px){body{padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 30px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9));gap:4px}.topbar{font-size:9px}.brand{font-size:10px}.sound-toggle{padding:2px 6px}.hint{display:none}.frame{border-radius:8px}.menu{grid-template-columns:1.1fr .9fr;gap:3%;padding:3% 3.5%;background:linear-gradient(90deg,#070b16ed 0%,#080d1bdc 50%,#080d1b90 100%)}.intro{max-width:none}.eyebrow{margin-bottom:6px;font-size:9px;letter-spacing:.18em}h1{font-size:clamp(30px,15vh,72px)}.lead{max-width:none;margin:8px 0 10px;font-size:11px;line-height:1.4}.modes{gap:6px}.mode{min-height:32px;padding:0 10px;font-size:10px}.guide{display:block;width:100%;padding:8px 10px}.guide h2{margin-bottom:4px;font-size:9px}.guide p{margin:2px 0;font-size:10px;gap:6px}.guide kbd{min-width:18px;padding:1px 4px;font-size:9px}.guide .rule{margin-top:5px;padding-top:4px;font-size:9px;line-height:1.35}.version{bottom:3px}}
+@media(max-height:500px){body{padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 30px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9));gap:4px}.topbar{font-size:9px}.brand{font-size:10px}.hint{display:none}.frame{border-radius:8px}.menu{grid-template-columns:1.1fr .9fr;gap:3%;padding:3% 3.5%;background:linear-gradient(90deg,#070b16ed 0%,#080d1bdc 50%,#080d1b90 100%)}.intro{max-width:none}.eyebrow{margin-bottom:6px;font-size:9px;letter-spacing:.18em}h1{font-size:clamp(30px,15vh,72px)}.lead{max-width:none;margin:8px 0 10px;font-size:11px;line-height:1.4}.modes{gap:6px}.mode{min-height:32px;padding:0 10px;font-size:10px}.guide{display:block;width:100%;padding:8px 10px}.guide h2{margin-bottom:4px;font-size:9px}.guide p{margin:2px 0;font-size:10px;gap:6px}.guide kbd{min-width:18px;padding:1px 4px;font-size:9px}.guide .rule{margin-top:5px;padding-top:4px;font-size:9px;line-height:1.35}.version{bottom:3px}}
 @media(max-height:400px){.menu{grid-template-columns:1fr 1fr;padding:2.5% 3%}.guide{padding:6px 8px}.guide h2{margin-bottom:3px}.guide p{margin:1px 0;font-size:9px;line-height:1.25}.guide kbd{min-width:15px;padding:0 3px;font-size:8px}.guide .rule{margin-top:3px;padding-top:3px;font-size:8px}.mode{padding:0 8px}.lead{font-size:10px}}
 @media(max-height:340px){.lead{display:none}h1{font-size:clamp(28px,14vh,60px)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
@@ -78,12 +77,12 @@ html.touch-ui .touch:not([hidden]){display:flex}
 </head>
 <body>
 <main class="shell">
-  <header class="topbar"><div class="brand">STICKBALL <b>Z</b></div><div class="status"><i class="dot"></i><span id="status">FLUGGEBIET 01</span><button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true" aria-label="Ton ausschalten">♫ AN</button></div></header>
+  <header class="topbar"><div class="brand">STICKBALL <b>Z</b></div><div class="status"><i class="dot"></i><span id="status">FLUGGEBIET 01</span></div></header>
   <section class="frame" aria-label="StickBall Z Spiel">
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-10f</p>
+        <p class="version">v2026-11-10g</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -113,8 +112,8 @@ html.touch-ui .touch:not([hidden]){display:flex}
     </div>
     <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="pauseSettings">EINSTELLUNGEN</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
     <div class="settings" id="settings" hidden><div class="settings-card"><h2>EINSTELLUNGEN</h2>
-      <div class="set-row" data-set="sound"><span>Ton</span><button type="button" class="set-val"></button></div>
-      <div class="set-row" data-set="volume"><span>Lautstärke</span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="music"><span>Musik</span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="sfx"><span>Soundeffekte</span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="vibration"><span>Vibration</span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="gfx"><span>Grafik</span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="back"><button type="button" class="set-back">ZURÜCK</button></div>
@@ -147,12 +146,16 @@ let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, 
 let padKind = '', overText = 'Enter / Tippen: Revanche  ·  Esc: Menü';
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
 const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=['AUTO','NIEDRIG','MITTEL','HOCH'],GFX_LEVELS=['NIEDRIG','MITTEL','HOCH'],GFX_DPR=[1,1.5,2];
-const settings={sound:true,volume:.8,vibration:true,gfx:0,lastMode:'free'};
+const settings={music:.7,sfx:.8,vibration:true,gfx:0,lastMode:'free'};
 try {
   const d=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
   if(d&&typeof d==='object') {
-    if(typeof d.sound==='boolean')settings.sound=d.sound;
-    if(typeof d.volume==='number'&&isFinite(d.volume))settings.volume=clamp(Math.round(d.volume*10)/10,0,1);
+    const vol=v=>typeof v==='number'&&isFinite(v)?clamp(Math.round(v*10)/10,0,1):null;
+    // Alte Spielstände: eine Lautstärke + Ton-Schalter -> beide Regler
+    const oldVol=vol(d.volume);if(oldVol!==null){settings.music=oldVol;settings.sfx=oldVol;}
+    if(d.sound===false){settings.music=0;settings.sfx=0;}
+    if(vol(d.music)!==null)settings.music=vol(d.music);
+    if(vol(d.sfx)!==null)settings.sfx=vol(d.sfx);
     if(typeof d.vibration==='boolean')settings.vibration=d.vibration;
     if(Number.isInteger(d.gfx)&&d.gfx>=0&&d.gfx<=3)settings.gfx=d.gfx;
     if(d.lastMode==='free'||d.lastMode==='bot'||d.lastMode==='local')settings.lastMode=d.lastMode;
@@ -168,69 +171,66 @@ function autoGfx(dt) {
   if(frameEma>1/45){autoTimer+=dt;if(autoTimer>2){gfxAuto--;autoTimer=0;frameEma=1/60;applyGfx();}}
   else autoTimer=Math.max(0,autoTimer-dt);
 }
-let audioContext=null,audioMaster=null,musicTimer=0,musicStep=0,audioEnabled=settings.sound;
-function masterVolume(){return .18*settings.volume;}
+// Zwei Kanäle: Musik und Soundeffekte (je 0–100 %, 0 = aus); audioEnabled = Audio verfügbar
+let audioContext=null,audioMaster=null,musicBus=null,sfxBus=null,musicTimer=0,musicStep=0,audioEnabled=true;
 const musicNotes=[0,440,0,523,587,0,523,440,0,392,0,440,523,0,392,349];
-function updateSoundButton() {
-  const button=document.getElementById('soundToggle');
-  button.textContent=audioEnabled?'♫ AN':'♫ AUS';
-  button.setAttribute('aria-pressed',String(audioEnabled));
-  button.setAttribute('aria-label',audioEnabled?'Ton ausschalten':'Ton einschalten');
-}
 function ensureAudio() {
   if(audioContext)return;
   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
   if(!AudioContextClass) {
-    audioEnabled=false;updateSoundButton();status.textContent='AUDIO NICHT UNTERSTÜTZT';return;
+    audioEnabled=false;status.textContent='AUDIO NICHT UNTERSTÜTZT';return;
   }
   audioContext=new AudioContextClass();
-  audioMaster=audioContext.createGain();audioMaster.gain.value=masterVolume();audioMaster.connect(audioContext.destination);
+  audioMaster=audioContext.createGain();audioMaster.gain.value=.18;audioMaster.connect(audioContext.destination);
+  musicBus=audioContext.createGain();musicBus.gain.value=settings.music;musicBus.connect(audioMaster);
+  sfxBus=audioContext.createGain();sfxBus.gain.value=settings.sfx;sfxBus.connect(audioMaster);
 }
-function playTone(frequency,duration,wave,volume,when) {
-  if(!audioEnabled||!audioContext||!audioMaster)return;
+function playTone(frequency,duration,wave,volume,when,bus) {
+  if(!audioEnabled||!audioContext||!bus)return;
   const start=when===undefined?audioContext.currentTime:when;
   const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();
   oscillator.type=wave;oscillator.frequency.setValueAtTime(frequency,start);
   gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(volume,start+.012);
   gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
-  oscillator.connect(gain);gain.connect(audioMaster);oscillator.start(start);oscillator.stop(start+duration+.02);
+  oscillator.connect(gain);gain.connect(bus);oscillator.start(start);oscillator.stop(start+duration+.02);
 }
 function playSfx(kind,heavy=false) {
-  if(!audioEnabled||!audioContext)return;
-  const now=audioContext.currentTime;
-  if(kind==='shot')playTone(heavy?190:330,.16,'triangle',.38,now);
-  else if(kind==='beam'){playTone(110,.42,'sawtooth',.32,now);playTone(220,.34,'triangle',.2,now);}
-  else if(kind==='block')playTone(760,.09,'square',.2,now);
-  else if(kind==='crater')playTone(72,.32,'sawtooth',.42,now);
-  else playTone(heavy?92:145,heavy?.24:.12,'triangle',heavy?.5:.34,now);
+  if(!audioEnabled||!audioContext||settings.sfx<=0)return;
+  const now=audioContext.currentTime,b=sfxBus;
+  if(kind==='shot')playTone(heavy?190:330,.16,'triangle',.38,now,b);
+  else if(kind==='beam'){playTone(110,.42,'sawtooth',.32,now,b);playTone(220,.34,'triangle',.2,now,b);}
+  else if(kind==='block')playTone(760,.09,'square',.2,now,b);
+  else if(kind==='crater')playTone(72,.32,'sawtooth',.42,now,b);
+  else playTone(heavy?92:145,heavy?.24:.12,'triangle',heavy?.5:.34,now,b);
 }
 function startMusic() {
-  if(!audioEnabled||musicTimer)return;
+  if(!audioEnabled||musicTimer||settings.music<=0)return;
   ensureAudio();
   if(!audioContext||!audioEnabled)return;
   musicStep=0;
   musicTimer=window.setInterval(()=>{
     if(!audioEnabled||state!=='playing'||!audioContext)return;
     const when=audioContext.currentTime+.025,note=musicNotes[musicStep];
-    if(note)playTone(note,.105,'square',.075,when);
-    if(musicStep%4===0)playTone([110,98,87,98][(musicStep>>2)%4],.19,'triangle',.12,when);
+    if(note)playTone(note,.105,'square',.075,when,musicBus);
+    if(musicStep%4===0)playTone([110,98,87,98][(musicStep>>2)%4],.19,'triangle',.12,when,musicBus);
     musicStep=(musicStep+1)%musicNotes.length;
   },125);
 }
 function stopMusic() {
   if(musicTimer){window.clearInterval(musicTimer);musicTimer=0;}
 }
-function setAudioEnabled(enabled) {
-  audioEnabled=enabled;updateSoundButton();
-  if(settings.sound!==enabled){settings.sound=enabled;saveSettings();}
-  if(!enabled){stopMusic();if(audioMaster)audioMaster.gain.setTargetAtTime(0,audioContext.currentTime,.04);return;}
+function startAudio() {
   ensureAudio();
-  if(!audioContext)return;
-  audioMaster.gain.setTargetAtTime(masterVolume(),audioContext.currentTime,.04);
+  if(!audioContext||!audioEnabled)return;
   audioContext.resume().then(()=>{if(state==='playing')startMusic();}).catch(()=>{
-    stopMusic();audioEnabled=false;updateSoundButton();status.textContent='AUDIO KANN NICHT STARTEN';
+    stopMusic();audioEnabled=false;status.textContent='AUDIO KANN NICHT STARTEN';
   });
   if(state==='playing')startMusic();
+}
+function applyVolumes() {
+  if(musicBus)musicBus.gain.setTargetAtTime(settings.music,audioContext.currentTime,.04);
+  if(sfxBus)sfxBus.gain.setTargetAtTime(settings.sfx,audioContext.currentTime,.04);
+  if(settings.music<=0)stopMusic();else if(state==='playing')startMusic();
 }
 const keyMaps = [
   { left:'KeyA', right:'KeyD', up:'KeyW', down:'KeyS', shot:'KeyG', beam:'KeyT', charge:'KeyH', punch:'KeyF', heavy:'KeyV', super:'KeyR' },
@@ -329,7 +329,7 @@ function begin(nextMode) {
   for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);
   if(settings.lastMode!==nextMode){settings.lastMode=nextMode;saveSettings();}
   mode=nextMode;state='playing';menu.hidden=true;pauseLayer.hidden=true;updateTouch();
-  setAudioEnabled(audioEnabled);
+  startAudio();
   hitStop=0;
   fighters[0].active=true;fighters[0].bot=false;
   fighters[1].active=mode!=='free';fighters[1].bot=mode==='bot';
@@ -457,19 +457,19 @@ function renderSettings() {
     const row=settingRows[i],key=row.dataset.set,val=row.querySelector('.set-val');
     row.classList.toggle('pad-focus',i===settingFocus);
     if(!val)continue;
-    val.textContent=key==='sound'?(audioEnabled?'AN':'AUS'):key==='volume'?'◀ '+Math.round(settings.volume*100)+'% ▶':key==='vibration'?(settings.vibration?'AN':'AUS'):
+    val.textContent=key==='music'||key==='sfx'?'◀ '+Math.round(settings[key]*100)+'% ▶':key==='vibration'?(settings.vibration?'AN':'AUS'):
       GFX_NAMES[settings.gfx]+(settings.gfx===0?' · '+GFX_LEVELS[gfxAuto]:'');
   }
 }
 function changeSetting(key,dir,wrap) {
   if(key==='back'){closeSettings();return;}
-  if(key==='sound')setAudioEnabled(!audioEnabled);
-  else if(key==='volume') {
-    let v=Math.round(settings.volume*10)+dir;
+  if(key==='music'||key==='sfx') {
+    let v=Math.round(settings[key]*10)+dir;
     v=wrap?(v>10?0:v<0?10:v):clamp(v,0,10);
-    settings.volume=v/10;
-    if(audioMaster&&audioEnabled)audioMaster.gain.setTargetAtTime(masterVolume(),audioContext.currentTime,.04);
-    playSfx('shot');
+    settings[key]=v/10;
+    ensureAudio();if(audioContext)audioContext.resume().catch(()=>{});
+    applyVolumes();
+    if(key==='sfx')playSfx('shot');
   } else if(key==='vibration'){settings.vibration=!settings.vibration;if(settings.vibration)rumble(0,.5,.5,120);}
   else if(key==='gfx'){settings.gfx=(settings.gfx+dir+4)%4;if(settings.gfx===0)gfxAuto=2;applyGfx();}
   saveSettings();renderSettings();
@@ -1378,7 +1378,6 @@ window.addEventListener('keydown',e=>{
 canvas.addEventListener('pointerdown',()=>{if(state==='over')begin(mode);});
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
 document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>begin(button.dataset.mode)));
-document.getElementById('soundToggle').addEventListener('click',()=>setAudioEnabled(!audioEnabled));
 document.getElementById('resume').addEventListener('click',resumeGame);
 document.getElementById('backMenu').addEventListener('click',backToMenu);
 document.querySelectorAll('.touch [data-key]').forEach(button=>{
@@ -1388,7 +1387,7 @@ document.querySelectorAll('.touch [data-key]').forEach(button=>{
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
 });
 // Start: gespeicherte Einstellungen anwenden, Schnellstart-Fokus auf zuletzt gespielten Modus
-applyGfx();updateSoundButton();
+applyGfx();
 setMenuFocus(Math.max(0,modeButtons.findIndex(b=>b.dataset.mode===settings.lastMode)));setPauseFocus(0);refreshInputTexts();
 document.getElementById('menuSettings').addEventListener('click',openSettings);
 document.getElementById('pauseSettings').addEventListener('click',openSettings);
