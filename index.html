@@ -24,7 +24,14 @@ body{display:grid;place-items:center;overflow:hidden;padding:max(18px,env(safe-a
 .frame{position:relative;overflow:hidden;aspect-ratio:16/9;border:1px solid #344263;border-radius:12px;background:#080d1b;box-shadow:0 28px 90px #0009,0 0 50px #202f571c}
 canvas{display:block;width:100%;height:100%}
 .menu{position:absolute;inset:0;display:grid;grid-template-columns:1.04fr .96fr;align-items:center;gap:4%;padding:5.5% 6%;background:linear-gradient(90deg,#070b16ed 0%,#080d1bdc 45%,#080d1b48 100%)}
-.menu[hidden],.pause[hidden]{display:none}
+.menu[hidden],.pause[hidden],.settings[hidden]{display:none}
+.settings{position:absolute;inset:0;z-index:5;display:grid;place-items:center;background:#050914b8}
+.settings-card{width:min(330px,92%);padding:16px 20px;border:1px solid #46536e;border-radius:8px;background:#0c1323f5}
+.settings-card h2{margin:0 0 10px;font-size:18px;letter-spacing:.08em;text-align:center}
+.set-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:4px 0;padding:3px 6px;border-radius:5px;color:#c7d3ea;font-size:12px;font-weight:700}
+.set-row.pad-focus{outline:2px solid var(--cyan);outline-offset:1px}
+.set-val{min-width:120px;padding:6px 10px;border:1px solid #46536e;border-radius:4px;background:#151e30;color:var(--white);font-size:12px;font-weight:800;cursor:pointer}
+.set-back{width:100%;margin-top:4px;padding:8px;border:0;border-radius:4px;background:var(--orange);color:#160b07;font-size:12px;font-weight:800;cursor:pointer}
 .intro{max-width:510px}.eyebrow{margin:0 0 14px;color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:.25em;text-transform:uppercase}
 h1{margin:0;font-size:clamp(42px,8.2vw,92px);line-height:.82;letter-spacing:-.09em;font-weight:950}
 h1 span{display:block;color:var(--orange);letter-spacing:-.075em}
@@ -70,7 +77,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-10c</p>
+        <p class="version">v2026-11-10d</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -78,6 +85,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
           <button class="mode primary" data-mode="free">FREIFLUG</button>
           <button class="mode" data-mode="bot">GEGEN KI</button>
           <button class="mode" data-mode="local">2 SPIELER</button>
+          <button class="mode" id="menuSettings" type="button" aria-label="Einstellungen">⚙</button>
         </div>
       </div>
       <aside class="guide">
@@ -97,7 +105,14 @@ html.touch-ui .touch:not([hidden]){display:flex}
         <p class="rule"><kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.</p>
       </aside>
     </div>
-    <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
+    <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="pauseSettings">EINSTELLUNGEN</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
+    <div class="settings" id="settings" hidden><div class="settings-card"><h2>EINSTELLUNGEN</h2>
+      <div class="set-row" data-set="sound"><span>Ton</span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="volume"><span>Lautstärke</span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="vibration"><span>Vibration</span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="gfx"><span>Grafik</span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="back"><button type="button" class="set-back">ZURÜCK</button></div>
+    </div></div>
     <div class="touch" id="touch" hidden>
       <button class="touch-pause" id="touchPause" type="button" aria-label="Pause">❚❚</button>
       <div class="touch-group">
@@ -124,7 +139,31 @@ let dpr = 1, state = 'menu', mode = 'free', clock = 0, accumulator = 0, lastTime
 let cameraX = 0, cameraY = 260, zoom = 1, previousCameraX = 0, previousCameraY = 260, previousZoom = 1;
 let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, maxDistance = 0, screenShake = 0, hitStop = 0;
 let padKind = '', overText = 'Enter / Tippen: Revanche  ·  Esc: Menü';
-let audioContext=null,audioMaster=null,musicTimer=0,musicStep=0,audioEnabled=true;
+// ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
+const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=['AUTO','NIEDRIG','MITTEL','HOCH'],GFX_LEVELS=['NIEDRIG','MITTEL','HOCH'],GFX_DPR=[1,1.5,2];
+const settings={sound:true,volume:.8,vibration:true,gfx:0,lastMode:'free'};
+try {
+  const d=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
+  if(d&&typeof d==='object') {
+    if(typeof d.sound==='boolean')settings.sound=d.sound;
+    if(typeof d.volume==='number'&&isFinite(d.volume))settings.volume=clamp(Math.round(d.volume*10)/10,0,1);
+    if(typeof d.vibration==='boolean')settings.vibration=d.vibration;
+    if(Number.isInteger(d.gfx)&&d.gfx>=0&&d.gfx<=3)settings.gfx=d.gfx;
+    if(d.lastMode==='free'||d.lastMode==='bot'||d.lastMode==='local')settings.lastMode=d.lastMode;
+  }
+}catch(e){}
+function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch(e){}}
+// Grafik: 0 niedrig · 1 mittel · 2 hoch; Auto startet hoch und stuft bei Ruckeln herunter
+let gfxAuto=2,fxLevel=2,fxSkip=0,frameEma=1/60,autoTimer=0,statusTick=0,rockGradient=null;
+function applyGfx(){fxLevel=settings.gfx===0?gfxAuto:settings.gfx-1;resize();}
+function autoGfx(dt) {
+  if(settings.gfx!==0||state!=='playing'||gfxAuto===0||dt>.25)return;
+  frameEma+=(dt-frameEma)*.05;
+  if(frameEma>1/45){autoTimer+=dt;if(autoTimer>2){gfxAuto--;autoTimer=0;frameEma=1/60;applyGfx();}}
+  else autoTimer=Math.max(0,autoTimer-dt);
+}
+let audioContext=null,audioMaster=null,musicTimer=0,musicStep=0,audioEnabled=settings.sound;
+function masterVolume(){return .18*settings.volume;}
 const musicNotes=[0,440,0,523,587,0,523,440,0,392,0,440,523,0,392,349];
 function updateSoundButton() {
   const button=document.getElementById('soundToggle');
@@ -139,7 +178,7 @@ function ensureAudio() {
     audioEnabled=false;updateSoundButton();status.textContent='AUDIO NICHT UNTERSTÜTZT';return;
   }
   audioContext=new AudioContextClass();
-  audioMaster=audioContext.createGain();audioMaster.gain.value=.18;audioMaster.connect(audioContext.destination);
+  audioMaster=audioContext.createGain();audioMaster.gain.value=masterVolume();audioMaster.connect(audioContext.destination);
 }
 function playTone(frequency,duration,wave,volume,when) {
   if(!audioEnabled||!audioContext||!audioMaster)return;
@@ -177,10 +216,11 @@ function stopMusic() {
 }
 function setAudioEnabled(enabled) {
   audioEnabled=enabled;updateSoundButton();
+  if(settings.sound!==enabled){settings.sound=enabled;saveSettings();}
   if(!enabled){stopMusic();if(audioMaster)audioMaster.gain.setTargetAtTime(0,audioContext.currentTime,.04);return;}
   ensureAudio();
   if(!audioContext)return;
-  audioMaster.gain.setTargetAtTime(.18,audioContext.currentTime,.04);
+  audioMaster.gain.setTargetAtTime(masterVolume(),audioContext.currentTime,.04);
   audioContext.resume().then(()=>{if(state==='playing')startMusic();}).catch(()=>{
     stopMusic();audioEnabled=false;updateSoundButton();status.textContent='AUDIO KANN NICHT STARTEN';
   });
@@ -221,7 +261,7 @@ skyGlow.addColorStop(0,'rgba(39,87,136,.24)');skyGlow.addColorStop(1,'rgba(8,13,
 skyCtx.fillStyle=skyGlow;skyCtx.fillRect(0,0,W,H);
 function resize() {
   const box = canvas.getBoundingClientRect();
-  dpr = Math.min(2, window.devicePixelRatio || 1);
+  dpr = Math.min(GFX_DPR[fxLevel] || 2, window.devicePixelRatio || 1);
   canvas.width = Math.max(1, Math.round(box.width * dpr));
   canvas.height = Math.max(1, Math.round(box.height * dpr));
 }
@@ -241,6 +281,8 @@ function terrainY(x) {
   return y;
 }
 function addParticle(x,y,vx,vy,color,size,life) {
+  // Grafik niedrig: jedes 2. Partikel weglassen, mittel: jedes 4.
+  if(fxLevel<2){fxSkip=(fxSkip+1)&3;if(fxLevel===0?(fxSkip&1):fxSkip===0)return;}
   const p=particles[particleCursor];
   particleCursor=(particleCursor+1)%MAX_PARTICLES;
   p.active=true;p.x=x;p.y=y;p.vx=vx;p.vy=vy;p.color=color;p.size=size;p.life=life;p.max=life;
@@ -279,6 +321,7 @@ function resetFighter(f,index) {
 }
 function begin(nextMode) {
   for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);
+  if(settings.lastMode!==nextMode){settings.lastMode=nextMode;saveSettings();}
   mode=nextMode;state='playing';menu.hidden=true;pauseLayer.hidden=true;updateTouch();
   setAudioEnabled(audioEnabled);
   hitStop=0;
@@ -346,9 +389,10 @@ const HINT_TOUCH='◀▲▼▶ fliegen · doppelt tippen: Dash · ✊ Combo · H
 const HINT_KEY='F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
 const PAD_BUTTONS=17;
 const padSlots=[-1,-1];
-const padStates=[0,1].map(()=>({connected:false,id:'',kind:'xbox',ax:0,ay:0,navDir:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS),latch:new Uint8Array(PAD_BUTTONS),eff:new Uint8Array(PAD_BUTTONS)}));
+const padStates=[0,1].map(()=>({connected:false,id:'',kind:'xbox',ax:0,ay:0,navDir:0,navY:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS),latch:new Uint8Array(PAD_BUTTONS),eff:new Uint8Array(PAD_BUTTONS)}));
 let padCount=-1,menuFocus=0,winner=-1;
-const modeButtons=Array.from(document.querySelectorAll('.menu [data-mode]'));
+const modeButtons=Array.from(document.querySelectorAll('.menu .modes button'));
+function activateMenuButton(b){if(b.dataset.mode)begin(b.dataset.mode);else openSettings();}
 function padPressed(st,k){return st.btn[k]===1&&st.prev[k]===0;}
 function pollPads() {
   const list=navigator.getGamepads?navigator.getGamepads():null;
@@ -394,8 +438,41 @@ function refreshInputTexts() {
   overText=padKind?padSym(padKind,'a')+' Revanche  ·  '+padSym(padKind,'b')+' Menü':touchUI?'Tippen: Revanche  ·  Zurück: Menü':'Enter / Tippen: Revanche  ·  Esc: Menü';
 }
 // Pause-Menü mit Steuerkreuz/Stick: links/rechts wählt, ✕/A bestätigt, ○/B oder Options = weiter
-const pauseButtons=[document.getElementById('resume'),document.getElementById('backMenu')];
+const pauseButtons=[document.getElementById('resume'),document.getElementById('pauseSettings'),document.getElementById('backMenu')];
 let pauseFocus=0;
+function activatePauseButton(i){if(i===0)resumeGame();else if(i===1)openSettings();else backToMenu();}
+// ---- Einstellungs-Menü (aus Hauptmenü und Pause): hoch/runter wählt, links/rechts ändert, ✕/A ändert, ○/B zurück ----
+const settingsLayer=document.getElementById('settings'),settingRows=Array.from(settingsLayer.querySelectorAll('.set-row'));
+let settingsOpen=false,settingFocus=0;
+function openSettings(){settingsOpen=true;settingFocus=0;settingsLayer.hidden=false;renderSettings();}
+function closeSettings(){settingsOpen=false;settingsLayer.hidden=true;}
+function renderSettings() {
+  for(let i=0;i<settingRows.length;i++) {
+    const row=settingRows[i],key=row.dataset.set,val=row.querySelector('.set-val');
+    row.classList.toggle('pad-focus',i===settingFocus);
+    if(!val)continue;
+    val.textContent=key==='sound'?(audioEnabled?'AN':'AUS'):key==='volume'?'◀ '+Math.round(settings.volume*100)+'% ▶':key==='vibration'?(settings.vibration?'AN':'AUS'):
+      GFX_NAMES[settings.gfx]+(settings.gfx===0?' · '+GFX_LEVELS[gfxAuto]:'');
+  }
+}
+function changeSetting(key,dir,wrap) {
+  if(key==='back'){closeSettings();return;}
+  if(key==='sound')setAudioEnabled(!audioEnabled);
+  else if(key==='volume') {
+    let v=Math.round(settings.volume*10)+dir;
+    v=wrap?(v>10?0:v<0?10:v):clamp(v,0,10);
+    settings.volume=v/10;
+    if(audioMaster&&audioEnabled)audioMaster.gain.setTargetAtTime(masterVolume(),audioContext.currentTime,.04);
+    playSfx('shot');
+  } else if(key==='vibration'){settings.vibration=!settings.vibration;if(settings.vibration)rumble(0,.5,.5,120);}
+  else if(key==='gfx'){settings.gfx=(settings.gfx+dir+4)%4;if(settings.gfx===0)gfxAuto=2;applyGfx();}
+  saveSettings();renderSettings();
+}
+function moveSettingFocus(d){settingFocus=(settingFocus+d+settingRows.length)%settingRows.length;renderSettings();}
+settingRows.forEach((row,i)=>{
+  const b=row.querySelector('button');
+  b.addEventListener('click',()=>{settingFocus=i;changeSetting(row.dataset.set,1,true);});
+});
 function setPauseFocus(i){pauseFocus=(i+pauseButtons.length)%pauseButtons.length;for(let k=0;k<pauseButtons.length;k++)pauseButtons[k].classList.toggle('pad-focus',k===pauseFocus);}
 function setMenuFocus(i) {
   menuFocus=(i+modeButtons.length)%modeButtons.length;
@@ -406,14 +483,23 @@ function handlePadUI() {
     const st=padStates[s];if(!st.connected)continue;
     const dir=st.ax>.55||st.btn[15]?1:st.ax<-.55||st.btn[14]?-1:0;
     const nav=dir!==0&&dir!==st.navDir?dir:0;st.navDir=dir;
+    const dirY=st.ay>.55||st.btn[13]?1:st.ay<-.55||st.btn[12]?-1:0;
+    const navY=dirY!==0&&dirY!==st.navY?dirY:0;st.navY=dirY;
+    if(settingsOpen) {
+      if(navY)moveSettingFocus(navY);
+      else if(nav)changeSetting(settingRows[settingFocus].dataset.set,nav,false);
+      else if(padPressed(st,0)){changeSetting(settingRows[settingFocus].dataset.set,1,true);return;}
+      else if(padPressed(st,1)||padPressed(st,9)){closeSettings();return;}
+      continue;
+    }
     if(state==='menu') {
       if(nav)setMenuFocus(menuFocus+nav);
-      else if(padPressed(st,0)||padPressed(st,9)){begin(modeButtons[menuFocus].dataset.mode);return;}
+      else if(padPressed(st,0)||padPressed(st,9)){activateMenuButton(modeButtons[menuFocus]);return;}
     } else if(state==='playing') {
       if(padPressed(st,9)){pauseGame();return;}
     } else if(state==='paused') {
       if(nav)setPauseFocus(pauseFocus+nav);
-      else if(padPressed(st,0)){if(pauseFocus===0)resumeGame();else backToMenu();return;}
+      else if(padPressed(st,0)){activatePauseButton(pauseFocus);return;}
       else if(padPressed(st,9)||padPressed(st,1)){resumeGame();return;}
     } else if(state==='over') {
       if(padPressed(st,0)||padPressed(st,9)){begin(mode);return;}
@@ -423,7 +509,10 @@ function handlePadUI() {
 }
 function rumble(index,strong,weak,ms) {
   const f=fighters[index],gi=padSlots[index];
-  if(gi<0||!f||f.bot||!navigator.getGamepads)return;
+  if(!settings.vibration||!f||f.bot)return;
+  // Handy ohne Controller: Spieler 1 über navigator.vibrate (nur spürbare Treffer)
+  if(gi<0){if(index===0&&touchUI&&strong>=.3&&navigator.vibrate){try{navigator.vibrate(Math.min(ms,200));}catch(e){}}return;}
+  if(!navigator.getGamepads)return;
   const g=navigator.getGamepads()[gi],a=g&&g.vibrationActuator;
   if(!a||!a.playEffect)return;
   try{const r=a.playEffect('dual-rumble',{duration:ms,strongMagnitude:strong,weakMagnitude:weak});if(r&&r.catch)r.catch(()=>{});}catch(e){}
@@ -861,7 +950,8 @@ function update(dt) {
   maxDistance=Math.max(maxDistance,Math.abs(fighters[0].x),Math.abs(fighters[1].active?fighters[1].x:0));
   if(maxDistance>worldRadius-700)worldRadius+=1800;
   const label=mode==='local'?'2 SPIELER  ·  ':mode==='bot'?'KI-KAMPF  ·  ':'';
-  status.textContent=label+'WELT ×'+(worldRadius/2400).toFixed(1)+'  ·  '+(maxDistance/1000).toFixed(1)+' KM';
+  statusTick=(statusTick+1)%20;
+  if(statusTick===0)status.textContent=label+'WELT ×'+(worldRadius/2400).toFixed(1)+'  ·  '+(maxDistance/1000).toFixed(1)+' KM';
 }
 function drawBackground() {
   ctx.drawImage(skyCanvas,0,0);
@@ -885,9 +975,12 @@ function drawTerrain() {
   for(let x=left+step;x<=right;x+=step)ctx.lineTo(x,terrainY(x));
   const bottom=Math.max(H+renderCameraY+1200,GROUND+1500);
   ctx.lineTo(right,bottom);ctx.lineTo(left,bottom);ctx.closePath();
-  const rock=ctx.createLinearGradient(0,GROUND,0,GROUND+1000);
-  rock.addColorStop(0,'#2c4966');rock.addColorStop(.22,'#1c314b');rock.addColorStop(.62,'#111f34');rock.addColorStop(1,'#0b1322');
-  ctx.fillStyle=rock;ctx.fill();
+  // Gradient nur einmal erzeugen (Weltkoordinaten, gilt mit jeder Kamera-Transformation)
+  if(!rockGradient){
+    rockGradient=ctx.createLinearGradient(0,GROUND,0,GROUND+1000);
+    rockGradient.addColorStop(0,'#2c4966');rockGradient.addColorStop(.22,'#1c314b');rockGradient.addColorStop(.62,'#111f34');rockGradient.addColorStop(1,'#0b1322');
+  }
+  ctx.fillStyle=rockGradient;ctx.fill();
   ctx.beginPath();ctx.moveTo(left,terrainY(left));
   for(let x=left+step;x<=right;x+=step)ctx.lineTo(x,terrainY(x));
   ctx.lineWidth=3/renderZoom;ctx.strokeStyle='#4ce1e8';ctx.stroke();
@@ -1250,13 +1343,24 @@ function render(alpha) {
 }
 function frame(now) {
   if(!lastTime)lastTime=now;
-  accumulator+=Math.min(.05,(now-lastTime)/1000);lastTime=now;
+  const rawDt=(now-lastTime)/1000;
+  accumulator+=Math.min(.05,rawDt);lastTime=now;
+  autoGfx(rawDt);
   pollPads();
   while(accumulator>=DT){update(DT);accumulator-=DT;}
   render(accumulator/DT);requestAnimationFrame(frame);
 }
 window.addEventListener('keydown',e=>{
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
+  if(settingsOpen) {
+    // Einstellungen per Tastatur: Pfeile wählen/ändern, Enter ändert, Esc zurück
+    e.preventDefault();
+    if(e.code==='ArrowUp')moveSettingFocus(-1);else if(e.code==='ArrowDown')moveSettingFocus(1);
+    else if(e.code==='ArrowLeft'||e.code==='ArrowRight')changeSetting(settingRows[settingFocus].dataset.set,e.code==='ArrowRight'?1:-1,false);
+    else if(!e.repeat&&(e.code==='Enter'||e.code==='Space'))changeSetting(settingRows[settingFocus].dataset.set,1,true);
+    else if(!e.repeat&&e.code==='Escape')closeSettings();
+    return;
+  }
   keys[e.code]=true;
   if(e.repeat)return;
   if(e.code==='Escape') {
@@ -1277,7 +1381,11 @@ document.querySelectorAll('.touch [data-key]').forEach(button=>{
   const release=()=>{keys[code]=false;};
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
 });
-setMenuFocus(0);setPauseFocus(0);refreshInputTexts();
+// Start: gespeicherte Einstellungen anwenden, Schnellstart-Fokus auf zuletzt gespielten Modus
+applyGfx();updateSoundButton();
+setMenuFocus(Math.max(0,modeButtons.findIndex(b=>b.dataset.mode===settings.lastMode)));setPauseFocus(0);refreshInputTexts();
+document.getElementById('menuSettings').addEventListener('click',openSettings);
+document.getElementById('pauseSettings').addEventListener('click',openSettings);
 document.getElementById('touchPause').addEventListener('click',()=>{if(state==='playing')pauseGame();});
 // ---- Handy-Grundausstattung: Vollbild, Zurück-Taste, Wake Lock, Fokus/Pause ----
 let historyArmed=false,wakeLock=null;
@@ -1302,7 +1410,8 @@ window.addEventListener('keydown',onUserInput,true);
 // Zurück: Spiel -> Pause, Pause bleibt, Ergebnis -> Menü, Hauptmenü -> nichts
 window.addEventListener('popstate',()=>{
   try{history.pushState({sbz:1},'');}catch(e){}
-  if(state==='playing')pauseGame();
+  if(settingsOpen)closeSettings();
+  else if(state==='playing')pauseGame();
   else if(state==='over')backToMenu();
 });
 // Vollbild verlassen (Esc / erstes Zurück) pausiert ein laufendes Spiel
