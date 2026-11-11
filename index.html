@@ -85,7 +85,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-11</p>
+        <p class="version">v2026-11-11b</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -106,7 +106,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
         <p><span>Hoch + Schlag: Uppercut · Runter + Schlag: Slam</span><kbd>W/S</kbd> + <kbd>F</kbd></p>
         <p><span>Im Flug vorwärts + Schlag: Rush</span><kbd>A/D</kbd> + <kbd>F</kbd></p>
         <p><span>Blocken · runter + vom Gegner weg</span><kbd>S</kbd> + <kbd>A/D</kbd></p>
-        <p><span>Ausweich-Dash · Richtung doppelt antippen</span><kbd>A/D · ←/→</kbd></p>
+        <p><span>Ausweichen · Richtung doppelt antippen, halten: Turbo</span><kbd>A/D · ←/→</kbd></p>
         <p><span>Ki-Schuss · auch im Flug lenkbar</span><kbd>G</kbd> + <kbd>WASD</kbd></p>
         <p><span>Kamehameha · halten, dann loslassen; hoch/runter lenkt</span><kbd>T</kbd> + <kbd>W/S</kbd></p>
         <p><span>Ki laden</span><kbd>H</kbd></p>
@@ -207,6 +207,7 @@ function playSfx(kind,heavy=false) {
   else if(kind==='beam'){playTone(110,.42,'sawtooth',.32,now,b);playTone(220,.34,'triangle',.2,now,b);}
   else if(kind==='block')playTone(760,.09,'square',.2,now,b);
   else if(kind==='crater')playTone(72,.32,'sawtooth',.42,now,b);
+  else if(kind==='dash'){playTone(620,.07,'sine',.22,now,b);playTone(310,.12,'triangle',.2,now+.02,b);}
   else playTone(heavy?92:145,heavy?.24:.12,'triangle',heavy?.5:.34,now,b);
 }
 function startMusic() {
@@ -344,6 +345,24 @@ function clearWounds(f) {
   for(let i=0;i<MAX_WOUNDS;i++)f.wounds[i].active=false;
   f.woundAcc=0;f.woundNext=0;f.bleedTimer=0;
 }
+// Ausweichen (8 Richtungen): kurz unverwundbar, Ring + Nachbilder
+function startDash(f,dx,dy) {
+  const len=Math.hypot(dx,dy)||1;
+  f.dashDir=dx/len;f.dashDirY=dy/len;f.dashTime=.17;f.dashInvuln=.16;f.dashCooldown=.55;f.ghostTimer=0;
+  spawnRing(f.x,f.y-40,55,f.superTime>0?'#ffe66d':f.color,3,.22);
+  burst(f.x,f.y-40,'rgb(220,240,255)',8,120);
+  playSfx('dash');
+}
+// Über der Grenze nicht hart abschneiden, sondern schnell abbremsen (nach Turbo/Dash)
+function softCap(v,lo,hi,dt){const d=Math.pow(.88,dt*60);return v>hi?Math.max(hi,v*d):v<lo?Math.min(lo,v*d):v;}
+const MAX_GHOSTS = 16;
+const ghosts = Array.from({length:MAX_GHOSTS}, () => ({active:false,x:0,y:0,life:0,max:1,color:'#fff',lean:0}));
+let ghostCursor = 0;
+function addGhost(f) {
+  if(fxLevel===0&&f.dashTime<=0)return;
+  const g=ghosts[ghostCursor];ghostCursor=(ghostCursor+1)%MAX_GHOSTS;
+  g.active=true;g.x=f.x;g.y=f.y;g.life=g.max=f.dashTime>0?.28:.2;g.color=f.superTime>0?'#ffe66d':f.color;g.lean=clamp(f.vx/2400,-.35,.35);
+}
 function burst(x,y,color,count,power) {
   for(let i=0;i<count;i++) {
     const a=(i/count)*Math.PI*2+clock*2, speed=power*(.35+((i*17)%11)/14);
@@ -376,7 +395,7 @@ function makeCrater(x,big) {
   playSfx('crater');
 }
 function resetFighter(f,index) {
-  clearWounds(f);
+  clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
   f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.cannonHolding=false;f.cannonCharge=0;f.shotQueued=false;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
@@ -395,6 +414,7 @@ function begin(nextMode) {
   for(let i=0;i<MAX_PARTICLES;i++)particles[i].active=false;
   for(let i=0;i<MAX_SPLATS;i++)splats[i].active=false;
   for(let i=0;i<MAX_RINGS;i++)rings[i].active=false;
+  for(let i=0;i<MAX_GHOSTS;i++)ghosts[i].active=false;
   screenFlash=0;
   resetFighter(fighters[0],0);resetFighter(fighters[1],1);
   worldRadius=2400;maxDistance=0;cameraX=0;cameraY=260;zoom=1;
@@ -438,21 +458,21 @@ const PAD_SYM={ps:{a:'✕',b:'○',x:'□',y:'△',l1:'L1',r1:'R1',l2:'L2',r2:'R
 function padSym(kind,k){return (PAD_SYM[kind]||PAD_SYM.xbox)[k];}
 function buildPadHint(kind) {
   const s=k=>padSym(kind,k);
-  return s('x')+' Leicht · '+s('y')+' Stark (halten: aufladen, +↑/↓) · '+s('r1')+' Ki (halten: Kanone) · '+s('r2')+' Kamehameha · '+s('a')+' Hoch · '+s('b')+' Dash (nach Finisher: verfolgen) · '+s('l1')+' Block · '+s('l2')+' Laden · '+s('l3')+' Super';
+  return s('x')+' Leicht · '+s('y')+' Stark (halten: aufladen, +↑/↓) · '+s('r1')+' Ki (halten: Kanone) · '+s('r2')+' Kamehameha · '+s('a')+' Hoch · '+s('b')+' Ausweichen (halten: Turbo, nach Finisher: verfolgen) · '+s('l1')+' Block · '+s('l2')+' Laden · '+s('l3')+' Super';
 }
 function padGuideHTML(kind) {
   const s=k=>'<kbd>'+padSym(kind,k)+'</kbd>',row=(t,k)=>'<p><span>'+t+'</span>'+k+'</p>';
   return '<h2>Steuerung · Controller</h2>'+row('Fliegen / lenken','<kbd>Stick</kbd>')+row('Hoch fliegen',s('a'))+row('Leichte Combo · bis zu 3 Treffer',s('x'))+
-    row('Stark · halten lädt auf, ↑/↓ lenkt',s('y'))+row('Ausweich-Dash',s('b'))+row('Blocken',s('l1'))+row('Ki-Schuss · halten: Kanone',s('r1'))+
+    row('Stark · halten lädt auf, ↑/↓ lenkt',s('y'))+row('Ausweichen · halten: Turbo',s('b'))+row('Blocken',s('l1'))+row('Ki-Schuss · halten: Kanone',s('r1'))+
     row('Kamehameha · halten, dann loslassen',s('r2'))+row('Ki laden',s('l2'))+row('Super-Saiyajin · bei 100 Ki',s('l3'))+
     '<p class="rule">Stick runter + '+s('r1')+' zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. '+s('start')+' pausiert.</p>';
 }
 const TOUCH_GUIDE='<h2>Steuerung · Touch</h2><p><span>Fliegen / lenken</span><span><kbd>◀</kbd> <kbd>▲</kbd> <kbd>▼</kbd> <kbd>▶</kbd></span></p>'+
-  '<p><span>Ausweich-Dash · Richtung doppelt tippen</span><kbd>◀/▶</kbd></p><p><span>Leichte Combo</span><kbd>✊</kbd></p><p><span>Heavy · kostet 12 Ki</span><kbd>H</kbd></p>'+
+  '<p><span>Ausweichen · Richtung doppelt tippen, halten: Turbo</span><kbd>◀/▶</kbd></p><p><span>Leichte Combo</span><kbd>✊</kbd></p><p><span>Heavy · kostet 12 Ki</span><kbd>H</kbd></p>'+
   '<p><span>Blocken · runter + vom Gegner weg</span><kbd>▼</kbd></p><p><span>Ki-Schuss</span><kbd>KI!</kbd></p><p><span>Kamehameha · halten, dann loslassen</span><kbd>KAME</kbd></p>'+
   '<p><span>Ki laden</span><kbd>KI</kbd></p><p><span>Super-Saiyajin · bei 100 Ki</span><kbd>SSJ</kbd></p><p class="rule"><kbd>▼</kbd> + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.</p>';
-const HINT_TOUCH='◀▲▼▶ fliegen · doppelt tippen: Dash · ✊ Combo · H Heavy · KI! Schuss · KAME halten · KI laden · SSJ Super';
-const HINT_KEY='F/J Combo · V/U Heavy · Richtung doppelt antippen: Dash · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
+const HINT_TOUCH='◀▲▼▶ fliegen · doppelt tippen: Ausweichen, halten: Turbo · ✊ Combo · H Heavy · KI! Schuss · KAME halten · KI laden · SSJ Super';
+const HINT_KEY='F/J Combo · V/U Heavy · 2× Richtung: Ausweichen, halten: Turbo · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
 const PAD_BUTTONS=17;
 const padSlots=[-1,-1];
 const padStates=[0,1].map(()=>({connected:false,id:'',kind:'xbox',ax:0,ay:0,navDir:0,navY:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS),latch:new Uint8Array(PAD_BUTTONS),eff:new Uint8Array(PAD_BUTTONS)}));
@@ -734,6 +754,7 @@ function updateBot(f,target,input) {
     else input.punch=attackPulse>.15;
   } else if(d<590&&f.fire<=0&&f.ki>=7)input.shot=true;
   if(f.ki<35&&d>220)input.charge=true;
+  input.dash=d>520&&!input.charge;
 }
 function startPunch(f,step,type=0) {
   f.attackStep=step;
@@ -798,39 +819,57 @@ function updateFighter(f,index,dt) {
     enemy.stun=Math.max(enemy.stun,.28);
     burst(f.x,f.y-40,'rgb(255,255,255)',12,140);playSfx('shot');rumble(index,.2,.4,60);
   } else if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.charging&&f.dashCooldown<=0) {
-    const dashAx=(input.right?1:0)-(input.left?1:0);
-    f.dashDir=dashAx||(enemy.active?-f.face:f.face);f.dashTime=.16;f.dashInvuln=.13;f.dashCooldown=.62;
+    // ○ antippen: Ausweichen in alle 8 Richtungen (ohne Richtung: vom Gegner weg)
+    const dashAx=(input.right?1:0)-(input.left?1:0),dashAy=(input.down?1:0)-(input.up?1:0);
+    startDash(f,dashAx||dashAy?dashAx:(enemy.active?-f.face:f.face),dashAx||dashAy?dashAy:0);
   }
   f.dashBtnHeld=input.dash;
   if(!stunned&&!f.charging&&f.dashCooldown<=0) {
     if(input.left&&!f.dashLeftHeld) {
-      if(f.dashTapLeft>0){f.dashDir=-1;f.dashTime=.16;f.dashInvuln=.13;f.dashCooldown=.62;f.dashTapLeft=0;}
+      if(f.dashTapLeft>0){startDash(f,-1,0);f.dashTapLeft=0;f.boostKey=-1;}
       else f.dashTapLeft=.27;
     }
     if(input.right&&!f.dashRightHeld) {
-      if(f.dashTapRight>0){f.dashDir=1;f.dashTime=.16;f.dashInvuln=.13;f.dashCooldown=.62;f.dashTapRight=0;}
+      if(f.dashTapRight>0){startDash(f,1,0);f.dashTapRight=0;f.boostKey=1;}
       else f.dashTapRight=.27;
     }
   }
   f.dashLeftHeld=input.left;f.dashRightHeld=input.right;
+  // Turbo: ○ gehalten (oder Richtung nach Doppeltipp gehalten) + Richtung -> schnell fliegen
+  if(f.boostKey&&!(f.boostKey<0?input.left:input.right))f.boostKey=0;
+  const bAx=(input.right?1:0)-(input.left?1:0),bAy=(input.down?1:0)-(input.up?1:0);
+  const wasBoosting=f.boosting;
+  f.boosting=(input.dash||f.boostKey!==0)&&(bAx!==0||bAy!==0)&&!stunned&&!f.charging&&!f.guarding&&!f.smashHolding;
+  if(f.boosting&&!wasBoosting&&f.dashTime<=0){spawnRing(f.x,f.y-40,70,f.superTime>0?'#ffe66d':f.color,3,.25);playSfx('dash');}
   if(!stunned) {
     if(f.charging) {
       f.vx=0;f.vy=0;
     } else if(f.smashHolding) {
       f.vx*=Math.pow(.82,dt*60);f.vy=(f.vy+260*dt)*Math.pow(.86,dt*60);
     } else {
-      const ax=(input.right?1:0)-(input.left?1:0);
-      if(f.dashTime>0)f.vx=f.dashDir*(f.superTime>0?900:760);
+      const ax=(input.right?1:0)-(input.left?1:0),ssjF=f.superTime>0;
+      if(f.dashTime>0){const ds=ssjF?900:760;f.vx=f.dashDir*ds;f.vy=f.dashDirY*ds*.9;}
+      else if(f.boosting) {
+        // Turbo: Geschwindigkeit weich auf Zielrichtung ziehen, leichte Schwerkraft
+        const len=Math.hypot(bAx,bAy)||1,top=ssjF?1050:820,k=Math.min(1,dt*7);
+        f.vx+=(bAx/len*top-f.vx)*k;f.vy+=(bAy/len*top*.85-f.vy)*k;
+      }
       else if(f.guarding)f.vx*=Math.pow(.72,dt*60);
       else {
         f.vx+=ax*(f.superTime>0?1950:1500)*dt;
         f.vx*=Math.pow(ax===0?.91:.985,dt*60);
-        f.vx=clamp(f.vx,-(f.superTime>0?580:430),f.superTime>0?580:430);
+        f.vx=softCap(f.vx,-(f.superTime>0?580:430),f.superTime>0?580:430,dt);
       }
-      if(input.up)f.vy-=1500*dt;
-      if(input.down&&!f.guarding)f.vy+=1250*dt;
-      f.vy+=260*dt;f.vy*=Math.pow(input.up||input.down?.995:.985,dt*60);
-      f.vy=clamp(f.vy,-410,430);
+      if(f.dashTime>0||f.boosting) {
+        // Nachbilder/Funken mit fester Rate (Pools), Turbo: Schweif hinter der Figur
+        if((f.ghostTimer-=dt)<=0){f.ghostTimer=f.dashTime>0?.03:.06;addGhost(f);}
+        if(f.boosting&&Math.random()<.6)addParticle(f.x-f.vx*.03+(Math.random()-.5)*14,f.y-36+(Math.random()-.5)*26,-f.vx*.25+(Math.random()-.5)*40,-f.vy*.25-(Math.random()*40),Math.random()<.35?'#fff':ssjF?'#ffe66d':f.color,1.5+Math.random()*2,.3);
+      } else {
+        if(input.up)f.vy-=1500*dt;
+        if(input.down&&!f.guarding)f.vy+=1250*dt;
+        f.vy+=260*dt;f.vy*=Math.pow(input.up||input.down?.995:.985,dt*60);
+        f.vy=softCap(f.vy,-410,430,dt);
+      }
     }
     if(f.charging) {
       // Aufsteigende Ki-Funken und Steinchen (Pool, feste Obergrenze)
@@ -1007,6 +1046,7 @@ function updateEffects(dt) {
     if(p.blood&&p.vy>0&&p.y>GROUND-60&&p.y>=terrainY(p.x)){p.active=false;if(settings.gore)addSplat(p.x,p.size);}
   }
   for(let i=0;i<MAX_RINGS;i++){const r=rings[i];if(r.active&&(r.life-=dt)<=0)r.active=false;}
+  for(let i=0;i<MAX_GHOSTS;i++){const g=ghosts[i];if(g.active&&(g.life-=dt)<=0)g.active=false;}
   screenFlash=Math.max(0,screenFlash-dt*2.6);
   screenShake=Math.max(0,screenShake-26*dt);
 }
@@ -1456,6 +1496,27 @@ function render(alpha) {
     const t=1-r.life/r.max,e=1-(1-t)*(1-t);
     ctx.globalAlpha=(1-t)*.85;ctx.strokeStyle=r.color;ctx.lineWidth=r.width*(1-t*.7);
     ctx.beginPath();ctx.arc(r.x,r.y,4+r.r*e,0,Math.PI*2);ctx.stroke();
+  }
+  // Nachbilder: einfache Strichmännchen-Silhouette
+  ctx.lineCap='round';ctx.lineWidth=4;
+  for(let i=0;i<MAX_GHOSTS;i++) {
+    const g=ghosts[i];if(!g.active)continue;
+    const t=g.life/g.max,x=g.x,y=g.y,l=g.lean*30;
+    ctx.globalAlpha=t*.45;ctx.strokeStyle=g.color;ctx.beginPath();
+    ctx.moveTo(x-9,y-2);ctx.lineTo(x,y-22);ctx.lineTo(x+9,y-2);
+    ctx.moveTo(x,y-22);ctx.lineTo(x+l*.6,y-46);
+    ctx.moveTo(x+l*.5-12,y-36);ctx.lineTo(x+l*.5+12,y-38);
+    ctx.moveTo(x+l+8,y-56);ctx.arc(x+l,y-56,8,0,Math.PI*2);ctx.stroke();
+  }
+  // Turbo-Schweif: verjüngte Lichtspur entgegen der Flugrichtung
+  for(let i=0;i<2;i++) {
+    const f=fighters[i];if(!f.active||!f.boosting)continue;
+    const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha-38,sp=Math.hypot(f.vx,f.vy)||1;
+    const len=Math.min(150,sp*.16),nx=-f.vx/sp,ny=-f.vy/sp,c=f.superTime>0?'#ffe66d':f.color;
+    for(let k=0;k<3;k++) {
+      ctx.globalAlpha=k===2?.85:.22+k*.15;ctx.strokeStyle=k===2?'#fff':c;ctx.lineWidth=k===0?26:k===1?14:4;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+nx*len*(1-k*.2),y+ny*len*(1-k*.2));ctx.stroke();
+    }
   }
   ctx.globalAlpha=1;
   for(let i=0;i<MAX_PROJECTILES;i++)if(projectiles[i].active)drawProjectile(projectiles[i],alpha);
