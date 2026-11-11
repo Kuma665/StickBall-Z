@@ -85,7 +85,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-11d</p>
+        <p class="version">v2026-11-11e</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -108,7 +108,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
         <p><span>Blocken · runter + vom Gegner weg</span><kbd>S</kbd> + <kbd>A/D</kbd></p>
         <p><span>Ausweichen · Richtung doppelt antippen, halten: Turbo</span><kbd>A/D · ←/→</kbd></p>
         <p><span>Ki-Schuss · auch im Flug lenkbar</span><kbd>G</kbd> + <kbd>WASD</kbd></p>
-        <p><span>Kamehameha · halten, dann loslassen; hoch/runter lenkt</span><kbd>T</kbd> + <kbd>W/S</kbd></p>
+        <p><span>Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt</span><kbd>T</kbd> + <kbd>W/S</kbd></p>
         <p><span>Ki laden</span><kbd>H</kbd></p>
         <p><span>Super-Saiyajin · bei 100 Ki</span><kbd>R</kbd></p>
         <p><span>Spieler 2 · Combo / Heavy / Schuss</span><span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd></span></p>
@@ -207,6 +207,7 @@ function playSfx(kind,heavy=false) {
   else if(kind==='beam'){playTone(110,.42,'sawtooth',.32,now,b);playTone(220,.34,'triangle',.2,now,b);}
   else if(kind==='block')playTone(760,.09,'square',.2,now,b);
   else if(kind==='crater')playTone(72,.32,'sawtooth',.42,now,b);
+  else if(kind==='kiai'){playTone(95,.3,'sawtooth',.4,now,b);playTone(480,.14,'square',.16,now,b);playTone(240,.22,'triangle',.3,now+.03,b);}
   else if(kind==='dash'){playTone(620,.07,'sine',.22,now,b);playTone(310,.12,'triangle',.2,now+.02,b);}
   else playTone(heavy?92:145,heavy?.24:.12,'triangle',heavy?.5:.34,now,b);
 }
@@ -395,7 +396,7 @@ function makeCrater(x,big) {
   playSfx('crater');
 }
 function resetFighter(f,index) {
-  clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;
+  clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;f.kiaiCooldown=0;f.r2Held=false;f.r2Time=0;f.comboCount=0;
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
   f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.cannonHolding=false;f.cannonCharge=0;f.shotQueued=false;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
@@ -458,20 +459,20 @@ const PAD_SYM={ps:{a:'✕',b:'○',x:'□',y:'△',l1:'L1',r1:'R1',l2:'L2',r2:'R
 function padSym(kind,k){return (PAD_SYM[kind]||PAD_SYM.xbox)[k];}
 function buildPadHint(kind) {
   const s=k=>padSym(kind,k);
-  return s('x')+' Leicht · '+s('y')+' Stark (halten: aufladen, +↑/↓) · '+s('r1')+' Ki (halten: Kanone) · '+s('r2')+' Kamehameha · '+s('a')+' Hoch · '+s('b')+' Ausweichen (halten: Turbo, nach Finisher: verfolgen) · '+s('l1')+' Block · '+s('l2')+' Laden · '+s('l3')+' Super';
+  return s('x')+' Leicht · '+s('y')+' Stark (halten: aufladen, +↑/↓) · '+s('r1')+' Ki (halten: Kanone) · '+s('r2')+' Druckwelle (halten: Kamehameha) · '+s('a')+' Hoch · '+s('b')+' Ausweichen (halten: Turbo, nach Finisher: verfolgen) · '+s('l1')+' Block · '+s('l2')+' Laden · '+s('l3')+' Super';
 }
 function padGuideHTML(kind) {
   const s=k=>'<kbd>'+padSym(kind,k)+'</kbd>',row=(t,k)=>'<p><span>'+t+'</span>'+k+'</p>';
   return '<h2>Steuerung · Controller</h2>'+row('Fliegen / lenken','<kbd>Stick</kbd>')+row('Hoch fliegen',s('a'))+row('Leichte Combo · bis zu 3 Treffer',s('x'))+
     row('Stark · halten lädt auf, ↑/↓ lenkt',s('y'))+row('Ausweichen · halten: Turbo',s('b'))+row('Blocken',s('l1'))+row('Ki-Schuss · halten: Kanone',s('r1'))+
-    row('Kamehameha · halten, dann loslassen',s('r2'))+row('Ki laden',s('l2'))+row('Super-Saiyajin · bei 100 Ki',s('l3'))+
+    row('Antippen: Ki-Druckwelle · halten: Kamehameha',s('r2'))+row('Ki laden',s('l2'))+row('Super-Saiyajin · bei 100 Ki',s('l3'))+
     '<p class="rule">Stick runter + '+s('r1')+' zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. '+s('start')+' pausiert.</p>';
 }
 const TOUCH_GUIDE='<h2>Steuerung · Touch</h2><p><span>Fliegen / lenken</span><span><kbd>◀</kbd> <kbd>▲</kbd> <kbd>▼</kbd> <kbd>▶</kbd></span></p>'+
   '<p><span>Ausweichen · Richtung doppelt tippen, halten: Turbo</span><kbd>◀/▶</kbd></p><p><span>Leichte Combo</span><kbd>✊</kbd></p><p><span>Heavy · kostet 12 Ki</span><kbd>H</kbd></p>'+
-  '<p><span>Blocken · runter + vom Gegner weg</span><kbd>▼</kbd></p><p><span>Ki-Schuss</span><kbd>KI!</kbd></p><p><span>Kamehameha · halten, dann loslassen</span><kbd>KAME</kbd></p>'+
+  '<p><span>Blocken · runter + vom Gegner weg</span><kbd>▼</kbd></p><p><span>Ki-Schuss</span><kbd>KI!</kbd></p><p><span>Antippen: Ki-Druckwelle · halten: Kamehameha</span><kbd>KAME</kbd></p>'+
   '<p><span>Ki laden</span><kbd>KI</kbd></p><p><span>Super-Saiyajin · bei 100 Ki</span><kbd>SSJ</kbd></p><p class="rule"><kbd>▼</kbd> + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.</p>';
-const HINT_TOUCH='◀▲▼▶ fliegen · doppelt tippen: Ausweichen, halten: Turbo · ✊ Combo · H Heavy · KI! Schuss · KAME halten · KI laden · SSJ Super';
+const HINT_TOUCH='◀▲▼▶ fliegen · doppelt tippen: Ausweichen, halten: Turbo · ✊ Combo · H Heavy · KI! Schuss · KAME tippen: Druckwelle, halten: Kamehameha · KI laden · SSJ Super';
 const HINT_KEY='F/J Combo · V/U Heavy · 2× Richtung: Ausweichen, halten: Turbo · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
 const PAD_BUTTONS=17;
 const padSlots=[-1,-1];
@@ -670,7 +671,39 @@ function fireKamehameha(f,input) {
   screenShake=Math.max(screenShake,5);
   playSfx('beam');
 }
+// R2 antippen: Ki-Druckwelle – stößt Gegner weg, wehrt Ki-Schüsse ab, befreit aus Combos (auch im Taumeln)
+const KIAI_COST = 20, KIAI_RADIUS = 135;
+function kiai(f,index,enemy) {
+  if(f.ki<KIAI_COST||f.kiaiCooldown>0)return;
+  f.ki-=KIAI_COST;f.kiaiCooldown=2.5;
+  f.stun=0;f.hitFlash=0;f.dashInvuln=Math.max(f.dashInvuln,.2);f.smashHolding=false;f.cannonHolding=false;
+  const cx=f.x,cy=f.y-40,c=f.superTime>0?'#ffe66d':f.color;
+  spawnRing(cx,cy,KIAI_RADIUS,'#fff',7,.32);spawnRing(cx,cy,KIAI_RADIUS*1.5,c,4,.5);
+  burst(cx,cy,'rgb(255,255,255)',22,260);burst(cx,cy,c,18,200);
+  flash(.16,'#fff');screenShake=Math.max(screenShake,6);hitStop=Math.max(hitStop,.04);
+  playSfx('kiai');rumble(index,.6,.7,140);
+  // Gegnerische Ki-Schüsse im Radius auflösen
+  for(let i=0;i<MAX_PROJECTILES;i++) {
+    const p=projectiles[i];
+    if(p.active&&p.owner!==index&&Math.hypot(p.x-cx,p.y-cy)<KIAI_RADIUS+p.r){p.active=false;burst(p.x,p.y,p.color,8,120);}
+  }
+  if(!enemy.active||enemy.dashInvuln>0)return;
+  const dx=enemy.x-cx,dy=enemy.y-40-cy,d=Math.hypot(dx,dy);
+  if(d>KIAI_RADIUS+20)return;
+  const nx=d>1?dx/d:(enemy.x>=f.x?1:-1),ny=d>1?dy/d:0;
+  enemy.vx=nx*560;enemy.vy=ny*420-140;
+  enemy.stun=Math.max(enemy.stun,.35);enemy.hitFlash=.18;enemy.hp=Math.max(0,enemy.hp-4);
+  enemy.punch=0;enemy.attackDuration=0;enemy.attackStep=0;enemy.smashHolding=false;enemy.comboWindow=0;enemy.comboQueued=false;
+  enemy.beamHeld=false;enemy.beamCharge=0;enemy.cannonHolding=false;
+  f.comboCount=0;
+  rumble(1-index,.5,.4,100);
+}
 function updateKamehameha(f,index,enemy,input,dt) {
+  f.kiaiCooldown=Math.max(0,f.kiaiCooldown-dt);
+  // Kurzer Druck (< 0,24 s, darunter startet kein Kamehameha) = Druckwelle
+  if(input.beam){if(!f.r2Held)f.r2Time=0;f.r2Time+=dt;}
+  else if(f.r2Held&&f.r2Time<.24)kiai(f,index,enemy);
+  f.r2Held=input.beam;
   f.beamCooldown=Math.max(0,f.beamCooldown-dt);
   f.beamHitCooldown=Math.max(0,f.beamHitCooldown-dt);
   f.beam=Math.max(0,f.beam-dt);
@@ -755,6 +788,8 @@ function updateBot(f,target,input) {
   } else if(d<590&&f.fire<=0&&f.ki>=7)input.shot=true;
   if(f.ki<35&&d>220)input.charge=true;
   input.dash=d>520&&!input.charge;
+  // KI befreit sich manchmal aus langen Combos mit der Druckwelle
+  if(f.stun>0&&f.comboCount>=3&&!f.beamHeld&&Math.random()<.05)kiai(f,1,target);
 }
 function startPunch(f,step,type=0) {
   f.attackStep=step;
