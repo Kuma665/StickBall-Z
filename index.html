@@ -85,7 +85,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-10j</p>
+        <p class="version">v2026-11-11</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -120,6 +120,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
       <div class="set-row" data-set="sfx"><span>Soundeffekte</span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="vibration"><span>Vibration</span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="gfx"><span>Grafik</span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="gore"><span>Blut &amp; Wunden</span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="back"><button type="button" class="set-back">ZURÜCK</button></div>
     </div></div>
     <div class="touch" id="touch" hidden>
@@ -149,8 +150,8 @@ let cameraX = 0, cameraY = 260, zoom = 1, previousCameraX = 0, previousCameraY =
 let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, maxDistance = 0, screenShake = 0, hitStop = 0;
 let padKind = '', overText = 'Enter / Tippen: Revanche  ·  Esc: Menü';
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
-const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=['AUTO','NIEDRIG','MITTEL','HOCH'],GFX_LEVELS=['NIEDRIG','MITTEL','HOCH'],GFX_DPR=[1,1.5,2];
-const settings={music:.7,sfx:.8,vibration:true,gfx:0,lastMode:'free'};
+const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=['AUTO','NIEDRIG','MITTEL','HOCH'],GFX_LEVELS=['NIEDRIG','MITTEL','HOCH'],GFX_DPR=[1,1.5,2],GORE_NAMES=['AUS','WENIG','BRUTAL'];
+const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:1,lastMode:'free'};
 try {
   const d=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
   if(d&&typeof d==='object') {
@@ -162,6 +163,7 @@ try {
     if(vol(d.sfx)!==null)settings.sfx=vol(d.sfx);
     if(typeof d.vibration==='boolean')settings.vibration=d.vibration;
     if(Number.isInteger(d.gfx)&&d.gfx>=0&&d.gfx<=3)settings.gfx=d.gfx;
+    if(Number.isInteger(d.gore)&&d.gore>=0&&d.gore<=2)settings.gore=d.gore;
     if(d.lastMode==='free'||d.lastMode==='bot'||d.lastMode==='local')settings.lastMode=d.lastMode;
   }
 }catch(e){}
@@ -248,8 +250,14 @@ const fighters = [
 ];
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
 const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false}));
-const particles = Array.from({length:MAX_PARTICLES}, () => ({active:false,x:0,y:0,vx:0,vy:0,life:0,max:1,size:1,color:''}));
+const particles = Array.from({length:MAX_PARTICLES}, () => ({active:false,x:0,y:0,vx:0,vy:0,life:0,max:1,size:1,color:'',blood:false}));
 const craters = Array.from({length:MAX_CRATERS}, () => ({active:false,x:0,w:0,depth:0}));
+// Blut am Boden, Druckwellen-Ringe, Wunden je Figur (feste Pools)
+const MAX_SPLATS = 70, MAX_RINGS = 10, MAX_WOUNDS = 6;
+const splats = Array.from({length:MAX_SPLATS}, () => ({active:false,x:0,y:0,w:0,a:1}));
+const rings = Array.from({length:MAX_RINGS}, () => ({active:false,x:0,y:0,r:0,life:0,max:1,color:'#fff',width:3}));
+let splatCursor = 0, ringCursor = 0, screenFlash = 0, flashColor = '#fff';
+const BLOOD_COLORS = ['#b3101f','#7d0912','#d81e2c','#5e0610'];
 const stars = Array.from({length:150}, (_,i) => {
   const n = Math.sin(i * 127.1 + 18.7) * 43758.5453;
   const m = Math.sin(i * 269.5 + 7.3) * 24634.6345;
@@ -290,12 +298,51 @@ function terrainY(x) {
   }
   return y;
 }
-function addParticle(x,y,vx,vy,color,size,life) {
+function addParticle(x,y,vx,vy,color,size,life,blood=false) {
   // Grafik niedrig: jedes 2. Partikel weglassen, mittel: jedes 4.
   if(fxLevel<2){fxSkip=(fxSkip+1)&3;if(fxLevel===0?(fxSkip&1):fxSkip===0)return;}
   const p=particles[particleCursor];
   particleCursor=(particleCursor+1)%MAX_PARTICLES;
-  p.active=true;p.x=x;p.y=y;p.vx=vx;p.vy=vy;p.color=color;p.size=size;p.life=life;p.max=life;
+  p.active=true;p.x=x;p.y=y;p.vx=vx;p.vy=vy;p.color=color;p.size=size;p.life=life;p.max=life;p.blood=blood;
+}
+function addSplat(x,size) {
+  const s=splats[splatCursor];splatCursor=(splatCursor+1)%MAX_SPLATS;
+  s.active=true;s.x=x;s.y=terrainY(x)+1;s.w=size*(1.3+Math.random()*1.4)*(settings.gore===2?1.4:1);s.a=.7+Math.random()*.3;
+}
+function spawnRing(x,y,max,color,width,life) {
+  if(fxLevel===0&&max<90)return;
+  const r=rings[ringCursor];ringCursor=(ringCursor+1)%MAX_RINGS;
+  r.active=true;r.x=x;r.y=y;r.r=max;r.color=color;r.width=width;r.life=life;r.max=life;
+}
+function flash(a,color){if(a>screenFlash){screenFlash=a;flashColor=color;}}
+// Blutspritzer in Schlagrichtung (dir), Menge nach Einstellung
+function bloodSpray(x,y,dir,count,power) {
+  const g=settings.gore;if(!g)return;
+  const n=g===2?count:Math.ceil(count*.35);
+  for(let i=0;i<n;i++) {
+    const sp=power*(.3+Math.random()*.9);
+    addParticle(x+(Math.random()-.5)*8,y+(Math.random()-.5)*10,dir*sp+(Math.random()-.5)*70,-40-Math.random()*power*.75,
+      BLOOD_COLORS[i&3],(g===2?1.8:1.4)+Math.random()*(g===2?3:1.6),.7+Math.random()*.6,true);
+  }
+}
+// Treffer am Körper: Blut + Wunden sammeln (auch bei AUS gespeichert, damit Umschalten sofort wirkt)
+function hurt(v,dir,amount,heavy) {
+  if(!v.wounds)return;
+  bloodSpray(v.x,v.y-44,dir,heavy?28:10+Math.min(10,amount*.6),heavy?320:200);
+  v.woundAcc+=amount*(heavy?1.6:1);
+  while(v.woundAcc>=16) {
+    v.woundAcc-=16;
+    let w=null;
+    for(let i=0;i<MAX_WOUNDS;i++)if(!v.wounds[i].active){w=v.wounds[i];break;}
+    if(!w){w=v.wounds[v.woundNext];v.woundNext=(v.woundNext+1)%MAX_WOUNDS;}
+    w.active=true;w.head=Math.random()<.4;w.s=.15+Math.random()*.75;w.a=-2.6+Math.random()*3.4;
+    w.ang=(Math.random()-.5)*1.8;w.len=(heavy?5:3)+Math.random()*3;w.drip=Math.random();
+  }
+}
+function clearWounds(f) {
+  if(!f.wounds)f.wounds=Array.from({length:MAX_WOUNDS},()=>({active:false,head:false,s:0,a:0,ang:0,len:0,drip:0}));
+  for(let i=0;i<MAX_WOUNDS;i++)f.wounds[i].active=false;
+  f.woundAcc=0;f.woundNext=0;f.bleedTimer=0;
 }
 function burst(x,y,color,count,power) {
   for(let i=0;i<count;i++) {
@@ -305,7 +352,9 @@ function burst(x,y,color,count,power) {
 }
 function impactBurst(x,y,color,heavy) {
   burst(x,y,color,heavy?22:14,heavy?240:170);
-  burst(x,y,'184,24,42',heavy?12:7,heavy?205:140);
+  burst(x,y,'#fff',heavy?10:5,heavy?300:200);
+  spawnRing(x,y,heavy?95:48,heavy?'#fff':color,heavy?5:3,heavy?.32:.2);
+  if(heavy){spawnRing(x,y,150,color,3,.45);flash(.28,'#fff');}
 }
 function makeCrater(x,big) {
   let slot=-1, nearest=Infinity;
@@ -319,11 +368,15 @@ function makeCrater(x,big) {
   if(c.active&&Math.abs(c.x-x)<(c.w+w)*.35) {
     c.x=(c.x+x)*.5;c.w=Math.min(760,Math.max(c.w,w)+52);c.depth=Math.min(330,c.depth+(big?82:46));
   } else {c.active=true;c.x=x;c.w=w;c.depth=big?220:128;}
-  burst(x,terrainY(x)-4,big?'255,188,112':'255,139,92',big?28:17,big?220:150);
+  for(let i=0;i<MAX_SPLATS;i++){const s=splats[i];if(s.active&&Math.abs(s.x-c.x)<c.w*.5)s.active=false;}
+  spawnRing(x,terrainY(x)-6,big?190:110,'#ffd29a',big?6:4,big?.5:.35);
+  if(big)flash(.22,'#ffe2b8');
+  burst(x,terrainY(x)-4,big?'rgb(255,188,112)':'rgb(255,139,92)',big?28:17,big?220:150);
   screenShake=Math.max(screenShake,big?9:5);
   playSfx('crater');
 }
 function resetFighter(f,index) {
+  clearWounds(f);
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
   f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.cannonHolding=false;f.cannonCharge=0;f.shotQueued=false;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
@@ -340,6 +393,9 @@ function begin(nextMode) {
   for(let i=0;i<MAX_CRATERS;i++)craters[i].active=false;
   for(let i=0;i<MAX_PROJECTILES;i++)projectiles[i].active=false;
   for(let i=0;i<MAX_PARTICLES;i++)particles[i].active=false;
+  for(let i=0;i<MAX_SPLATS;i++)splats[i].active=false;
+  for(let i=0;i<MAX_RINGS;i++)rings[i].active=false;
+  screenFlash=0;
   resetFighter(fighters[0],0);resetFighter(fighters[1],1);
   worldRadius=2400;maxDistance=0;cameraX=0;cameraY=260;zoom=1;
   previousCameraX=0;previousCameraY=260;previousZoom=1;
@@ -465,7 +521,7 @@ function renderSettings() {
     const row=settingRows[i],key=row.dataset.set,val=row.querySelector('.set-val');
     row.classList.toggle('pad-focus',i===settingFocus);
     if(!val)continue;
-    val.textContent=key==='music'||key==='sfx'?'◀ '+Math.round(settings[key]*100)+'% ▶':key==='vibration'?(settings.vibration?'AN':'AUS'):
+    val.textContent=key==='music'||key==='sfx'?'◀ '+Math.round(settings[key]*100)+'% ▶':key==='vibration'?(settings.vibration?'AN':'AUS'):key==='gore'?GORE_NAMES[settings.gore]:
       GFX_NAMES[settings.gfx]+(settings.gfx===0?' · '+GFX_LEVELS[gfxAuto]:'');
   }
 }
@@ -480,6 +536,7 @@ function changeSetting(key,dir,wrap) {
     if(key==='sfx')playSfx('shot');
   } else if(key==='vibration'){settings.vibration=!settings.vibration;if(settings.vibration)rumble(0,.5,.5,120);}
   else if(key==='gfx'){settings.gfx=(settings.gfx+dir+4)%4;if(settings.gfx===0)gfxAuto=2;applyGfx();}
+  else if(key==='gore')settings.gore=(settings.gore+dir+3)%3;
   saveSettings();renderSettings();
 }
 function moveSettingFocus(d){settingFocus=(settingFocus+d+settingRows.length)%settingRows.length;renderSettings();}
@@ -541,7 +598,13 @@ function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill
 function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent='FLUGGEBIET 01';}
 function endMatch(w) {
   state='over';winner=w;stopMusic();updateTouch();
-  screenShake=Math.max(screenShake,9);
+  screenShake=Math.max(screenShake,14);
+  // K.O.: Druckwelle, Blitz, bei Blut großer Spritzer (Partikel laufen im Endbildschirm weiter)
+  const l=fighters[1-w],dir=Math.sign(l.x-fighters[w].x)||1;
+  spawnRing(l.x,l.y-44,220,'#fff',7,.6);spawnRing(l.x,l.y-44,320,l.color,4,.85);
+  burst(l.x,l.y-44,l.color,30,300);
+  if(settings.gore){bloodSpray(l.x,l.y-44,dir,60,420);bloodSpray(l.x,l.y-44,-dir,24,260);flash(.55,settings.gore===2?'#a00010':'#fff');}
+  else flash(.5,'#fff');
   rumble(1-w,1,.8,380);rumble(w,.3,.5,160);
 }
 // Ki-Schuss: klein (7 Ki) oder große Ki-Kanone (20 Ki, c = Ladung 0..1)
@@ -611,12 +674,13 @@ function updateKamehameha(f,index,enemy,input,dt) {
         enemy.hp=Math.max(0,enemy.hp-(f.superTime>0?23:16)*(blocked?.2:scale));
         if(blocked) {
           enemy.hitFlash=.08;enemy.vx+=f.face*45;
-          burst(enemy.x,enemy.y-45,'145,220,255',9,90);
+          burst(enemy.x,enemy.y-45,'rgb(145,220,255)',9,90);
           screenShake=Math.max(screenShake,1.5);hitStop=Math.max(hitStop,.02);
           playSfx('block');
         } else {
           enemy.stun=comboStun(enemy,.22);enemy.hitFlash=.18;enemy.vx+=f.face*115;enemy.vy-=65;
-          impactBurst(enemy.x,enemy.y-45,f.color,false);screenShake=Math.max(screenShake,2.8);
+          impactBurst(enemy.x,enemy.y-45,f.color,false);screenShake=Math.max(screenShake,3.5);
+          hurt(enemy,f.face,(f.superTime>0?23:16)*scale,false);
           hitStop=Math.max(hitStop,.035);
           playSfx('hit');rumble(1-index,.4,.3,60);
         }
@@ -637,7 +701,7 @@ function damage(f,from,p) {
   f.hp-=p.power*(blocked?.18:scale);
   if(blocked) {
     f.hitFlash=.08;f.vx+=Math.sign(f.x-from.x||1)*65;
-    burst(f.x,f.y-38,'145,220,255',10,95);
+    burst(f.x,f.y-38,'rgb(145,220,255)',10,95);
     hitStop=Math.max(hitStop,.025);
     playSfx('block');
     return;
@@ -645,6 +709,8 @@ function damage(f,from,p) {
   f.stun=comboStun(f,.2);f.hitFlash=.18;f.smashHolding=false;f.comboWindow=0;f.comboQueued=false;f.comboDisplay=0;f.attackStep=0;f.punch=0;f.attackDuration=0;
   f.vx+=Math.sign(f.x-from.x||1)*(p.big?260:150);f.vy=p.big?-250:-110;
   impactBurst(f.x,f.y-38,p.color,p.big);
+  hurt(f,Math.sign(p.vx)||1,p.power*scale,p.big);
+  screenShake=Math.max(screenShake,p.big?9:3);
   hitStop=Math.max(hitStop,p.big?.095:.055);
   playSfx('hit',p.big);
   rumble(f===fighters[0]?0:1,p.big?.8:.35,p.big?.6:.3,p.big?140:60);
@@ -713,7 +779,7 @@ function updateFighter(f,index,dt) {
   f.charging=input.charge&&!f.beamHeld;
   if(input.super&&!f.superHeld&&f.ki>=100&&f.superTime<=0) {
     f.ki=0;f.superTime=12;
-    burst(f.x,f.y-52,'255,224,91',32,210);
+    burst(f.x,f.y-52,'rgb(255,224,91)',32,210);
     screenShake=Math.max(screenShake,7);
   }
   f.superHeld=input.super;
@@ -730,7 +796,7 @@ function updateFighter(f,index,dt) {
     f.x=clamp(enemy.x-f.face*55,-worldRadius,worldRadius);f.y=Math.min(enemy.y,terrainY(f.x));
     f.vx=enemy.vx*.8;f.vy=enemy.vy*.8;f.px=f.x;f.py=f.y;
     enemy.stun=Math.max(enemy.stun,.28);
-    burst(f.x,f.y-40,'255,255,255',12,140);playSfx('shot');rumble(index,.2,.4,60);
+    burst(f.x,f.y-40,'rgb(255,255,255)',12,140);playSfx('shot');rumble(index,.2,.4,60);
   } else if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.charging&&f.dashCooldown<=0) {
     const dashAx=(input.right?1:0)-(input.left?1:0);
     f.dashDir=dashAx||(enemy.active?-f.face:f.face);f.dashTime=.16;f.dashInvuln=.13;f.dashCooldown=.62;
@@ -847,7 +913,7 @@ function updateFighter(f,index,dt) {
       if(!input.heavy||f.smashCharge>=1.3) {
         const c=Math.min(1,f.smashCharge);
         f.smashHolding=false;startPunch(f,4,f.bufferedHeavyType);f.smashPower=1+c;
-        if(c>=1){burst(f.x,f.y-45,'255,255,255',16,190);screenShake=Math.max(screenShake,3);}
+        if(c>=1){burst(f.x,f.y-45,'rgb(255,255,255)',16,190);screenShake=Math.max(screenShake,3);}
       }
     }
     const attackProgress=f.attackDuration>0?1-f.punch/f.attackDuration:0;
@@ -869,7 +935,7 @@ function updateFighter(f,index,dt) {
         enemy.hitFlash=blocked?.08:.22;
         if(blocked) {
           enemy.vx+=f.face*55;f.vx-=f.face*35;
-          burst(enemy.x,enemy.y-43,'145,220,255',12,105);
+          burst(enemy.x,enemy.y-43,'rgb(145,220,255)',12,105);
           playSfx('block');rumble(1-index,.1,.35,50);
         } else {
           const gap=Math.max(0,Math.abs(enemy.x-f.x)-44);
@@ -886,8 +952,9 @@ function updateFighter(f,index,dt) {
           screenShake=Math.max(screenShake,1.3);hitStop=Math.max(hitStop,.025);
         } else {
           f.comboWindow=f.attackType===0&&f.attackStep<3?.42:0;
-          impactBurst(enemy.x,enemy.y-44,finisher?'255,235,170':f.color,finisher);
-          screenShake=Math.max(screenShake,(finisher?8:4)*kb);
+          impactBurst(enemy.x,enemy.y-44,finisher?'rgb(255,235,170)':f.color,finisher);
+          hurt(enemy,f.face,damage*scale,finisher);
+          screenShake=Math.max(screenShake,(finisher?11:5)*kb);
           hitStop=Math.max(hitStop,Math.min(.2,(finisher?.11:.06)*kb));
           playSfx('hit',finisher);
           rumble(1-index,finisher?.85:.45,finisher?.6:.35,finisher?150:70);rumble(index,.15,.3,45);
@@ -906,7 +973,13 @@ function updateFighter(f,index,dt) {
   if(f.y< -2600){f.y=-2600;f.vy=Math.max(0,f.vy);}
   f.x=clamp(f.x,-worldRadius,worldRadius);
   if(f.hp<=0&&enemy.active&&mode!=='free'){f.hp=0;endMatch(1-index);return;}
-  if(f.hp<=0){f.hp=MAX_HP;f.ki=50;f.x=enemy.active?enemy.x-f.face*220:f.x;f.y=terrainY(f.x)-130;f.vx=-f.vx*.3;f.vy=-100;burst(f.x,f.y,f.color,30,240);}
+  // Bluten bei vielen Wunden/wenig Leben (BRUTAL stärker)
+  if(settings.gore&&f.hp<MAX_HP*(settings.gore===2?.65:.35)&&(f.bleedTimer-=dt)<=0) {
+    const hurtT=1-f.hp/MAX_HP;
+    f.bleedTimer=(settings.gore===2?.5:1.1)-hurtT*.35+Math.random()*.3;
+    addParticle(f.x+(Math.random()-.5)*10,f.y-30-Math.random()*28,f.vx*.4+(Math.random()-.5)*30,-10-Math.random()*30,BLOOD_COLORS[(Math.random()*4)|0],1.4+Math.random()*1.8,1.4,true);
+  }
+  if(f.hp<=0){clearWounds(f);f.hp=MAX_HP;f.ki=50;f.x=enemy.active?enemy.x-f.face*220:f.x;f.y=terrainY(f.x)-130;f.vx=-f.vx*.3;f.vy=-100;burst(f.x,f.y,f.color,30,240);}
 }
 function updateProjectiles(dt) {
   for(let i=0;i<MAX_PROJECTILES;i++) {
@@ -924,7 +997,21 @@ function updateProjectiles(dt) {
     if(Math.random()<.14)addParticle(p.x,p.y,(Math.random()-.5)*18,(Math.random()-.5)*18,p.color,2,.22);
   }
 }
+// Partikel, Blut am Boden, Ringe, Blitz – läuft auch im K.O.-Bildschirm weiter
+function updateEffects(dt) {
+  for(let i=0;i<MAX_PARTICLES;i++) {
+    const p=particles[i];if(!p.active)continue;
+    p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;
+    if(p.life<=0){p.active=false;continue;}
+    // Blut bleibt als Fleck am Boden liegen (Boden liegt nie höher als GROUND-60)
+    if(p.blood&&p.vy>0&&p.y>GROUND-60&&p.y>=terrainY(p.x)){p.active=false;if(settings.gore)addSplat(p.x,p.size);}
+  }
+  for(let i=0;i<MAX_RINGS;i++){const r=rings[i];if(r.active&&(r.life-=dt)<=0)r.active=false;}
+  screenFlash=Math.max(0,screenFlash-dt*2.6);
+  screenShake=Math.max(0,screenShake-26*dt);
+}
 function update(dt) {
+  if(state==='over'){updateEffects(dt);return;}
   if(state!=='playing')return;
   if(hitStop>0) {
     hitStop=Math.max(0,hitStop-dt);
@@ -944,12 +1031,7 @@ function update(dt) {
     }
   }
   updateProjectiles(dt);
-  for(let i=0;i<MAX_PARTICLES;i++) {
-    const p=particles[i];if(!p.active)continue;
-    p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;
-    if(p.life<=0)p.active=false;
-  }
-  screenShake=Math.max(0,screenShake-26*dt);
+  updateEffects(dt);
   const focus=fighters[1].active?(fighters[0].x+fighters[1].x)*.5:fighters[0].x;
   const secondActive=fighters[1].active;
   const highY=secondActive?Math.min(fighters[0].y,fighters[1].y):fighters[0].y;
@@ -1046,6 +1128,25 @@ function drawAura(level,color,core,seed) {
   ctx.globalAlpha=1;
 }
 function limb3(ax,ay,bx,by,cx,cy){ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx,cy);}
+// Wunden (lokal, Blick nach rechts): Rumpf entlang der Wirbelsäule, Kopf am Rand. BRUTAL: größer + Blutspuren nach unten
+function drawWounds(f,head,hipY,neckX,neckY,hx,hy,max,gore) {
+  const hurtT=1-f.hp/MAX_HP,big=gore===2?1.35:1;
+  let shown=0;
+  for(let pass=0;pass<2;pass++) {
+    ctx.strokeStyle=pass?'#ff3a4a':'#5a040c';ctx.lineWidth=pass?1.4:2.8*big;ctx.beginPath();shown=0;
+    for(let i=0;i<MAX_WOUNDS&&shown<max;i++) {
+      const w=f.wounds[i];if(!w.active)continue;shown++;
+      if(w.head!==head)continue;
+      let x,y;
+      if(head){x=hx+Math.cos(w.a)*6.5;y=hy+Math.sin(w.a)*6.5;}
+      else {x=neckX*w.s+Math.sin(w.s*3)*1.2;y=hipY+(neckY-hipY)*w.s;}
+      const l=w.len*big*(pass?.6:1),c=Math.cos(w.ang)*l*.5,s=Math.sin(w.ang)*l*.5;
+      ctx.moveTo(x-c,y-s);ctx.lineTo(x+c,y+s);
+      if(gore===2&&!pass&&hurtT>.3){const d=(2+w.drip*7)*hurtT;ctx.moveTo(x,y);ctx.lineTo(x+.6,y+d);}
+    }
+    ctx.stroke();
+  }
+}
 function drawFighter(f,alpha) {
   if(!f.active)return;
   const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha;
@@ -1217,6 +1318,8 @@ function drawFighter(f,alpha) {
   ctx.strokeStyle=lineColor;ctx.beginPath();
   ctx.moveTo(0,hipY);ctx.quadraticCurveTo(2,(hipY+neckY)*.5,neckX,neckY);
   limb3(0,hipY,fkX,fkY,ffX,ffY);limb3(sx,sy,feX,feY,fhX,fhY);ctx.stroke();
+  const gore=f.wounds?settings.gore:0,woundMax=gore===2?MAX_WOUNDS:3;
+  if(gore) drawWounds(f,false,hipY,neckX,neckY,0,0,woundMax,gore);
   ctx.fillStyle=f.guarding?'#9cefff':lineColor;ctx.beginPath();ctx.arc(fhX,fhY,f.guarding?4:kind===5||kind>=8?3.3+k*2.2:3.3,0,Math.PI*2);ctx.fill();
   // Ladekugel beim Aufladen: wächst, bei voller Ladung weißes Blitzen
   if(smashing) {
@@ -1248,6 +1351,7 @@ function drawFighter(f,alpha) {
   if(stunned){ctx.moveTo(hx+1.5,hy-2.5);ctx.lineTo(hx+5.5,hy+1.5);ctx.moveTo(hx+5.5,hy-2.5);ctx.lineTo(hx+1.5,hy+1.5);}
   else {const fierce=f.punch>0||f.charging||ready?1.6:0;ctx.moveTo(hx+1.5,hy-.2-fierce*.4);ctx.lineTo(hx+5.8,hy+.6-fierce);}
   ctx.stroke();
+  if(gore) drawWounds(f,true,hipY,neckX,neckY,hx,hy,woundMax,gore);
   if(f.charging){ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(hx+4.3,hy+3.8,1.6,1.5+Math.abs(Math.sin(clock*9))*1.3,0,0,Math.PI*2);ctx.fill();}
   if(shot>0) {
     const glow=.55+.35*Math.sin(clock*38),ox=punchX+8,oy=punchY-2;
@@ -1333,16 +1437,31 @@ function render(alpha) {
   if(screenShake>0)ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake);
   ctx.translate(W/2-renderCameraX*renderZoom,H/2-renderCameraY*renderZoom);ctx.scale(renderZoom,renderZoom);
   drawTerrain();
+  if(settings.gore) {
+    ctx.fillStyle='#8a0a16';
+    for(let i=0;i<MAX_SPLATS;i++) {
+      const s=splats[i];if(!s.active)continue;
+      ctx.globalAlpha=s.a;ctx.beginPath();ctx.ellipse(s.x,s.y,s.w,s.w*.3,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
   drawKamehameha(fighters[0]);drawKamehameha(fighters[1]);
   for(let i=0;i<MAX_PARTICLES;i++) {
     const p=particles[i];if(!p.active)continue;
     ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;
     ctx.fillRect(p.x,p.y,p.size,p.size);
   }
+  for(let i=0;i<MAX_RINGS;i++) {
+    const r=rings[i];if(!r.active)continue;
+    const t=1-r.life/r.max,e=1-(1-t)*(1-t);
+    ctx.globalAlpha=(1-t)*.85;ctx.strokeStyle=r.color;ctx.lineWidth=r.width*(1-t*.7);
+    ctx.beginPath();ctx.arc(r.x,r.y,4+r.r*e,0,Math.PI*2);ctx.stroke();
+  }
   ctx.globalAlpha=1;
   for(let i=0;i<MAX_PROJECTILES;i++)if(projectiles[i].active)drawProjectile(projectiles[i],alpha);
   drawFighter(fighters[0],alpha);drawFighter(fighters[1],alpha);
   ctx.restore();
+  if(screenFlash>0){ctx.globalAlpha=Math.min(.6,screenFlash);ctx.fillStyle=flashColor;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
   if(state==='playing'||state==='over')drawHud();
   if(state==='over'&&winner>=0) {
     const wf=fighters[winner];
