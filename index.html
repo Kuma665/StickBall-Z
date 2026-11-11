@@ -85,7 +85,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-11b</p>
+        <p class="version">v2026-11-11c</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -1036,6 +1036,16 @@ function updateProjectiles(dt) {
     if(Math.random()<.14)addParticle(p.x,p.y,(Math.random()-.5)*18,(Math.random()-.5)*18,p.color,2,.22);
   }
 }
+const MAX_SEP_X = 1100, MAX_SEP_Y = 600;
+function leash(a,b,k,vk,max) {
+  const d=b[k]-a[k],ex=Math.abs(d)-max;if(ex<=0)return;
+  const s=Math.sign(d),floorA=terrainY(a.x),floorB=terrainY(b.x);
+  // Wer sich wegbewegt, wird stärker zurückgehalten (am Boden nicht in die Erde schieben), Geschwindigkeit voneinander weg stoppen
+  const oa=Math.max(0,-a[vk]*s),ob=Math.max(0,b[vk]*s),wa=(oa+1)/(oa+ob+2);
+  a[k]+=s*ex*wa;b[k]-=s*ex*(1-wa);
+  if(k==='y'){a.y=Math.min(a.y,floorA);b.y=Math.min(b.y,floorB);if(Math.abs(b.y-a.y)>max){if(a.y<b.y)a.y=b.y-max;else b.y=a.y-max;}}
+  if(a[vk]*s<0)a[vk]*=.3;if(b[vk]*s>0)b[vk]*=.3;
+}
 // Partikel, Blut am Boden, Ringe, Blitz – läuft auch im K.O.-Bildschirm weiter
 function updateEffects(dt) {
   for(let i=0;i<MAX_PARTICLES;i++) {
@@ -1069,6 +1079,9 @@ function update(dt) {
       const direction=dx>=0?1:-1,push=(42-Math.abs(dx))*.5;
       fighters[0].x-=direction*push;fighters[1].x+=direction*push;
     }
+    // Leine im Kampf: Abstand begrenzen, damit niemand aus dem Bild fliegt (Wegbewegung wird gestoppt)
+    leash(fighters[0],fighters[1],'x','vx',MAX_SEP_X);
+    leash(fighters[0],fighters[1],'y','vy',MAX_SEP_Y);
   }
   updateProjectiles(dt);
   updateEffects(dt);
@@ -1081,12 +1094,18 @@ function update(dt) {
   const bothGrounded=grounded0&&grounded1;
   const horizontalZoom=secondActive?W/(Math.abs(fighters[0].x-fighters[1].x)+560):1;
   const floorScreen=H*.62,topMargin=86;
-  const flightZoom=(floorScreen-topMargin)/Math.max(1,floorY-highY+50);
+  // Kampf: Boden nur im Bild halten, solange der untere Kämpfer nah dran ist, sonst beide Kämpfer rahmen
+  let bottomY=floorY;
+  if(secondActive) {
+    const lowY=Math.max(fighters[0].y,fighters[1].y),t=clamp((floorY-lowY-250)/300,0,1);
+    bottomY=floorY+(lowY+110-floorY)*t;
+  }
+  const flightZoom=(floorScreen-topMargin)/Math.max(1,bottomY-highY+50);
   previousCameraX=cameraX;previousCameraY=cameraY;previousZoom=zoom;
-  const targetZoom=clamp(Math.min(horizontalZoom,flightZoom),.035,1);
+  const targetZoom=clamp(Math.min(horizontalZoom,flightZoom),secondActive?.3:.035,1);
   zoom+=(targetZoom-zoom)*Math.min(1,dt*1.8);
   cameraX+=(focus-cameraX)*Math.min(1,dt*4);
-  const targetCameraY=(bothGrounded?GROUND:floorY)-(floorScreen-H/2)/zoom;
+  const targetCameraY=(bothGrounded?GROUND:bottomY)-(floorScreen-H/2)/zoom;
   cameraY+=(targetCameraY-cameraY)*Math.min(1,dt*1.1);
   maxDistance=Math.max(maxDistance,Math.abs(fighters[0].x),Math.abs(fighters[1].active?fighters[1].x:0));
   if(maxDistance>worldRadius-700)worldRadius+=1800;
