@@ -83,7 +83,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-12e</p>
+        <p class="version">v2026-11-12f</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -327,11 +327,11 @@ function flash(a,color){if(a>screenFlash){screenFlash=a;flashColor=color;}}
 // Blutspritzer in Schlagrichtung (dir), Menge nach Einstellung
 function bloodSpray(x,y,dir,count,power) {
   const g=settings.gore;if(!g)return;
-  const n=g===2?count:Math.ceil(count*.35);
+  const n=Math.ceil(count*(g===2?.55:.35));
   for(let i=0;i<n;i++) {
     const sp=power*(.3+Math.random()*.9);
     addParticle(x+(Math.random()-.5)*8,y+(Math.random()-.5)*10,dir*sp+(Math.random()-.5)*70,-40-Math.random()*power*.75,
-      BLOOD_COLORS[i&3],(g===2?1.8:1.4)+Math.random()*(g===2?3:1.6),.7+Math.random()*.6,true);
+      BLOOD_COLORS[i&3],(g===2?1.6:1.4)+Math.random()*(g===2?2.2:1.6),.7+Math.random()*.6,true);
   }
 }
 // Treffer am Körper: Blut + Wunden sammeln (auch bei AUS gespeichert, damit Umschalten sofort wirkt)
@@ -1059,8 +1059,8 @@ function updateFighter(f,index,dt) {
   // Bluten bei vielen Wunden/wenig Leben (BRUTAL stärker)
   if(settings.gore&&f.hp<MAX_HP*(settings.gore===2?.85:.35)&&(f.bleedTimer-=dt)<=0) {
     const hurtT=1-f.hp/MAX_HP;
-    if(settings.gore===2&&hurtT>.55&&Math.random()<.18)bloodSpray(f.x,f.y-40-Math.random()*20,Math.random()<.5?-1:1,5,110);
-    f.bleedTimer=(settings.gore===2?.28:1.1)-hurtT*.35+Math.random()*.3;
+    if(settings.gore===2&&hurtT>.6&&Math.random()<.07)bloodSpray(f.x,f.y-40-Math.random()*20,Math.random()<.5?-1:1,5,110);
+    f.bleedTimer=(settings.gore===2?.45:1.1)-hurtT*.35+Math.random()*.3;
     addParticle(f.x+(Math.random()-.5)*10,f.y-30-Math.random()*28,f.vx*.4+(Math.random()-.5)*30,-10-Math.random()*30,BLOOD_COLORS[(Math.random()*4)|0],1.4+Math.random()*1.8,1.4,true);
   }
   if(f.hp<=0){clearWounds(f);f.hp=MAX_HP;f.ki=50;f.x=enemy.active?enemy.x-f.face*220:f.x;f.y=terrainY(f.x)-130;f.vx=-f.vx*.3;f.vy=-100;burst(f.x,f.y,f.color,30,240);}
