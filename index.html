@@ -83,7 +83,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-12f</p>
+        <p class="version">v2026-11-12g</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -339,7 +339,7 @@ function hurt(v,dir,amount,heavy) {
   if(!v.wounds)return;
   bloodSpray(v.x,v.y-44,dir,heavy?28:10+Math.min(10,amount*.6),heavy?320:200);
   v.woundAcc+=amount*(heavy?1.6:1);
-  const wStep=settings.gore===2?12:16;
+  const wStep=settings.gore===2?14:16;
   while(v.woundAcc>=wStep) {
     v.woundAcc-=wStep;
     let w=null;
@@ -1418,7 +1418,7 @@ function drawFighter(f,alpha) {
   ctx.strokeStyle=lineColor;ctx.beginPath();
   ctx.moveTo(0,hipY);ctx.quadraticCurveTo(2,(hipY+neckY)*.5,neckX,neckY);
   limb3(0,hipY,fkX,fkY,ffX,ffY);limb3(sx,sy,feX,feY,fhX,fhY);ctx.stroke();
-  const gore=f.wounds?settings.gore:0,woundMax=gore===2?7:3;
+  const gore=f.wounds?settings.gore:0,woundMax=gore===2?5:3;
   if(gore) drawWounds(f,false,hipY,neckX,neckY,0,0,woundMax,gore);
   ctx.fillStyle=f.guarding?'#9cefff':lineColor;ctx.beginPath();ctx.arc(fhX,fhY,f.guarding?4:kind===5||kind>=8?3.3+k*2.2:3.3,0,Math.PI*2);ctx.fill();
   // Ladekugel beim Aufladen: wächst, bei voller Ladung weißes Blitzen
