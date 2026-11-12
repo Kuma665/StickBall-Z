@@ -9,6 +9,7 @@ Allgemeine Regeln (Kommunikation, Sicherung, Git, Spielgerät, Performance, Test
 - Spielziel: freier Flugkampf mit Ki-Angriffen, zerstörbarem Boden und einer Welt, die mit der Flugdistanz wächst.
 - Sicherungen: `C:\Users\arams\Documents\GitHub\StickBall-Z_backup\`
 - Pushen nur, wenn ich „pushen ok“ sage.
+- PC/Fernseher: Layout noch nicht geprüft (Screenshots 915×412 und 1920×1080 vergleichen, siehe globale Regel „Handy und PC“).
 
 ## Eingabe
 - DualSense über die Gamepad-API; Tastatur bleibt als Zweitweg erhalten.

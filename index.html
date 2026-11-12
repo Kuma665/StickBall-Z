@@ -18,8 +18,8 @@ window.addEventListener('unhandledrejection',function(e){var r=e.reason;show('Pr
 :root{color-scheme:dark;--bg:#070a15;--panel:#101629;--line:#25314d;--white:#f4f7ff;--muted:#9ba9c4;--orange:#ff743d;--cyan:#4ce1e8;--lime:#c5f36b;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-body{display:grid;place-items:center;overflow:hidden;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));background:radial-gradient(ellipse at 50% 110%,#182848 0%,var(--bg) 67%);color:var(--white)}
-.shell{width:min(1240px,calc((100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9),100%);display:grid;gap:12px}
+body{overflow:hidden;padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));background:radial-gradient(ellipse at 50% 110%,#182848 0%,var(--bg) 67%);color:var(--white)}
+.shell{position:fixed;left:0;top:0;width:680px;display:grid;gap:4px;transform-origin:0 0}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 3px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
 .brand{color:var(--white);font-size:12px;letter-spacing:.2em}.brand b{color:var(--orange)}
 .status{display:flex;align-items:center;gap:8px}.dot{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px #c5f36b88}
@@ -47,6 +47,7 @@ button{font:inherit}
 .mode:hover{transform:translateY(-2px);border-color:var(--cyan);background:#19283b}
 .mode.primary{border-color:transparent;background:var(--orange);color:#1c0c06}
 .mode.primary:hover{background:#ff9367}
+html.hide-cursor,html.hide-cursor *{cursor:none!important}
 .mode.pad-focus{outline:2px solid var(--cyan);outline-offset:2px}
 .guide{justify-self:end;width:min(100%,360px);max-height:100%;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:19px;border:1px solid #34405b;border-radius:9px;background:#0a1020d9;backdrop-filter:blur(8px)}
 .guide h2{margin:0 0 12px;color:#e9efff;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
@@ -67,13 +68,10 @@ html.touch-ui .touch:not([hidden]){display:flex}
 .touch button.fire{width:38px;height:38px;border-color:#ff956b77;background:#d7492466}
 .touch .touch-pause{position:absolute;top:9%;left:50%;width:28px;height:28px;margin-left:-14px;font-size:9px;pointer-events:auto}
 .pause-card button.pad-focus{outline:2px solid var(--cyan);outline-offset:3px}
-@media(max-width:700px){body{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9));gap:7px}.topbar{font-size:9px}.brand{font-size:10px}.menu{grid-template-columns:1fr;padding:5%;gap:0;background:#080d1bbd}.intro{max-width:70%}.eyebrow{margin-bottom:8px;font-size:9px}h1{font-size:clamp(38px,9vw,66px)}.lead{margin:10px 0 12px;font-size:11px}.mode{min-height:34px;padding:0 10px;font-size:10px}.guide{padding:10px}.guide h2{margin-bottom:6px;font-size:9px}.guide p{margin:5px 0;font-size:10px}.guide .rule{margin-top:7px;padding-top:6px;font-size:9px}.hint{font-size:9px}}
-@media(max-width:520px){.menu{grid-template-columns:1fr;align-content:center;gap:12px;padding:6%}.intro{max-width:100%}.lead{max-width:290px}}
-@media(max-height:620px){body{padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.shell{width:min(100%,calc((100dvh - 30px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9));gap:4px}.topbar{font-size:9px}.brand{font-size:10px}.hint{display:none}.frame{border-radius:8px}.menu{gap:3%;padding:3% 3.5%;background:linear-gradient(90deg,#070b16ed 0%,#080d1bdc 50%,#080d1b90 100%)}.intro{max-width:none}.eyebrow{margin-bottom:6px;font-size:9px;letter-spacing:.18em}h1{font-size:clamp(30px,15vh,72px)}.lead{max-width:460px;margin:8px 0 10px;font-size:11px;line-height:1.4}.modes{gap:6px}.mode{min-height:32px;padding:0 10px;font-size:10px}.guide{padding:8px 10px}.guide h2{margin-bottom:4px;font-size:9px}.guide p{margin:2px 0;font-size:10px;gap:6px}.guide kbd{min-width:18px;padding:1px 4px;font-size:9px}.guide .rule{margin-top:5px;padding-top:4px;font-size:9px;line-height:1.35}.version{bottom:3px}}
-@media(max-height:400px){.menu{padding:2.5% 3%}.guide{padding:6px 8px}.guide h2{margin-bottom:3px}.guide p{margin:1px 0;font-size:9px;line-height:1.25}.guide kbd{min-width:15px;padding:0 3px;font-size:8px}.guide .rule{margin-top:3px;padding-top:3px;font-size:8px}.mode{padding:0 8px}.lead{font-size:10px}}
-@media(max-height:340px){.lead{display:none}h1{font-size:clamp(28px,14vh,60px)}}
+/* Ein Layout fuer alle Bildschirme: entworfen fuer ca. 680x400, per JS (fitShell) proportional skaliert */
+.topbar{font-size:9px}.brand{font-size:10px}.hint{display:none}.frame{border-radius:8px}.menu{gap:3%;padding:3% 3.5%;background:linear-gradient(90deg,#070b16ed 0%,#080d1bdc 50%,#080d1b90 100%)}.intro{max-width:none}.eyebrow{margin-bottom:6px;font-size:9px;letter-spacing:.18em}h1{font-size:60px}.lead{max-width:460px;margin:8px 0 10px;font-size:11px;line-height:1.4}.modes{gap:6px}.mode{min-height:32px;padding:0 10px;font-size:10px}.guide{padding:8px 10px}.guide h2{margin-bottom:4px;font-size:9px}.guide p{margin:2px 0;font-size:10px;gap:6px}.guide kbd{min-width:18px;padding:1px 4px;font-size:9px}.guide .rule{margin-top:5px;padding-top:4px;font-size:9px;line-height:1.35}.version{bottom:3px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
-.version{position:absolute;right:10px;bottom:6px;margin:0;color:var(--muted);font-size:9px;letter-spacing:.08em;opacity:.65;pointer-events:none}
+.version{position:absolute;right:10px;bottom:3px;margin:0;color:var(--muted);font-size:9px;letter-spacing:.08em;opacity:.65;pointer-events:none}
 .rotate{display:none}
 @media(orientation:portrait) and (pointer:coarse){.rotate{position:fixed;inset:0;z-index:60;display:grid;place-items:center;align-content:center;gap:10px;background:#070a15f5;color:var(--white);font-size:15px;font-weight:800;letter-spacing:.12em;text-align:center}.rotate b{font-size:42px;color:var(--orange)}}
 </style>
@@ -85,7 +83,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-11e</p>
+        <p class="version">v2026-11-12</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -279,7 +277,16 @@ skyCtx.fillStyle=skyGradient;skyCtx.fillRect(0,0,W,H);
 const skyGlow=skyCtx.createRadialGradient(W*.72,H*.24,3,W*.72,H*.24,390);
 skyGlow.addColorStop(0,'rgba(39,87,136,.24)');skyGlow.addColorStop(1,'rgba(8,13,27,0)');
 skyCtx.fillStyle=skyGlow;skyCtx.fillRect(0,0,W,H);
+const shellEl=document.querySelector('.shell');
+// Ganze Oberflaeche (Topbar + Spielfeld + Menues) proportional zur Bildschirmgroesse skalieren
+function fitShell(){
+  const cs=getComputedStyle(document.body),pl=parseFloat(cs.paddingLeft)||0,pt=parseFloat(cs.paddingTop)||0;
+  const aw=Math.max(1,window.innerWidth-pl-(parseFloat(cs.paddingRight)||0)),ah=Math.max(1,window.innerHeight-pt-(parseFloat(cs.paddingBottom)||0));
+  const sw=shellEl.offsetWidth||680,sh=shellEl.offsetHeight||400,k=Math.min(aw/sw,ah/sh);
+  shellEl.style.transform='translate('+(pl+(aw-sw*k)/2).toFixed(1)+'px,'+(pt+(ah-sh*k)/2).toFixed(1)+'px) scale('+k.toFixed(4)+')';
+}
 function resize() {
+  fitShell();
   const box = canvas.getBoundingClientRect();
   dpr = Math.min(GFX_DPR[fxLevel] || 2, window.devicePixelRatio || 1);
   canvas.width = Math.max(1, Math.round(box.width * dpr));
@@ -1613,6 +1620,12 @@ window.addEventListener('keydown',e=>{
     else if(!e.repeat&&e.code==='Escape')closeSettings();
     return;
   }
+  // Hauptmenue und Pause per Tastatur: Pfeile waehlen, Enter/Leertaste bestaetigt
+  if(state==='menu'||state==='paused'){
+    const d=e.code==='ArrowRight'||e.code==='ArrowDown'?1:e.code==='ArrowLeft'||e.code==='ArrowUp'?-1:0;
+    if(d){if(state==='menu')setMenuFocus(menuFocus+d);else setPauseFocus(pauseFocus+d);return;}
+    if(!e.repeat&&(e.code==='Enter'||e.code==='Space')){e.preventDefault();if(state==='menu')activateMenuButton(modeButtons[menuFocus]);else activatePauseButton(pauseFocus);return;}
+  }
   keys[e.code]=true;
   if(e.repeat)return;
   if(e.code==='Escape') {
@@ -1623,6 +1636,10 @@ window.addEventListener('keydown',e=>{
 });
 canvas.addEventListener('pointerdown',()=>{if(state==='over')begin(mode);});
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
+// Mauszeiger im laufenden Spiel ausblenden, bei Mausbewegung kurz zeigen
+let mouseSeenAt=0;
+window.addEventListener('mousemove',()=>{mouseSeenAt=performance.now();document.documentElement.classList.remove('hide-cursor');},{passive:true});
+setInterval(()=>{document.documentElement.classList.toggle('hide-cursor',state==='playing'&&performance.now()-mouseSeenAt>1500);},300);
 document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>begin(button.dataset.mode)));
 document.getElementById('resume').addEventListener('click',resumeGame);
 document.getElementById('backMenu').addEventListener('click',backToMenu);
