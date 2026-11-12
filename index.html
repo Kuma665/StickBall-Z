@@ -83,7 +83,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-12b</p>
+        <p class="version">v2026-11-12c</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -253,7 +253,7 @@ const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:
 const particles = Array.from({length:MAX_PARTICLES}, () => ({active:false,x:0,y:0,vx:0,vy:0,life:0,max:1,size:1,color:'',blood:false}));
 const craters = Array.from({length:MAX_CRATERS}, () => ({active:false,x:0,w:0,depth:0}));
 // Blut am Boden, Druckwellen-Ringe, Wunden je Figur (feste Pools)
-const MAX_SPLATS = 70, MAX_RINGS = 10, MAX_WOUNDS = 6;
+const MAX_SPLATS = 70, MAX_RINGS = 10, MAX_WOUNDS = 12;
 const splats = Array.from({length:MAX_SPLATS}, () => ({active:false,x:0,y:0,w:0,a:1}));
 const rings = Array.from({length:MAX_RINGS}, () => ({active:false,x:0,y:0,r:0,life:0,max:1,color:'#fff',width:3}));
 let splatCursor = 0, ringCursor = 0, screenFlash = 0, flashColor = '#fff';
@@ -339,13 +339,14 @@ function hurt(v,dir,amount,heavy) {
   if(!v.wounds)return;
   bloodSpray(v.x,v.y-44,dir,heavy?28:10+Math.min(10,amount*.6),heavy?320:200);
   v.woundAcc+=amount*(heavy?1.6:1);
-  while(v.woundAcc>=16) {
-    v.woundAcc-=16;
+  const wStep=settings.gore===2?9:16;
+  while(v.woundAcc>=wStep) {
+    v.woundAcc-=wStep;
     let w=null;
     for(let i=0;i<MAX_WOUNDS;i++)if(!v.wounds[i].active){w=v.wounds[i];break;}
     if(!w){w=v.wounds[v.woundNext];v.woundNext=(v.woundNext+1)%MAX_WOUNDS;}
     w.active=true;w.head=Math.random()<.4;w.s=.15+Math.random()*.75;w.a=-2.6+Math.random()*3.4;
-    w.ang=(Math.random()-.5)*1.8;w.len=(heavy?5:3)+Math.random()*3;w.drip=Math.random();
+    w.ang=(Math.random()-.5)*1.8;w.len=((heavy?5:3)+Math.random()*3)*(settings.gore===2?1.3:1);w.drip=Math.random();
   }
 }
 function clearWounds(f) {
@@ -1056,9 +1057,10 @@ function updateFighter(f,index,dt) {
   f.x=clamp(f.x,-worldRadius,worldRadius);
   if(f.hp<=0&&enemy.active&&mode!=='free'){f.hp=0;endMatch(1-index);return;}
   // Bluten bei vielen Wunden/wenig Leben (BRUTAL stärker)
-  if(settings.gore&&f.hp<MAX_HP*(settings.gore===2?.65:.35)&&(f.bleedTimer-=dt)<=0) {
+  if(settings.gore&&f.hp<MAX_HP*(settings.gore===2?.85:.35)&&(f.bleedTimer-=dt)<=0) {
     const hurtT=1-f.hp/MAX_HP;
-    f.bleedTimer=(settings.gore===2?.5:1.1)-hurtT*.35+Math.random()*.3;
+    if(settings.gore===2&&hurtT>.55&&Math.random()<.18)bloodSpray(f.x,f.y-40-Math.random()*20,Math.random()<.5?-1:1,5,110);
+    f.bleedTimer=(settings.gore===2?.28:1.1)-hurtT*.35+Math.random()*.3;
     addParticle(f.x+(Math.random()-.5)*10,f.y-30-Math.random()*28,f.vx*.4+(Math.random()-.5)*30,-10-Math.random()*30,BLOOD_COLORS[(Math.random()*4)|0],1.4+Math.random()*1.8,1.4,true);
   }
   if(f.hp<=0){clearWounds(f);f.hp=MAX_HP;f.ki=50;f.x=enemy.active?enemy.x-f.face*220:f.x;f.y=terrainY(f.x)-130;f.vx=-f.vx*.3;f.vy=-100;burst(f.x,f.y,f.color,30,240);}
@@ -1226,20 +1228,24 @@ function limb3(ax,ay,bx,by,cx,cy){ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo
 function drawWounds(f,head,hipY,neckX,neckY,hx,hy,max,gore) {
   const hurtT=1-f.hp/MAX_HP,big=gore===2?1.35:1;
   let shown=0;
-  for(let pass=0;pass<2;pass++) {
-    ctx.strokeStyle=pass?'#ff3a4a':'#5a040c';ctx.lineWidth=pass?1.4:2.8*big;ctx.beginPath();shown=0;
+  for(let pass=(gore===2?-1:0);pass<2;pass++) {
+    // BRUTAL: zuerst dunkle Blutflecken unter den Wunden, dann Schnitte
+    if(pass<0){ctx.fillStyle='rgba(105,0,14,.8)';ctx.beginPath();shown=0;}else{ctx.strokeStyle=pass?'#ff3a4a':'#5a040c';ctx.lineWidth=pass?1.4:2.8*big;ctx.beginPath();shown=0;}
     for(let i=0;i<MAX_WOUNDS&&shown<max;i++) {
       const w=f.wounds[i];if(!w.active)continue;shown++;
       if(w.head!==head)continue;
       let x,y;
       if(head){x=hx+Math.cos(w.a)*6.5;y=hy+Math.sin(w.a)*6.5;}
       else {x=neckX*w.s+Math.sin(w.s*3)*1.2;y=hipY+(neckY-hipY)*w.s;}
+      if(pass<0){const r=1.2+hurtT*(2.2+w.drip*2.4);ctx.moveTo(x+r,y);ctx.arc(x,y,r,0,Math.PI*2);continue;}
       const l=w.len*big*(pass?.6:1),c=Math.cos(w.ang)*l*.5,s=Math.sin(w.ang)*l*.5;
       ctx.moveTo(x-c,y-s);ctx.lineTo(x+c,y+s);
-      if(gore===2&&!pass&&hurtT>.3){const d=(2+w.drip*7)*hurtT;ctx.moveTo(x,y);ctx.lineTo(x+.6,y+d);}
+      if(gore===2&&!pass&&hurtT>.3){const d=(3+w.drip*(head?16:11))*hurtT;ctx.moveTo(x,y);ctx.lineTo(x+.6,y+d);}
     }
-    ctx.stroke();
+    if(pass<0)ctx.fill();else ctx.stroke();
   }
+  // BRUTAL: Blut aus dem Mund bei wenig Leben
+  if(head&&gore===2&&hurtT>.45){const d=4+(hurtT-.45)*22+Math.sin(clock*3)*1.2;ctx.strokeStyle='#8a0612';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(hx+4.5,hy+4);ctx.quadraticCurveTo(hx+5.2,hy+4+d*.5,hx+4.6,hy+4+d);ctx.stroke();}
 }
 function drawFighter(f,alpha) {
   if(!f.active)return;
