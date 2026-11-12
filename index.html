@@ -83,7 +83,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-12c</p>
+        <p class="version">v2026-11-12d</p>
         <p class="eyebrow">2D-Duell · Combos · Block · Ausweichen</p>
         <h1>STICKBALL<span>Z</span></h1>
         <p class="lead">Kämpfe mit Combos, blocke Treffer und weich im richtigen Moment aus. Flieg frei durch eine endlose Welt und spreng den Boden weg.</p>
@@ -1534,7 +1534,7 @@ function render(alpha) {
   renderZoom=previousZoom+(zoom-previousZoom)*alpha;
   drawBackground();
   ctx.save();
-  if(screenShake>0)ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake);
+  if(screenShake>0&&state!=='paused')ctx.translate((Math.random()-.5)*screenShake,(Math.random()-.5)*screenShake);
   ctx.translate(W/2-renderCameraX*renderZoom,H/2-renderCameraY*renderZoom);ctx.scale(renderZoom,renderZoom);
   drawTerrain();
   if(settings.gore) {
@@ -1603,7 +1603,8 @@ function render(alpha) {
 function frame(now) {
   if(!lastTime)lastTime=now;
   const rawDt=(now-lastTime)/1000;
-  accumulator+=Math.min(.05,rawDt);lastTime=now;
+  // Pause = Standbild: Zeit nicht weiterzÃ¤hlen, sonst wechselt die Interpolation und die Figuren zittern
+  if(state!=='paused')accumulator+=Math.min(.05,rawDt);lastTime=now;
   autoGfx(rawDt);
   pollPads();
   while(accumulator>=DT){update(DT);accumulator-=DT;}
