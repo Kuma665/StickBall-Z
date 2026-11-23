@@ -1641,7 +1641,7 @@ function render(alpha) {
 function frame(now) {
   if(!lastTime)lastTime=now;
   const rawDt=(now-lastTime)/1000;
-  // Pause = Standbild: Zeit nicht weiterzÃ¤hlen, sonst wechselt die Interpolation und die Figuren zittern
+  // Pause = Standbild: Zeit nicht weiterzählen, sonst wechselt die Interpolation und die Figuren zittern
   if(state!=='paused')accumulator+=Math.min(.05,rawDt);lastTime=now;
   autoGfx(rawDt);
   pollPads();
