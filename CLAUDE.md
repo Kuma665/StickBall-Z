@@ -30,6 +30,7 @@ Allgemeine Regeln (Kommunikation, Sicherung, Git, Spielgerät, Performance, Test
 - Stumm-Knopf `#muteBtn` (oben rechts im Spielfeld), `settings.mute`, `toggleMute()`; Taste M, Controller △/Y, nur in Menü/Pause. Lautstärke über `audioMaster` (`MASTER_VOL`).
 - Eckhinweis `#padHint` unten rechts, nur mit Controller, gesteuert über `updateCornerUI()` (jeden Frame aufgerufen, ändert DOM nur bei Änderung). Texte in `UI_TXT`.
 - Alte Hinweiszeile `#hint` unter dem Spielfeld ist per CSS ausgeblendet.
+- Figuren-Look: Frisuren in `HAIR` (je Stil normal/Super), `HAIR_COLOR`, Gürtel `f.belt` mit wehenden Enden, Rivalen-Pose (Stil 1 verschränkt im Stand die Arme), Funken beim Ki-Laden.
 
 ## Offen (Stand 22.11.2026)
 - Erledigt: Stumm-Knopf, Erklärtexte im Hauptmenü entfernt, Eckhinweis „✕ OK · ○ Zurück“.

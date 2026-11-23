@@ -86,7 +86,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-22</p>
+        <p class="version">v2026-11-23</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free">FREIFLUG</button>
@@ -272,8 +272,8 @@ const keyMaps = [
 const MAX_HP = 250;
 const BEAM_COST = 45;
 const fighters = [
-  { name:'BLAZE', style:0, color:'#ff3f55', dark:'#a9233b', belt:'#ff3f55', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, cannonHolding:false, cannonCharge:0, shotQueued:false, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
-  { name:'VOLT', style:1, color:'#36a9ff', dark:'#155fb6', belt:'#36a9ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, cannonHolding:false, cannonCharge:0, shotQueued:false, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
+  { name:'BLAZE', style:0, color:'#ff3f55', dark:'#a9233b', belt:'#ffb23e', hair:'#090b12', x:-100, y:GROUND, vx:0, vy:0, px:-100, py:GROUND, face:1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, cannonHolding:false, cannonCharge:0, shotQueued:false, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:true, bot:false, t:0 },
+  { name:'VOLT', style:1, color:'#36a9ff', dark:'#155fb6', belt:'#e8f6ff', hair:'#090b12', x:150, y:GROUND, vx:0, vy:0, px:150, py:GROUND, face:-1, hp:MAX_HP, ki:65, superTime:0, superHeld:false, charging:false, guarding:false, fire:0, shotAnim:0, beam:0, beamCharge:0, beamHeld:false, beamCooldown:0, beamHitCooldown:0, beamTerrainHit:false, beamHitsGround:false, beamAngle:0, beamEndX:0, beamEndY:0, stun:0, hitFlash:0, dashTapLeft:0, dashTapRight:0, dashTime:0, dashInvuln:0, dashCooldown:0, dashDir:1, dashLeftHeld:false, dashRightHeld:false, dashBtnHeld:false, shotHeld:false, guideShot:-1, cannonHolding:false, cannonCharge:0, shotQueued:false, smashHolding:false, smashCharge:0, smashPower:1, cancelWindow:0, chaseWindow:0, comboCount:0, punch:0, punchBuffer:0, heavyBuffer:0, bufferedAttackType:0, bufferedHeavyType:3, attackStep:0, attackType:0, heavyPowered:false, attackDuration:0, comboWindow:0, comboQueued:false, queuedAttack:0, comboDisplay:0, comboHits:0, punchHit:false, punchCooldown:0, punchHeld:false, heavyHeld:false, active:false, bot:false, t:0 }
 ];
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
 const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false}));
@@ -1226,12 +1226,12 @@ function bendJoint(ax,ay,cx,cy,len) {
 }
 // Haar-Spitzen relativ zur Kopfmitte (Blick nach rechts): [Stil][0=normal,1=Super]; im Super-Modus flackern die Spitzen
 const HAIR=[
-  [[7,-4, 6,-10, 2,-9, -1,-15, -4,-10, -9,-13, -8,-6, -14,-6, -8,1],
-   [7,-3, 10,-13, 3,-11, 2,-23, -3,-12, -8,-25, -8,-11, -19,-17, -10,-5, -21,-4, -8,2]],
-  [[7,-4, 8,-11, 3,-9, 2,-16, -2,-10, -5,-15, -7,-8, -12,-10, -8,-1],
-   [7,-3, 12,-14, 4,-11, 4,-25, -1,-12, -4,-27, -7,-11, -15,-22, -10,-6, -18,-9, -8,1]]
+  [[7,-4, 12,-9, 5,-10, 7,-19, 0,-13, -3,-22, -6,-13, -13,-18, -10,-8, -18,-8, -10,-2, -15,3, -8,2],
+   [7,-3, 13,-12, 5,-12, 6,-26, -1,-14, -6,-30, -8,-13, -18,-24, -11,-7, -24,-8, -11,0, -19,6, -8,3]],
+  [[7,-4, 9,-14, 4,-12, 4,-25, -1,-14, -4,-27, -6,-13, -11,-23, -9,-8, -14,-13, -8,-1],
+   [7,-3, 11,-18, 5,-14, 6,-32, 0,-16, -4,-35, -6,-15, -13,-30, -10,-9, -18,-17, -8,0]]
 ];
-const HAIR_COLOR=['#8a1a2c','#123f7c'];
+const HAIR_COLOR=['#2a0c14','#0c1a33'];
 // Flammen-Aura um den Körper (lokale Koordinaten): Zungen steigen nach oben, zwei Schichten + Umriss
 function drawAura(level,color,core,seed) {
   const N=22,cy=-36,rx=16+level*10,ry=32+level*15;
@@ -1316,6 +1316,12 @@ function drawFighter(f,alpha) {
     const lvl=f.charging?1:Math.max(smashLvl,cannonC,beamLvl);
     if(lvl>0) {
       drawAura(f.charging?1:.2+lvl*.5,auraColor,auraCore,seed);
+      if(f.charging){
+        // Aufsteigende Funken beim Ki-Laden (feste Anzahl)
+        ctx.fillStyle=auraCore;
+        for(let i=0;i<4;i++){const t=(clock*1.3+i*.25+seed)%1;ctx.globalAlpha=(1-t)*.9;ctx.fillRect(Math.sin(i*2.3+seed)*15-1,-6-t*70,2,2);}
+        ctx.globalAlpha=1;
+      }
       if(f.charging&&y>floor-4) {
         // Staub-Druckwellen am Boden
         ctx.strokeStyle=auraColor;ctx.lineWidth=2;
@@ -1404,6 +1410,7 @@ function drawFighter(f,alpha) {
     feX=7;feY=-42;fhX=punchX;fhY=punchY;
     if(ready){beX=8;beY=-40;bhX=16;bhY=-38;}else{beX=-4;beY=-40;bhX=5;bhY=-45;}
   } else if(flyFast){feX=10;feY=-51;fhX=20;fhY=-56;beX=-8;beY=-42;bhX=-16;bhY=-35;}
+  else if(f.style===1&&!airborne&&walking<.08){beX=13;beY=-37;bhX=-3;bhY=-40;feX=14;feY=-35;fhX=-1;fhY=-43+breathe*.4;}
   else {const sw=Math.sin(f.t*12)*walking*4;beX=-2-sw;beY=-39;bhX=6-sw;bhY=-47;feX=9+sw;feY=-38;fhX=15+sw;fhY=-46+breathe*.5;}
   // Wischspur hinter Faust/Fuß während des Zuschlagens
   if(kind&&atkT>.16&&atkT<.62) {
@@ -1446,6 +1453,9 @@ function drawFighter(f,alpha) {
   ctx.strokeStyle=lineColor;ctx.beginPath();
   ctx.moveTo(0,hipY);ctx.quadraticCurveTo(2,(hipY+neckY)*.5,neckX,neckY);
   limb3(0,hipY,fkX,fkY,ffX,ffY);limb3(sx,sy,feX,feY,fhX,fhY);ctx.stroke();
+  // Gürtel mit wehenden Enden
+  ctx.strokeStyle=ssj?'#fff2b0':f.belt;ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(-5,hipY+1);ctx.lineTo(5,hipY);
+  ctx.moveTo(-3,hipY+1);ctx.quadraticCurveTo(-7-wind*5,hipY+3+wave*.6,-10-wind*9,hipY+7+lift*.4-wave);ctx.stroke();
   const gore=f.wounds?settings.gore:0,woundMax=gore===2?5:3;
   if(gore) drawWounds(f,false,hipY,neckX,neckY,0,0,woundMax,gore);
   ctx.fillStyle=f.guarding?'#9cefff':lineColor;ctx.beginPath();ctx.arc(fhX,fhY,f.guarding?4:kind===5||kind>=8?3.3+k*2.2:3.3,0,Math.PI*2);ctx.fill();
