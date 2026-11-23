@@ -97,7 +97,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-23d</p>
+        <p class="version">v2026-11-23e</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free">FREIFLUG</button>
@@ -505,7 +505,7 @@ function readInput(f,index) {
   return out;
 }
 // ---- Gamepads: feste Zuordnung Controller -> Spieler (Reihenfolge der Verbindung) ----
-const PS_RE=/dualsense|dualshock|wireless controller|054c/i;
+const PS_RE=/dualsense|dualshock|wireless controller|054c/i,XBOX_RE=/xbox|xinput|045e/i;  // Xbox meldet sich teils auch als "Wireless Controller"
 // Tastensymbole je Controller: PS -> ✕ ○ □ △ / L1 R1 L2 R2; Xbox und unbekannt -> A B X Y / LB RB LT RT
 const PAD_SYM={ps:{a:'✕',b:'○',x:'□',y:'△',l1:'L1',r1:'R1',l2:'L2',r2:'R2',l3:'L3',start:'OPTIONS'},xbox:{a:'A',b:'B',x:'X',y:'Y',l1:'LB',r1:'RB',l2:'LT',r2:'RT',l3:'LS',start:'MENU'}};
 function padSym(kind,k){return (PAD_SYM[kind]||PAD_SYM.xbox)[k];}
@@ -583,7 +583,7 @@ function pollPads() {
     if(gi<0){if(st.connected){st.connected=false;st.btn.fill(0);st.prev.fill(0);if(state==='playing')pauseGame();}continue;}
     const g=list[gi],b=g.buttons;
     st.connected=true;count++;
-    if(g.id!==st.id){st.id=g.id;st.kind=PS_RE.test(g.id)?'ps':'xbox';}
+    if(g.id!==st.id){st.id=g.id;st.kind=PS_RE.test(g.id)&&!XBOX_RE.test(g.id)?'ps':'xbox';}
     for(let k=0;k<PAD_BUTTONS;k++){const bt=b[k];st.prev[k]=st.btn[k];st.btn[k]=padFocus&&bt&&(bt.pressed||bt.value>.35)?1:0;if(st.btn[k]&&!st.prev[k])st.latch[k]=1;}
     st.ax=padFocus?g.axes[0]||0:0;st.ay=padFocus?g.axes[1]||0:0;
   }
