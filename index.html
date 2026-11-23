@@ -73,6 +73,14 @@ html.touch-ui .touch:not([hidden]){display:flex}
 .mute-btn{position:absolute;top:8px;right:8px;z-index:7;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #46536e;border-radius:50%;background:#0c1323d9;color:var(--white);font-size:13px;line-height:1;cursor:pointer}.mute-btn[hidden]{display:none}
 .intro h1{margin-bottom:16px}
 .pad-hint{position:absolute;right:10px;bottom:15px;z-index:6;margin:0;color:#c7d3ea;font-size:10px;font-weight:700;letter-spacing:.04em;text-shadow:0 1px 3px #000c;pointer-events:none}.pad-hint[hidden]{display:none}
+/* Tastensymbole als runde Plakette (wie UCD .psg); psg0-3 = PS ✕○□△ per SVG/CSS, xb0-3 = Xbox A B X Y, psw = Schultertasten */
+.psg{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:1.45em;height:1.45em;border-radius:50%;background:radial-gradient(circle at 50% 30%,#3a3f47,#121418 70%);border:1px solid #7d8590;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.7);color:#f4f7ff;font:900 .9em/1 Arial,sans-serif;letter-spacing:0;text-shadow:none;vertical-align:middle;margin:0 .12em}
+.psw{width:auto;min-width:1.45em;padding:0 .38em;border-radius:.75em;font-size:.78em;height:1.6em}
+.xb0{color:#5fd36a}.xb1{color:#ff6262}.xb2{color:#5aa8ff}.xb3{color:#ffd23f}
+.psg0{color:transparent;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6.3 6.3L13.7 13.7M13.7 6.3L6.3 13.7' stroke='%236fa8ff' stroke-width='2.1' stroke-linecap='round'/%3E%3C/svg%3E") center/100% no-repeat,radial-gradient(circle at 50% 30%,#3a3f47,#121418 70%);filter:drop-shadow(0 0 2px rgba(111,168,255,.5))}
+.psg1{color:transparent;background:radial-gradient(circle,transparent 0 .27em,#ff5f5f .29em .39em,transparent .41em),radial-gradient(circle at 50% 30%,#3a3f47,#121418 70%);filter:drop-shadow(0 0 2px rgba(255,95,95,.5))}
+.psg2{color:transparent;background:linear-gradient(#23272d,#23272d) center/.42em .42em no-repeat,linear-gradient(#ff7fd0,#ff7fd0) center/.64em .64em no-repeat,radial-gradient(circle at 50% 30%,#3a3f47,#121418 70%);filter:drop-shadow(0 0 2px rgba(255,127,208,.5))}
+.psg3{color:transparent;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 5.6L14.6 13.7H5.4Z' fill='none' stroke='%233fe0a8' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat,radial-gradient(circle at 50% 30%,#3a3f47,#121418 70%);filter:drop-shadow(0 0 2px rgba(63,224,168,.5))}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 .version{position:absolute;right:10px;bottom:3px;margin:0;color:var(--muted);font-size:9px;letter-spacing:.08em;opacity:.65;pointer-events:none}
 .rotate{display:none}
@@ -86,7 +94,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-23b</p>
+        <p class="version">v2026-11-23c</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free">FREIFLUG</button>
@@ -149,7 +157,7 @@ const keys = Object.create(null);
 let dpr = 1, state = 'menu', mode = 'free', clock = 0, accumulator = 0, lastTime = 0;
 let cameraX = 0, cameraY = 260, zoom = 1, previousCameraX = 0, previousCameraY = 260, previousZoom = 1;
 let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, maxDistance = 0, screenShake = 0, hitStop = 0;
-let padKind = '', overText = 'Enter / Tippen: Revanche  ·  Esc: Menü';
+let padKind = '', overParts = null, overText = 'Enter / Tippen: Revanche  ·  Esc: Menü';
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
 const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=['AUTO','NIEDRIG','MITTEL','HOCH'],GFX_LEVELS=['NIEDRIG','MITTEL','HOCH'],GFX_DPR=[1,1.5,2],GORE_NAMES=['AUS','WENIG','BRUTAL'];
 const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,mute:false,lastMode:'free'};
@@ -256,12 +264,12 @@ function updateCornerUI() {
   const inMenu=state==='menu'||state==='paused';
   let txt='';
   if(padKind&&inMenu&&!helpOpen) {
-    const s=k=>padSym(padKind,k);
+    const s=k=>padBadge(padKind,k);
     txt=settingsOpen?s('a')+' '+UI_TXT.ok+' · '+s('b')+' '+UI_TXT.back:state==='paused'?s('a')+' '+UI_TXT.select+' · '+s('b')+' '+UI_TXT.resume:s('a')+' '+UI_TXT.ok;
   }
   const key=(inMenu?'1':'0')+txt;
   if(key===cornerKey)return;
-  cornerKey=key;muteBtn.hidden=!inMenu;padHintEl.hidden=!txt;padHintEl.textContent=txt;
+  cornerKey=key;muteBtn.hidden=!inMenu;padHintEl.hidden=!txt;padHintEl.innerHTML=txt;
 }
 muteBtn.addEventListener('click',e=>{e.stopPropagation();toggleMute();muteBtn.blur();});
 renderMute();
@@ -498,12 +506,40 @@ const PS_RE=/dualsense|dualshock|wireless controller|054c/i;
 // Tastensymbole je Controller: PS -> ✕ ○ □ △ / L1 R1 L2 R2; Xbox und unbekannt -> A B X Y / LB RB LT RT
 const PAD_SYM={ps:{a:'✕',b:'○',x:'□',y:'△',l1:'L1',r1:'R1',l2:'L2',r2:'R2',l3:'L3',start:'OPTIONS'},xbox:{a:'A',b:'B',x:'X',y:'Y',l1:'LB',r1:'RB',l2:'LT',r2:'RT',l3:'LS',start:'MENU'}};
 function padSym(kind,k){return (PAD_SYM[kind]||PAD_SYM.xbox)[k];}
+const FACE_KEYS=['a','b','x','y'],OVER_PAD=[{k:'a'},' Revanche  ·  ',{k:'b'},' Menü'];
+// Symbol als HTML-Plakette (.psg): Gesichtstasten rund, Schulter-/Systemtasten als Pille
+function padBadge(kind,k){const t=padSym(kind,k),n=FACE_KEYS.indexOf(k);return '<b class="psg '+(n<0?'psw':(kind==='ps'?'psg':'xb')+n)+'">'+t+'</b>';}
+// Gleiche Plakette auf dem Canvas: Zeile aus Texten und {k:'a'}-Teilen, mittig um cx; Schrift setzt der Aufrufer
+function drawPadLine(kind,parts,cx,y,fs) {
+  const d=fs*1.45,gap=fs*.24;let w=0;
+  for(const p of parts)w+=typeof p==='string'?ctx.measureText(p).width:d+gap;
+  let x=cx-w/2;const font=ctx.font,col=ctx.fillStyle;ctx.textAlign='left';
+  for(const p of parts) {
+    if(typeof p==='string'){ctx.fillText(p,x,y);x+=ctx.measureText(p).width;continue;}
+    const r=d/2,bx=x+gap/2+r,by=y-fs*.36,n=FACE_KEYS.indexOf(p.k);
+    ctx.fillStyle='#1b1e24';ctx.strokeStyle='#7d8590';ctx.lineWidth=1;ctx.beginPath();ctx.arc(bx,by,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+    if(kind==='ps') {
+      ctx.strokeStyle=['#6fa8ff','#ff5f5f','#ff7fd0','#3fe0a8'][n];ctx.lineWidth=fs*.15;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+      const q=r*.42;
+      if(n===0){ctx.moveTo(bx-q,by-q);ctx.lineTo(bx+q,by+q);ctx.moveTo(bx+q,by-q);ctx.lineTo(bx-q,by+q);}
+      else if(n===1)ctx.arc(bx,by,r*.48,0,Math.PI*2);
+      else if(n===2)ctx.rect(bx-q,by-q,q*2,q*2);
+      else{ctx.moveTo(bx,by-r*.5);ctx.lineTo(bx+r*.5,by+r*.36);ctx.lineTo(bx-r*.5,by+r*.36);ctx.closePath();}
+      ctx.stroke();ctx.lineCap='butt';ctx.lineJoin='miter';
+    } else {
+      ctx.fillStyle=['#5fd36a','#ff6262','#5aa8ff','#ffd23f'][n];ctx.font='900 '+(fs*.9)+'px Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(padSym(kind,p.k),bx,by+fs*.04);ctx.font=font;ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    }
+    ctx.fillStyle=col;x+=d+gap;
+  }
+  ctx.textAlign='center';
+}
 function buildPadHint(kind) {
   const s=k=>padSym(kind,k);
   return s('x')+' Leicht · '+s('y')+' Stark (halten: aufladen, +↑/↓) · '+s('r1')+' Ki (halten: Kanone) · '+s('r2')+' Druckwelle (halten: Kamehameha) · '+s('a')+' Hoch · '+s('b')+' Ausweichen (halten: Turbo, nach Finisher: verfolgen) · '+s('l1')+' Block · '+s('l2')+' Laden · '+s('l3')+' Super';
 }
 function padGuideHTML(kind) {
-  const s=k=>'<kbd>'+padSym(kind,k)+'</kbd>',row=(t,k)=>'<p><span>'+t+'</span>'+k+'</p>';
+  const s=k=>padBadge(kind,k),row=(t,k)=>'<p><span>'+t+'</span>'+k+'</p>';
   return '<h2>Steuerung · Controller</h2>'+row('Fliegen / lenken','<kbd>Stick</kbd>')+row('Hoch fliegen',s('a'))+row('Leichte Combo · bis zu 3 Treffer',s('x'))+
     row('Stark · halten lädt auf, ↑/↓ lenkt',s('y'))+row('Ausweichen · halten: Turbo',s('b'))+row('Blocken',s('l1'))+row('Ki-Schuss · halten: Kanone',s('r1'))+
     row('Antippen: Ki-Druckwelle · halten: Kamehameha',s('r2'))+row('Ki laden',s('l2'))+row('Super-Saiyajin · bei 100 Ki',s('l3'))+
@@ -567,6 +603,7 @@ function updateTouch(){touchControls.hidden=!(state==='playing'&&!padStates[0].c
 function refreshInputTexts() {
   hint.textContent=padKind?buildPadHint(padKind):touchUI?HINT_TOUCH:HINT_KEY;
   guideEl.innerHTML=padKind?padGuideHTML(padKind):touchUI?TOUCH_GUIDE:guideKeyHTML;
+  overParts=padKind?OVER_PAD:null;
   overText=padKind?padSym(padKind,'a')+' Revanche  ·  '+padSym(padKind,'b')+' Menü':touchUI?'Tippen: Revanche  ·  Zurück: Menü':'Enter / Tippen: Revanche  ·  Esc: Menü';
 }
 // Pause-Menü mit Steuerkreuz/Stick: links/rechts wählt, ✕/A bestätigt, ○/B oder Options = weiter
@@ -1634,7 +1671,7 @@ function render(alpha) {
     ctx.textAlign='center';ctx.font='900 28px system-ui';ctx.fillStyle=wf.color;
     ctx.fillText(wf.name+(wf.bot?' (KI)':'')+' GEWINNT',W/2,H/2+4);
     ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
-    ctx.fillText(overText,W/2,H/2+24);
+    if(overParts)drawPadLine(padKind,overParts,W/2,H/2+24,10);else ctx.fillText(overText,W/2,H/2+24);
   }
   if(state==='menu') {
     for(let i=0;i<5;i++) {
