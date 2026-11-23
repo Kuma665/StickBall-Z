@@ -73,7 +73,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
 .pause-card button.pad-focus{outline:2px solid var(--cyan);outline-offset:3px}
 /* Ein Layout fuer alle Bildschirme: entworfen fuer ca. 680x400, per JS (fitShell) proportional skaliert */
 .topbar{font-size:9px}.brand{font-size:10px}.hint{display:none}.frame{border-radius:8px}.menu{gap:3%;padding:3% 3.5%;background:linear-gradient(90deg,#070b16ed 0%,#080d1bdc 50%,#080d1b90 100%)}.intro{max-width:none}.eyebrow{margin-bottom:6px;font-size:9px;letter-spacing:.18em}h1{font-size:60px}.lead{max-width:460px;margin:8px 0 10px;font-size:11px;line-height:1.4}.modes{gap:6px}.mode{min-height:32px;padding:0 10px;font-size:10px}.guide{padding:8px 10px}.guide h2{margin-bottom:4px;font-size:9px}.guide p{margin:2px 0;font-size:10px;gap:6px}.guide kbd{min-width:18px;padding:1px 4px;font-size:9px}.guide .rule{margin-top:5px;padding-top:4px;font-size:9px;line-height:1.35}.version{bottom:3px}
-.mute-btn{position:absolute;top:8px;right:8px;z-index:7;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #46536e;border-radius:50%;background:#0c1323d9;color:var(--white);font-size:13px;line-height:1;cursor:pointer}.mute-btn[hidden]{display:none}
+.mute-btn{position:absolute;top:8px;right:8px;z-index:7;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #46536e;border-radius:50%;background:#0c1323d9;color:var(--white);font-size:13px;line-height:1;cursor:pointer}.mute-btn[hidden]{display:none}.mute-btn.below-hud{top:54px}
 .intro h1{margin-bottom:16px}
 .pad-hint{position:absolute;right:10px;bottom:15px;z-index:6;margin:0;color:#c7d3ea;font-size:10px;font-weight:700;letter-spacing:.04em;text-shadow:0 1px 3px #000c;pointer-events:none}.pad-hint[hidden]{display:none}
 /* Tastensymbole als runde Plakette (wie UCD .psg); psg0-3 = PS ✕○□△ per SVG/CSS, xb0-3 = Xbox A B X Y, psw = Schultertasten */
@@ -97,7 +97,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" aria-label="2D-Flugkampf"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-23e</p>
+        <p class="version">v2026-11-23f</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free">FREIFLUG</button>
@@ -124,7 +124,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
         <p><span>Spieler 2 · Combo / Heavy / Schuss</span><span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd></span></p>
         <p class="rule"><kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.</p>
       </aside><button type="button" class="set-back pad-focus" id="helpBack">ZURÜCK</button></div></div>
-    <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="pauseSettings">EINSTELLUNGEN</button><button class="secondary" id="pauseHelp">STEUERUNG</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
+    <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="pauseSettings">EINSTELLUNGEN</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
     <div class="settings" id="settings" hidden><div class="settings-card"><h2>EINSTELLUNGEN</h2>
       <div class="set-row" data-set="music"><span>Musik</span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="sfx"><span>Soundeffekte</span><button type="button" class="set-val"></button></div>
@@ -270,9 +270,9 @@ function updateCornerUI() {
     const s=k=>padBadge(padKind,k);
     txt=settingsOpen?s('a')+' '+UI_TXT.ok+' · '+s('b')+' '+UI_TXT.back:state==='paused'?s('a')+' '+UI_TXT.select+' · '+s('b')+' '+UI_TXT.resume:s('a')+' '+UI_TXT.ok;
   }
-  const key=(inMenu?'1':'0')+txt;
+  const key=(inMenu?'1':state==='over'?'2':'0')+txt;
   if(key===cornerKey)return;
-  cornerKey=key;muteBtn.hidden=!inMenu;padHintEl.hidden=!txt;padHintEl.innerHTML=txt;
+  cornerKey=key;muteBtn.hidden=!(inMenu||state==='over');muteBtn.classList.toggle('below-hud',state==='over');padHintEl.hidden=!txt;padHintEl.innerHTML=txt;
 }
 muteBtn.addEventListener('click',e=>{e.stopPropagation();toggleMute();muteBtn.blur();});
 renderMute();
@@ -610,9 +610,9 @@ function refreshInputTexts() {
   overText=padKind?padSym(padKind,'a')+' Revanche  ·  '+padSym(padKind,'b')+' Menü':touchUI?'Tippen: Revanche  ·  Zurück: Menü':'Enter / Tippen: Revanche  ·  Esc: Menü';
 }
 // Pause-Menü mit Steuerkreuz/Stick: links/rechts wählt, ✕/A bestätigt, ○/B oder Options = weiter
-const pauseButtons=[document.getElementById('resume'),document.getElementById('pauseSettings'),document.getElementById('pauseHelp'),document.getElementById('backMenu')];
+const pauseButtons=[document.getElementById('resume'),document.getElementById('pauseSettings'),document.getElementById('backMenu')];
 let pauseFocus=0;
-function activatePauseButton(i){if(i===0)resumeGame();else if(i===1)openSettings();else if(i===2)openHelp();else backToMenu();}
+function activatePauseButton(i){if(i===0)resumeGame();else if(i===1)openSettings();else backToMenu();}
 // ---- Einstellungs-Menü (aus Hauptmenü und Pause): hoch/runter wählt, links/rechts ändert, ✕/A ändert, ○/B zurück ----
 const settingsLayer=document.getElementById('settings'),settingRows=Array.from(settingsLayer.querySelectorAll('.set-row'));
 let settingsOpen=false,settingFocus=0;
@@ -658,7 +658,7 @@ function handlePadUI() {
     const nav=dir!==0&&dir!==st.navDir?dir:0;st.navDir=dir;
     const dirY=st.ay>.55||st.btn[13]?1:st.ay<-.55||st.btn[12]?-1:0;
     const navY=dirY!==0&&dirY!==st.navY?dirY:0;st.navY=dirY;
-    if((state==='menu'||state==='paused')&&padPressed(st,3)){toggleMute();return;}
+    if((state==='menu'||state==='paused'||state==='over')&&padPressed(st,3)){toggleMute();return;}
     if(helpOpen) {
       if(dirY)guideEl.scrollTop+=dirY*6;
       if(padPressed(st,0)||padPressed(st,1)||padPressed(st,9)){closeHelp();return;}
@@ -1605,7 +1605,7 @@ function drawHud() {
         ctx.fillStyle='#ffe66d';ctx.fillRect(x+8,y+33,174*clamp(f.superTime/12,0,1),2);
       } else if(f.ki>=100) {
         ctx.textAlign=i===0?'left':'right';ctx.font='800 9px system-ui';ctx.fillStyle='#ffe66d';
-        ctx.fillText((padStates[i].connected?padSym(padStates[i].kind,'l3'):i===0?(touchUI&&!padKind?'SSJ':'R'):'O')+' SUPER BEREIT',i===0?x+84:x+106,y+40);
+        ctx.fillText(f.bot?'SUPER BEREIT':(padStates[i].connected?padSym(padStates[i].kind,'l3'):i===0?(touchUI&&!padKind?'SSJ':'R'):'O')+' SUPER BEREIT',i===0?x+84:x+106,y+40);
       }
   }
   ctx.textAlign='center';ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
@@ -1697,7 +1697,7 @@ function frame(now) {
 }
 window.addEventListener('keydown',e=>{
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
-  if(e.code==='KeyM'&&!e.repeat&&(state==='menu'||state==='paused')){toggleMute();return;}
+  if(e.code==='KeyM'&&!e.repeat&&(state==='menu'||state==='paused'||state==='over')){toggleMute();return;}
   if(helpOpen) {
     e.preventDefault();
     if(e.code==='ArrowUp')guideEl.scrollTop-=30;else if(e.code==='ArrowDown')guideEl.scrollTop+=30;
@@ -1749,7 +1749,6 @@ document.getElementById('menuSettings').addEventListener('click',openSettings);
 document.getElementById('menuHelp').addEventListener('click',openHelp);
 document.getElementById('helpBack').addEventListener('click',closeHelp);
 document.getElementById('pauseSettings').addEventListener('click',openSettings);
-document.getElementById('pauseHelp').addEventListener('click',openHelp);
 document.getElementById('touchPause').addEventListener('click',()=>{if(state==='playing')pauseGame();});
 // ---- Handy-Grundausstattung: Vollbild, Zurück-Taste, Wake Lock, Fokus/Pause ----
 let historyArmed=false,wakeLock=null;
