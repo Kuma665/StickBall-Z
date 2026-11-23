@@ -92,64 +92,100 @@ html.touch-ui .touch:not([hidden]){display:flex}
 </head>
 <body>
 <main class="shell">
-  <header class="topbar"><div class="brand">STICKBALL <b>Z</b></div><div class="status"><i class="dot"></i><span id="status">FLUGGEBIET 01</span></div></header>
-  <section class="frame" aria-label="StickBall Z Spiel">
-    <canvas id="game" aria-label="2D-Flugkampf"></canvas>
+  <header class="topbar"><div class="brand">STICKBALL <b>Z</b></div><div class="status"><i class="dot"></i><span id="status" data-t="stArea"></span></div></header>
+  <section class="frame" data-ta="ariaFrame">
+    <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-23f</p>
+        <p class="version">v2026-11-23g</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
-          <button class="mode primary" data-mode="free">FREIFLUG</button>
-          <button class="mode" data-mode="bot">GEGEN KI</button>
-          <button class="mode" data-mode="local">2 SPIELER</button>
-          <button class="mode" id="menuHelp" type="button">STEUERUNG</button>
-          <button class="mode" id="menuSettings" type="button" aria-label="Einstellungen">⚙</button>
+          <button class="mode primary" data-mode="free" data-t="modeFree"></button>
+          <button class="mode" data-mode="bot" data-t="modeBot"></button>
+          <button class="mode" data-mode="local" data-t="modeLocal"></button>
+          <button class="mode" id="menuHelp" type="button" data-t="menuHelp"></button>
+          <button class="mode" id="menuSettings" type="button" data-ta="menuSettings">⚙</button>
         </div>
       </div>
     </div>
-    <div class="help" id="help" hidden><div class="help-card"><aside class="guide">
-        <h2>Steuerung · Spieler 1</h2>
-        <p><span>Fliegen / lenken</span><span><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></span></p>
-        <p><span>Leichte Combo · bis zu 3 Treffer</span><kbd>F</kbd></p>
-        <p><span>Heavy · kostet 12 Ki für Extra-Kraft</span><kbd>V</kbd></p>
-        <p><span>Hoch + Schlag: Uppercut · Runter + Schlag: Slam</span><kbd>W/S</kbd> + <kbd>F</kbd></p>
-        <p><span>Im Flug vorwärts + Schlag: Rush</span><kbd>A/D</kbd> + <kbd>F</kbd></p>
-        <p><span>Blocken · runter + vom Gegner weg</span><kbd>S</kbd> + <kbd>A/D</kbd></p>
-        <p><span>Ausweichen · Richtung doppelt antippen, halten: Turbo</span><kbd>A/D · ←/→</kbd></p>
-        <p><span>Ki-Schuss · auch im Flug lenkbar</span><kbd>G</kbd> + <kbd>WASD</kbd></p>
-        <p><span>Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt</span><kbd>T</kbd> + <kbd>W/S</kbd></p>
-        <p><span>Ki laden</span><kbd>H</kbd></p>
-        <p><span>Super-Saiyajin · bei 100 Ki</span><kbd>R</kbd></p>
-        <p><span>Spieler 2 · Combo / Heavy / Schuss</span><span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd></span></p>
-        <p class="rule"><kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.</p>
-      </aside><button type="button" class="set-back pad-focus" id="helpBack">ZURÜCK</button></div></div>
-    <div class="pause" id="pause" hidden><div class="pause-card"><h2>PAUSE</h2><button id="resume">WEITER</button><button class="secondary" id="pauseSettings">EINSTELLUNGEN</button><button class="secondary" id="backMenu">ZUM MENÜ</button></div></div>
-    <div class="settings" id="settings" hidden><div class="settings-card"><h2>EINSTELLUNGEN</h2>
-      <div class="set-row" data-set="music"><span>Musik</span><button type="button" class="set-val"></button></div>
-      <div class="set-row" data-set="sfx"><span>Soundeffekte</span><button type="button" class="set-val"></button></div>
-      <div class="set-row" data-set="vibration"><span>Vibration</span><button type="button" class="set-val"></button></div>
-      <div class="set-row" data-set="gfx"><span>Grafik</span><button type="button" class="set-val"></button></div>
-      <div class="set-row" data-set="gore"><span>Blut &amp; Wunden</span><button type="button" class="set-val"></button></div>
-      <div class="set-row" data-set="back"><button type="button" class="set-back">ZURÜCK</button></div>
+    <div class="help" id="help" hidden><div class="help-card"><aside class="guide"></aside><button type="button" class="set-back pad-focus" id="helpBack" data-t="back"></button></div></div>
+    <div class="pause" id="pause" hidden><div class="pause-card"><h2 data-t="pause"></h2><button id="resume" data-t="pResume"></button><button class="secondary" id="pauseSettings" data-t="pSettings"></button><button class="secondary" id="backMenu" data-t="pMenu"></button></div></div>
+    <div class="settings" id="settings" hidden><div class="settings-card"><h2 data-t="setTitle"></h2>
+      <div class="set-row" data-set="music"><span data-t="setMusic"></span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="sfx"><span data-t="setSfx"></span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="vibration"><span data-t="setVib"></span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="gfx"><span data-t="setGfx"></span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="gore"><span data-t="setGore"></span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="back"><button type="button" class="set-back" data-t="back"></button></div>
     </div></div>
-    <button class="mute-btn" id="muteBtn" type="button" aria-label="Ton aus">🔊</button>
+    <button class="mute-btn" id="muteBtn" type="button">🔊</button>
     <p class="pad-hint" id="padHint" hidden></p>
     <div class="touch" id="touch" hidden>
-      <button class="touch-pause" id="touchPause" type="button" aria-label="Pause">❚❚</button>
+      <button class="touch-pause" id="touchPause" type="button" data-ta="ariaPause">❚❚</button>
       <div class="touch-group">
-        <button data-key="KeyA" aria-label="Links">◀</button><button data-key="KeyW" aria-label="Hoch">▲</button>
-        <button data-key="KeyS" aria-label="Runter">▼</button><button data-key="KeyD" aria-label="Rechts">▶</button>
+        <button data-key="KeyA" data-ta="ariaLeft">◀</button><button data-key="KeyW" data-ta="ariaUp">▲</button>
+        <button data-key="KeyS" data-ta="ariaDown">▼</button><button data-key="KeyD" data-ta="ariaRight">▶</button>
       </div>
-      <div class="touch-group"><button data-key="KeyH" aria-label="Ki laden">KI</button><button data-key="KeyR" aria-label="Super-Saiyajin">SSJ</button><button data-key="KeyF" aria-label="Combo-Schlag">✊</button><button data-key="KeyV" aria-label="Schwerer Angriff">H</button><button data-key="KeyT" aria-label="Kamehameha aufladen">KAME</button><button class="fire" data-key="KeyG" aria-label="Ki schießen">KI!</button></div>
+      <div class="touch-group"><button data-key="KeyH" data-ta="ariaCharge" data-t="tCharge"></button><button data-key="KeyR" data-ta="ariaSuper" data-t="tSuper"></button><button data-key="KeyF" data-ta="ariaPunch">✊</button><button data-key="KeyV" data-ta="ariaHeavy" data-t="tHeavy"></button><button data-key="KeyT" data-ta="ariaBeam" data-t="tBeam"></button><button class="fire" data-key="KeyG" data-ta="ariaShot" data-t="tShot"></button></div>
     </div>
   </section>
-  <p class="hint" id="hint">F/J Combo · V/U Heavy · W/S + Schlag Spezial · Flug + vorwärts + Schlag Rush · G/K Ki · R/O Super</p>
+  <p class="hint" id="hint"></p>
 </main>
-<div class="rotate" id="rotate"><b>↻</b>BITTE HANDY QUER HALTEN</div>
+<div class="rotate" id="rotate"><b>↻</b><span data-t="rotate"></span></div>
 <script>
 (() => {
 'use strict';
+// ---- Zentrale Text-Tabelle (alle Menü-/HUD-/Hinweistexte; für spätere Übersetzung nur hier ändern) ----
+// HTML-Elemente holen ihre Texte über data-t="schlüssel" (Inhalt) bzw. data-ta="schlüssel" (aria-label), siehe applyTexts().
+// {x} = Platzhalter, gefüllt über fmt(); Steuerungs-Zeilen: [Text, Taste] (Controller: Tastenname aus PAD_SYM, sonst HTML).
+const TXT={
+  // Hauptmenü, Pause, Einstellungen
+  modeFree:'FREIFLUG',modeBot:'GEGEN KI',modeLocal:'2 SPIELER',menuHelp:'STEUERUNG',menuSettings:'Einstellungen',back:'ZURÜCK',
+  pause:'PAUSE',pResume:'WEITER',pSettings:'EINSTELLUNGEN',pMenu:'ZUM MENÜ',
+  setTitle:'EINSTELLUNGEN',setMusic:'Musik',setSfx:'Soundeffekte',setVib:'Vibration',setGfx:'Grafik',setGore:'Blut & Wunden',
+  on:'AN',off:'AUS',gfxNames:['AUTO','NIEDRIG','MITTEL','HOCH'],gfxLevels:['NIEDRIG','MITTEL','HOCH'],goreNames:['AUS','WENIG','BRUTAL'],
+  rotate:'BITTE HANDY QUER HALTEN',
+  // Eckhinweis (nur mit Controller) und Stumm-Knopf
+  ok:'OK',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',
+  // Touch-Buttons und Bildschirmleser-Namen
+  tCharge:'KI',tSuper:'SSJ',tHeavy:'H',tBeam:'KAME',tShot:'KI!',
+  ariaFrame:'StickBall Z Spiel',ariaCanvas:'2D-Flugkampf',ariaPause:'Pause',ariaLeft:'Links',ariaUp:'Hoch',ariaDown:'Runter',ariaRight:'Rechts',
+  ariaCharge:'Ki laden',ariaSuper:'Super-Saiyajin',ariaPunch:'Combo-Schlag',ariaHeavy:'Schwerer Angriff',ariaBeam:'Kamehameha aufladen',ariaShot:'Ki schießen',
+  // Statuszeile (Kopfzeile, derzeit ausgeblendet)
+  stArea:'FLUGGEBIET 01',stFree:'FREIFLUG',stBot:'KAMPF GEGEN KI',stLocal:'LOKALER KAMPF',stPads:'CONTROLLER: ',
+  stAudioNo:'AUDIO NICHT UNTERSTÜTZT',stAudioFail:'AUDIO KANN NICHT STARTEN',lblLocal:'2 SPIELER  ·  ',lblBot:'KI-KAMPF  ·  ',
+  // HUD und Ergebnis
+  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
+  botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
+  overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
+  // Steuerung (Anleitung)
+  guideKeyTitle:'Steuerung · Spieler 1',guidePadTitle:'Steuerung · Controller',guideTouchTitle:'Steuerung · Touch',
+  guideKey:[['Fliegen / lenken','<span><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></span>'],['Leichte Combo · bis zu 3 Treffer','<kbd>F</kbd>'],
+    ['Heavy · kostet 12 Ki für Extra-Kraft','<kbd>V</kbd>'],['Hoch + Schlag: Uppercut · Runter + Schlag: Slam','<kbd>W/S</kbd> + <kbd>F</kbd>'],
+    ['Im Flug vorwärts + Schlag: Rush','<kbd>A/D</kbd> + <kbd>F</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>S</kbd> + <kbd>A/D</kbd>'],
+    ['Ausweichen · Richtung doppelt antippen, halten: Turbo','<kbd>A/D · ←/→</kbd>'],['Ki-Schuss · auch im Flug lenkbar','<kbd>G</kbd> + <kbd>WASD</kbd>'],
+    ['Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt','<kbd>T</kbd> + <kbd>W/S</kbd>'],['Ki laden','<kbd>H</kbd>'],
+    ['Super-Saiyajin · bei 100 Ki','<kbd>R</kbd>'],['Spieler 2 · Combo / Heavy / Schuss','<span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd></span>']],
+  ruleKey:'<kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.',
+  guidePad:[['Fliegen / lenken','<kbd>Stick</kbd>'],['Hoch fliegen','a'],['Leichte Combo · bis zu 3 Treffer','x'],['Stark · halten lädt auf, ↑/↓ lenkt','y'],
+    ['Ausweichen · halten: Turbo','b'],['Blocken','l1'],['Ki-Schuss · halten: Kanone','r1'],['Antippen: Ki-Druckwelle · halten: Kamehameha','r2'],
+    ['Ki laden','l2'],['Super-Saiyajin · bei 100 Ki','l3']],
+  rulePad:'Stick runter + {r1} zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. {start} pausiert.',
+  guideTouch:[['Fliegen / lenken','<span><kbd>◀</kbd> <kbd>▲</kbd> <kbd>▼</kbd> <kbd>▶</kbd></span>'],['Ausweichen · Richtung doppelt tippen, halten: Turbo','<kbd>◀/▶</kbd>'],
+    ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · kostet 12 Ki','<kbd>H</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>▼</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
+    ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>']],
+  ruleTouch:'<kbd>▼</kbd> + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.',
+  // alte Hinweiszeile #hint (per CSS ausgeblendet)
+  hintKey:'F/J Combo · V/U Heavy · 2× Richtung: Ausweichen, halten: Turbo · Ki-Schuss mit WASD lenken · Beam mit W/S lenken',
+  hintTouch:'◀▲▼▶ fliegen · doppelt tippen: Ausweichen, halten: Turbo · ✊ Combo · H Heavy · KI! Schuss · KAME tippen: Druckwelle, halten: Kamehameha · KI laden · SSJ Super',
+  hintPad:'{x} Leicht · {y} Stark (halten: aufladen, +↑/↓) · {r1} Ki (halten: Kanone) · {r2} Druckwelle (halten: Kamehameha) · {a} Hoch · {b} Ausweichen (halten: Turbo, nach Finisher: verfolgen) · {l1} Block · {l2} Laden · {l3} Super'
+};
+function fmt(s,o){return s.replace(/\{(\w+)\}/g,(m,k)=>k in o?o[k]:m);}
+function applyTexts(){
+  document.querySelectorAll('[data-t]').forEach(e=>{e.textContent=TXT[e.dataset.t];});
+  document.querySelectorAll('[data-ta]').forEach(e=>{e.setAttribute('aria-label',TXT[e.dataset.ta]);});
+}
+applyTexts();
 let W = 960; const H = 540, DT = 1 / 60, GROUND = 366;
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
 const menu = document.getElementById('menu'), pauseLayer = document.getElementById('pause');
@@ -160,9 +196,9 @@ const keys = Object.create(null);
 let dpr = 1, state = 'menu', mode = 'free', clock = 0, accumulator = 0, lastTime = 0;
 let cameraX = 0, cameraY = 260, zoom = 1, previousCameraX = 0, previousCameraY = 260, previousZoom = 1;
 let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, maxDistance = 0, screenShake = 0, hitStop = 0;
-let padKind = '', overParts = null, overText = 'Enter / Tippen: Revanche  ·  Esc: Menü';
+let padKind = '', overParts = null, overText = TXT.overKey;
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
-const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=['AUTO','NIEDRIG','MITTEL','HOCH'],GFX_LEVELS=['NIEDRIG','MITTEL','HOCH'],GFX_DPR=[1,1.5,2],GORE_NAMES=['AUS','WENIG','BRUTAL'];
+const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=TXT.gfxNames,GFX_LEVELS=TXT.gfxLevels,GFX_DPR=[1,1.5,2],GORE_NAMES=TXT.goreNames;
 const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,mute:false,lastMode:'free'};
 try {
   const d=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
@@ -197,7 +233,7 @@ function ensureAudio() {
   if(audioContext)return;
   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
   if(!AudioContextClass) {
-    audioEnabled=false;status.textContent='AUDIO NICHT UNTERSTÜTZT';return;
+    audioEnabled=false;status.textContent=TXT.stAudioNo;return;
   }
   audioContext=new AudioContextClass();
   audioMaster=audioContext.createGain();audioMaster.gain.value=settings.mute?0:MASTER_VOL;audioMaster.connect(audioContext.destination);
@@ -244,7 +280,7 @@ function startAudio() {
   ensureAudio();
   if(!audioContext||!audioEnabled)return;
   audioContext.resume().then(()=>{if(state==='playing')startMusic();}).catch(()=>{
-    stopMusic();audioEnabled=false;status.textContent='AUDIO KANN NICHT STARTEN';
+    stopMusic();audioEnabled=false;status.textContent=TXT.stAudioFail;
   });
   if(state==='playing')startMusic();
 }
@@ -256,11 +292,9 @@ function applyVolumes() {
 }
 // Stumm-Knopf (Menü und Pause): schaltet alles aus, Reglerwerte bleiben; Taste M, Controller △/Y
 const MASTER_VOL=.18;
-// Texte für Stumm-Knopf und Eckhinweis (zentral, für spätere Übersetzung)
-const UI_TXT={ok:'OK',back:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an'};
 const muteBtn=document.getElementById('muteBtn'),padHintEl=document.getElementById('padHint');
 let cornerKey='';
-function renderMute(){muteBtn.textContent=settings.mute?'🔇':'🔊';muteBtn.setAttribute('aria-label',settings.mute?UI_TXT.muteOff:UI_TXT.muteOn);}
+function renderMute(){muteBtn.textContent=settings.mute?'🔇':'🔊';muteBtn.setAttribute('aria-label',settings.mute?TXT.muteOff:TXT.muteOn);}
 function toggleMute(){settings.mute=!settings.mute;saveSettings();renderMute();applyVolumes();}
 // Stumm-Knopf nur in Menü/Pause; Knopf-Hinweis nur mit Controller, nicht auf der scrollenden Steuerungsseite. DOM nur bei Änderung anfassen.
 function updateCornerUI() {
@@ -268,7 +302,7 @@ function updateCornerUI() {
   let txt='';
   if(padKind&&inMenu&&!helpOpen) {
     const s=k=>padBadge(padKind,k);
-    txt=settingsOpen?s('a')+' '+UI_TXT.ok+' · '+s('b')+' '+UI_TXT.back:state==='paused'?s('a')+' '+UI_TXT.select+' · '+s('b')+' '+UI_TXT.resume:s('a')+' '+UI_TXT.ok;
+    txt=settingsOpen?s('a')+' '+TXT.ok+' · '+s('b')+' '+TXT.hintBack:state==='paused'?s('a')+' '+TXT.select+' · '+s('b')+' '+TXT.resume:s('a')+' '+TXT.ok;
   }
   const key=(inMenu?'1':state==='over'?'2':'0')+txt;
   if(key===cornerKey)return;
@@ -472,9 +506,9 @@ function begin(nextMode) {
   resetFighter(fighters[0],0);resetFighter(fighters[1],1);
   worldRadius=2400;maxDistance=0;cameraX=0;cameraY=260;zoom=1;
   previousCameraX=0;previousCameraY=260;previousZoom=1;
-  if(mode==='free')status.textContent='FREIFLUG';
-  else if(mode==='bot')status.textContent='KAMPF GEGEN KI';
-  else status.textContent='LOKALER KAMPF';
+  if(mode==='free')status.textContent=TXT.stFree;
+  else if(mode==='bot')status.textContent=TXT.stBot;
+  else status.textContent=TXT.stLocal;
   refreshInputTexts();
   winner=-1;
 }
@@ -509,7 +543,7 @@ const PS_RE=/dualsense|dualshock|wireless controller|054c/i,XBOX_RE=/xbox|xinput
 // Tastensymbole je Controller: PS -> ✕ ○ □ △ / L1 R1 L2 R2; Xbox und unbekannt -> A B X Y / LB RB LT RT
 const PAD_SYM={ps:{a:'✕',b:'○',x:'□',y:'△',l1:'L1',r1:'R1',l2:'L2',r2:'R2',l3:'L3',start:'OPTIONS'},xbox:{a:'A',b:'B',x:'X',y:'Y',l1:'LB',r1:'RB',l2:'LT',r2:'RT',l3:'LS',start:'MENU'}};
 function padSym(kind,k){return (PAD_SYM[kind]||PAD_SYM.xbox)[k];}
-const FACE_KEYS=['a','b','x','y'],OVER_PAD=[{k:'a'},' Revanche  ·  ',{k:'b'},' Menü'];
+const FACE_KEYS=['a','b','x','y'],OVER_PAD=[{k:'a'},TXT.rematch+'  ·  ',{k:'b'},TXT.toMenu];
 // Symbol als HTML-Plakette (.psg): Gesichtstasten rund, Schulter-/Systemtasten als Pille
 function padBadge(kind,k){const t=padSym(kind,k),n=FACE_KEYS.indexOf(k);return '<b class="psg '+(n<0?'psw':(kind==='ps'?'psg':'xb')+n)+'">'+t+'</b>';}
 // Gleiche Plakette auf dem Canvas: Zeile aus Texten und {k:'a'}-Teilen, mittig um cx; Schrift setzt der Aufrufer
@@ -537,23 +571,11 @@ function drawPadLine(kind,parts,cx,y,fs) {
   }
   ctx.textAlign='center';
 }
-function buildPadHint(kind) {
-  const s=k=>padSym(kind,k);
-  return s('x')+' Leicht · '+s('y')+' Stark (halten: aufladen, +↑/↓) · '+s('r1')+' Ki (halten: Kanone) · '+s('r2')+' Druckwelle (halten: Kamehameha) · '+s('a')+' Hoch · '+s('b')+' Ausweichen (halten: Turbo, nach Finisher: verfolgen) · '+s('l1')+' Block · '+s('l2')+' Laden · '+s('l3')+' Super';
-}
-function padGuideHTML(kind) {
-  const s=k=>padBadge(kind,k),row=(t,k)=>'<p><span>'+t+'</span>'+k+'</p>';
-  return '<h2>Steuerung · Controller</h2>'+row('Fliegen / lenken','<kbd>Stick</kbd>')+row('Hoch fliegen',s('a'))+row('Leichte Combo · bis zu 3 Treffer',s('x'))+
-    row('Stark · halten lädt auf, ↑/↓ lenkt',s('y'))+row('Ausweichen · halten: Turbo',s('b'))+row('Blocken',s('l1'))+row('Ki-Schuss · halten: Kanone',s('r1'))+
-    row('Antippen: Ki-Druckwelle · halten: Kamehameha',s('r2'))+row('Ki laden',s('l2'))+row('Super-Saiyajin · bei 100 Ki',s('l3'))+
-    '<p class="rule">Stick runter + '+s('r1')+' zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. '+s('start')+' pausiert.</p>';
-}
-const TOUCH_GUIDE='<h2>Steuerung · Touch</h2><p><span>Fliegen / lenken</span><span><kbd>◀</kbd> <kbd>▲</kbd> <kbd>▼</kbd> <kbd>▶</kbd></span></p>'+
-  '<p><span>Ausweichen · Richtung doppelt tippen, halten: Turbo</span><kbd>◀/▶</kbd></p><p><span>Leichte Combo</span><kbd>✊</kbd></p><p><span>Heavy · kostet 12 Ki</span><kbd>H</kbd></p>'+
-  '<p><span>Blocken · runter + vom Gegner weg</span><kbd>▼</kbd></p><p><span>Ki-Schuss</span><kbd>KI!</kbd></p><p><span>Antippen: Ki-Druckwelle · halten: Kamehameha</span><kbd>KAME</kbd></p>'+
-  '<p><span>Ki laden</span><kbd>KI</kbd></p><p><span>Super-Saiyajin · bei 100 Ki</span><kbd>SSJ</kbd></p><p class="rule"><kbd>▼</kbd> + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.</p>';
-const HINT_TOUCH='◀▲▼▶ fliegen · doppelt tippen: Ausweichen, halten: Turbo · ✊ Combo · H Heavy · KI! Schuss · KAME tippen: Druckwelle, halten: Kamehameha · KI laden · SSJ Super';
-const HINT_KEY='F/J Combo · V/U Heavy · 2× Richtung: Ausweichen, halten: Turbo · Ki-Schuss mit WASD lenken · Beam mit W/S lenken';
+function buildPadHint(kind){const o={};for(const k in PAD_SYM.xbox)o[k]=padSym(kind,k);return fmt(TXT.hintPad,o);}
+// Anleitung aus der Text-Tabelle: Zeilen [Text, Taste]; beim Controller ist die Taste ein PAD_SYM-Name (wird Plakette)
+function guideHTML(title,rows,rule,kind){let h='<h2>'+title+'</h2>';for(const r of rows)h+='<p><span>'+r[0]+'</span>'+(kind&&r[1] in PAD_SYM.xbox?padBadge(kind,r[1]):r[1])+'</p>';return h+'<p class="rule">'+rule+'</p>';}
+function padGuideHTML(kind){return guideHTML(TXT.guidePadTitle,TXT.guidePad,fmt(TXT.rulePad,{r1:padBadge(kind,'r1'),start:padBadge(kind,'start')}),kind);}
+const TOUCH_GUIDE=guideHTML(TXT.guideTouchTitle,TXT.guideTouch,TXT.ruleTouch),KEY_GUIDE=guideHTML(TXT.guideKeyTitle,TXT.guideKey,TXT.ruleKey);
 const PAD_BUTTONS=17;
 const padSlots=[-1,-1];
 const padStates=[0,1].map(()=>({connected:false,id:'',kind:'xbox',ax:0,ay:0,navDir:0,navY:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS),latch:new Uint8Array(PAD_BUTTONS),eff:new Uint8Array(PAD_BUTTONS)}));
@@ -592,22 +614,22 @@ function pollPads() {
   if(kind!==padKind||count!==padCount) {
     padKind=kind;padCount=count;
     refreshInputTexts();updateTouch();
-    if(state==='menu')status.textContent=count?'CONTROLLER: '+count:'FLUGGEBIET 01';
+    if(state==='menu')status.textContent=count?TXT.stPads+count:TXT.stArea;
   }
   handlePadUI();
 }
 // Touch-Buttons: nur auf Touch-Geräten, nur im laufenden Spiel und nur ohne Controller für Spieler 1
-const guideEl=document.querySelector('.guide'),guideKeyHTML=guideEl.innerHTML;
+const guideEl=document.querySelector('.guide');
 let touchUI=!!(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches);
 document.documentElement.classList.toggle('touch-ui',touchUI);
 function setTouchUI(on){if(on===touchUI)return;touchUI=on;document.documentElement.classList.toggle('touch-ui',on);refreshInputTexts();}
 window.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')setTouchUI(true);},true);
 function updateTouch(){touchControls.hidden=!(state==='playing'&&!padStates[0].connected);}
 function refreshInputTexts() {
-  hint.textContent=padKind?buildPadHint(padKind):touchUI?HINT_TOUCH:HINT_KEY;
-  guideEl.innerHTML=padKind?padGuideHTML(padKind):touchUI?TOUCH_GUIDE:guideKeyHTML;
+  hint.textContent=padKind?buildPadHint(padKind):touchUI?TXT.hintTouch:TXT.hintKey;
+  guideEl.innerHTML=padKind?padGuideHTML(padKind):touchUI?TOUCH_GUIDE:KEY_GUIDE;
   overParts=padKind?OVER_PAD:null;
-  overText=padKind?padSym(padKind,'a')+' Revanche  ·  '+padSym(padKind,'b')+' Menü':touchUI?'Tippen: Revanche  ·  Zurück: Menü':'Enter / Tippen: Revanche  ·  Esc: Menü';
+  overText=padKind?padSym(padKind,'a')+TXT.rematch+'  ·  '+padSym(padKind,'b')+TXT.toMenu:touchUI?TXT.overTouch:TXT.overKey;
 }
 // Pause-Menü mit Steuerkreuz/Stick: links/rechts wählt, ✕/A bestätigt, ○/B oder Options = weiter
 const pauseButtons=[document.getElementById('resume'),document.getElementById('pauseSettings'),document.getElementById('backMenu')];
@@ -623,7 +645,7 @@ function renderSettings() {
     const row=settingRows[i],key=row.dataset.set,val=row.querySelector('.set-val');
     row.classList.toggle('pad-focus',i===settingFocus);
     if(!val)continue;
-    val.textContent=key==='music'||key==='sfx'?'◀ '+Math.round(settings[key]*100)+'% ▶':key==='vibration'?(settings.vibration?'AN':'AUS'):key==='gore'?GORE_NAMES[settings.gore]:
+    val.textContent=key==='music'||key==='sfx'?'◀ '+Math.round(settings[key]*100)+'% ▶':key==='vibration'?(settings.vibration?TXT.on:TXT.off):key==='gore'?GORE_NAMES[settings.gore]:
       GFX_NAMES[settings.gfx]+(settings.gfx===0?' · '+GFX_LEVELS[gfxAuto]:'');
   }
 }
@@ -698,7 +720,7 @@ function rumble(index,strong,weak,ms) {
 }
 function pauseGame(){state='paused';setPauseFocus(0);stopMusic();pauseLayer.hidden=false;updateTouch();}
 function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);state='playing';pauseLayer.hidden=true;updateTouch();if(audioEnabled)startMusic();}
-function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent='FLUGGEBIET 01';}
+function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;}
 function endMatch(w) {
   state='over';winner=w;stopMusic();updateTouch();
   screenShake=Math.max(screenShake,14);
@@ -1220,9 +1242,9 @@ function update(dt) {
   cameraY+=(targetCameraY-cameraY)*Math.min(1,dt*1.1);
   maxDistance=Math.max(maxDistance,Math.abs(fighters[0].x),Math.abs(fighters[1].active?fighters[1].x:0));
   if(maxDistance>worldRadius-700)worldRadius+=1800;
-  const label=mode==='local'?'2 SPIELER  ·  ':mode==='bot'?'KI-KAMPF  ·  ':'';
+  const label=mode==='local'?TXT.lblLocal:mode==='bot'?TXT.lblBot:'';
   statusTick=(statusTick+1)%20;
-  if(statusTick===0)status.textContent=label+'WELT ×'+(worldRadius/2400).toFixed(1)+'  ·  '+(maxDistance/1000).toFixed(1)+' KM';
+  if(statusTick===0)status.textContent=label+TXT.world+(worldRadius/2400).toFixed(1)+TXT.worldSep+(maxDistance/1000).toFixed(1)+TXT.km;
 }
 function drawBackground() {
   ctx.drawImage(skyCanvas,0,0,W,H);
@@ -1552,10 +1574,10 @@ function drawFighter(f,alpha) {
   }
   if(f.comboDisplay>0&&f.comboHits>1) {
     ctx.globalAlpha=clamp(f.comboDisplay/.25,0,1);ctx.textAlign='center';ctx.font='900 11px system-ui';
-    ctx.fillStyle='#fff';ctx.fillText('COMBO ×'+f.comboHits,0,-103);ctx.globalAlpha=1;
+    ctx.fillStyle='#fff';ctx.fillText(TXT.combo+f.comboHits,0,-103);ctx.globalAlpha=1;
   }
   if(f.guarding) {
-    ctx.globalAlpha=.9;ctx.textAlign='center';ctx.font='800 9px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText('BLOCK',0,-101);ctx.globalAlpha=1;
+    ctx.globalAlpha=.9;ctx.textAlign='center';ctx.font='800 9px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText(TXT.block,0,-101);ctx.globalAlpha=1;
   }
   ctx.restore();
 }
@@ -1597,19 +1619,19 @@ function drawHud() {
     ctx.fillStyle='#263048';ctx.fillRect(x+8,y+24,174,5);
       ctx.fillStyle='#c5f36b';ctx.fillRect(x+8,y+24,174*clamp(f.ki/100,0,1),5);
     ctx.font='700 11px system-ui';ctx.fillStyle=f.color;ctx.textAlign=i===0?'left':'right';
-    ctx.fillText(f.name+(f.bot?' · KI':''),i===0?x+8:x+182,y+40);
+    ctx.fillText(f.name+(f.bot?TXT.botTag:''),i===0?x+8:x+182,y+40);
       if(f.superTime>0) {
         ctx.textAlign=i===0?'left':'right';ctx.font='800 9px system-ui';ctx.fillStyle='#ffe66d';
-        ctx.fillText('SUPER '+f.superTime.toFixed(1)+'s',i===0?x+84:x+106,y+40);
+        ctx.fillText(TXT.superPre+f.superTime.toFixed(1)+TXT.superSuf,i===0?x+84:x+106,y+40);
         ctx.fillStyle='#273044';ctx.fillRect(x+8,y+33,174,2);
         ctx.fillStyle='#ffe66d';ctx.fillRect(x+8,y+33,174*clamp(f.superTime/12,0,1),2);
       } else if(f.ki>=100) {
         ctx.textAlign=i===0?'left':'right';ctx.font='800 9px system-ui';ctx.fillStyle='#ffe66d';
-        ctx.fillText(f.bot?'SUPER BEREIT':(padStates[i].connected?padSym(padStates[i].kind,'l3'):i===0?(touchUI&&!padKind?'SSJ':'R'):'O')+' SUPER BEREIT',i===0?x+84:x+106,y+40);
+        ctx.fillText(f.bot?TXT.superReady:(padStates[i].connected?padSym(padStates[i].kind,'l3'):i===0?(touchUI&&!padKind?TXT.keyTouchSuper:TXT.keySuper1):TXT.keySuper2)+' '+TXT.superReady,i===0?x+84:x+106,y+40);
       }
   }
   ctx.textAlign='center';ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
-  ctx.fillText('WELT ×'+(worldRadius/2400).toFixed(1)+'  ·  '+(maxDistance/1000).toFixed(1)+' KM',W/2,24);
+  ctx.fillText(TXT.world+(worldRadius/2400).toFixed(1)+TXT.worldSep+(maxDistance/1000).toFixed(1)+TXT.km,W/2,24);
 }
 function render(alpha) {
   ctx.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);
@@ -1672,7 +1694,7 @@ function render(alpha) {
     const wf=fighters[winner];
     ctx.fillStyle='#050914c0';ctx.fillRect(0,H/2-38,W,76);
     ctx.textAlign='center';ctx.font='900 28px system-ui';ctx.fillStyle=wf.color;
-    ctx.fillText(wf.name+(wf.bot?' (KI)':'')+' GEWINNT',W/2,H/2+4);
+    ctx.fillText(wf.name+(wf.bot?TXT.winBotTag:'')+TXT.wins,W/2,H/2+4);
     ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
     if(overParts)drawPadLine(padKind,overParts,W/2,H/2+24,10);else ctx.fillText(overText,W/2,H/2+24);
   }
