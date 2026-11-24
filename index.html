@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24o</p>
+        <p class="version">v2026-11-24p</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -1830,7 +1830,7 @@ function drawFighter(f,alpha) {
   const kind=atkT<0?0:smashing?(f.bufferedHeavyType===6?8:f.bufferedHeavyType===5?9:5):f.attackType===6?8:f.attackType===5?9:f.attackType===4?6:f.attackType===3?5:f.attackType===2?4:f.attackType===1?3:f.attackStep===3?2:f.attackStep===2?1:7;
   let hipY=-24,neckX=2,neckY=-50+breathe*.4;
   let bkX,bkY,bfX,bfY,fkX,fkY,ffX,ffY,beX=0,beY=0,bhX,bhY,feX=0,feY=0,fhX,fhY;
-  if(f.charging){const ct=clamp(f.ki/100,0,1),pump=Math.sin(clock*9)*.8*(1+ct);hipY=-15+pump*.5;neckX=-1;neckY=-44+pump+Math.sin(clock*31)*(.4+ct*.8);bkX=-14;bkY=-9;bfX=-21;bfY=0;fkX=14;fkY=-9;ffX=21;ffY=0;}
+  if(f.charging){const ct=clamp(f.ki/100,0,1),pump=Math.sin(clock*9)*.8*(1+ct);hipY=-20+pump*.4;neckX=1;neckY=-47+pump+Math.sin(clock*31)*(.4+ct*.8);bkX=-5;bkY=-11;bfX=-10;bfY=0;fkX=8;fkY=-11;ffX=12;ffY=0;}
   else if(airborne) {
     const sway=Math.sin(f.t*7)*2,st=flyFast?1:0;
     bkX=-5-st*3;bkY=-12+st*2;bfX=-12-st*9;bfY=-3-st*6+sway;
@@ -1871,7 +1871,7 @@ function drawFighter(f,alpha) {
     bendJoint(sx,sy,fhX,fhY,13.5);feX=jointX;feY=jointY;
   }
   else if(f.guarding){beX=4;beY=-36;bhX=13;bhY=-55;feX=11;feY=-36;fhX=5;fhY=-56;}
-  else if(f.charging){const ct=clamp(f.ki/100,0,1),sh=Math.sin(clock*40)*(.6+ct*1.2);beX=sx-12+sh;beY=sy+8;bhX=sx-21;bhY=sy+15-sh;feX=sx+12-sh;feY=sy+8;fhX=sx+21;fhY=sy+15+sh;}
+  else if(f.charging){const ct=clamp(f.ki/100,0,1),sh=Math.sin(clock*40)*(.6+ct*1.2);beX=sx-7+sh;beY=sy+8;bhX=sx-2;bhY=sy+16-sh;feX=sx+4-sh;feY=sy+9;fhX=sx+10;fhY=sy+15+sh;}
   else if(shot>0||ready) {
     feX=7;feY=-42;fhX=punchX;fhY=punchY;
     if(ready){beX=8;beY=-40;bhX=16;bhY=-38;}else{beX=-4;beY=-40;bhX=5;bhY=-45;}
