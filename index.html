@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24v</p>
+        <p class="version">v2026-11-24w</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -317,7 +317,7 @@ function autoGfx(dt) {
 }
 // Zwei Kanäle: Musik und Soundeffekte (je 0–100 %, 0 = aus); audioEnabled = Audio verfügbar
 let audioContext=null,audioMaster=null,musicBus=null,sfxBus=null,sfxComp=null,audioEnabled=true,musicEl=null,musicNode=null;
-const MUSIC_SRC='music.mp3?v=2',MUSIC_GAIN=.55;
+const MUSIC_SRC='music.mp3?v=2',MUSIC_GAIN=.165;
 const SFX_GAIN=1.8;  // MUSIC_GAIN: Datei ist lauter als die Code-Töne · SFX_GAIN: Effekte lauter, Kompressor sfxComp fängt Spitzen ab
 function ensureAudio() {
   if(audioContext)return;
@@ -328,8 +328,8 @@ function ensureAudio() {
   audioContext=new AudioContextClass();
   audioMaster=audioContext.createGain();audioMaster.gain.value=settings.mute?0:MASTER_VOL;audioMaster.connect(audioContext.destination);
   musicBus=audioContext.createGain();musicBus.gain.value=settings.music*MUSIC_GAIN;musicBus.connect(audioMaster);
-  // Effekte lauter (SFX_GAIN) mit Kompressor dahinter, damit laute Treffer nicht übersteuern
-  sfxComp=audioContext.createDynamicsCompressor();sfxComp.threshold.value=-16;sfxComp.knee.value=10;sfxComp.ratio.value=5;sfxComp.attack.value=.002;sfxComp.release.value=.18;sfxComp.connect(audioMaster);
+  // Effekte lauter (SFX_GAIN), Kompressor nur als Begrenzer kurz vor Übersteuerung (keine Pegel-Absenkung im Normalbereich)
+  sfxComp=audioContext.createDynamicsCompressor();sfxComp.threshold.value=-6;sfxComp.knee.value=4;sfxComp.ratio.value=8;sfxComp.attack.value=.002;sfxComp.release.value=.15;sfxComp.connect(audioMaster);
   sfxBus=audioContext.createGain();sfxBus.gain.value=settings.sfx*SFX_GAIN;sfxBus.connect(sfxComp);
 }
 function playTone(frequency,duration,wave,volume,when,bus) {
@@ -413,7 +413,7 @@ function applyVolumes() {
   if(settings.music<=0)stopMusic();else if(audioContext)startMusic();  // Musik läuft überall (Menü, Pause, Ergebnis), sobald Ton erlaubt ist
 }
 // Stumm-Knopf (Menü und Pause): schaltet alles aus, Reglerwerte bleiben; Taste M, Controller △/Y
-const MASTER_VOL=.18;
+const MASTER_VOL=.6;  // v2026-11-24w: vorher .18 (Effekte viel zu leise); Musik über MUSIC_GAIN gleich laut gehalten
 const muteBtn=document.getElementById('muteBtn'),padHintEl=document.getElementById('padHint');
 let cornerKey='';
 function renderMute(){muteBtn.textContent=settings.mute?'🔇':'🔊';muteBtn.setAttribute('aria-label',settings.mute?TXT.muteOff:TXT.muteOn);}
