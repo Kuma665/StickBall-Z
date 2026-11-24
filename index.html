@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24r</p>
+        <p class="version">v2026-11-24s</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -317,7 +317,7 @@ function autoGfx(dt) {
 }
 // Zwei Kanäle: Musik und Soundeffekte (je 0–100 %, 0 = aus); audioEnabled = Audio verfügbar
 let audioContext=null,audioMaster=null,musicBus=null,sfxBus=null,audioEnabled=true,musicEl=null,musicNode=null;
-const MUSIC_SRC='thisisbeatkitchen-beatkitchen-my-true-strength-91-bpm-377763.mp3?v=1',MUSIC_GAIN=.55;  // MUSIC_GAIN: Datei ist lauter als die Code-Töne
+const MUSIC_SRC='music.mp3?v=2',MUSIC_GAIN=.55;  // MUSIC_GAIN: Datei ist lauter als die Code-Töne
 function ensureAudio() {
   if(audioContext)return;
   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
