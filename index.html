@@ -97,7 +97,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24b</p>
+        <p class="version">v2026-11-24c</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -115,6 +115,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
       <div class="set-row" data-set="sfx"><span data-t="setSfx"></span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="vibration"><span data-t="setVib"></span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="gfx"><span data-t="setGfx"></span><button type="button" class="set-val"></button></div>
+      <div class="set-row" data-set="bot"><span data-t="setBot"></span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="gore"><span data-t="setGore"></span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="back"><button type="button" class="set-back" data-t="back"></button></div>
     </div></div>
@@ -143,7 +144,7 @@ const TXT={
   // Hauptmenü, Pause, Einstellungen
   modeFree:'FREIFLUG',modeBot:'GEGEN KI',modeLocal:'2 SPIELER',menuHelp:'STEUERUNG',menuSettings:'Einstellungen',back:'ZURÜCK',
   pause:'PAUSE',pResume:'WEITER',pSettings:'EINSTELLUNGEN',pMenu:'ZUM MENÜ',
-  setTitle:'EINSTELLUNGEN',setMusic:'Musik',setSfx:'Soundeffekte',setVib:'Vibration',setGfx:'Grafik',setGore:'Blut & Wunden',
+  setTitle:'EINSTELLUNGEN',setMusic:'Musik',setSfx:'Soundeffekte',setVib:'Vibration',setGfx:'Grafik',setGore:'Blut & Wunden',setBot:'KI-Stärke',botNames:['LEICHT','NORMAL','SCHWER'],
   on:'AN',off:'AUS',gfxNames:['AUTO','NIEDRIG','MITTEL','HOCH'],gfxLevels:['NIEDRIG','MITTEL','HOCH'],goreNames:['AUS','WENIG','BRUTAL'],
   rotate:'BITTE HANDY QUER HALTEN',
   // Eckhinweis (nur mit Controller) und Stumm-Knopf
@@ -200,7 +201,7 @@ let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, 
 let padKind = '', overParts = null, overText = TXT.overKey;
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
 const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=TXT.gfxNames,GFX_LEVELS=TXT.gfxLevels,GFX_DPR=[1,1.5,2],GORE_NAMES=TXT.goreNames;
-const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,mute:false,fsOff:false,lastMode:'free'};
+const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,bot:0,mute:false,fsOff:false,lastMode:'free'};
 try {
   const d=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
   if(d&&typeof d==='object') {
@@ -211,10 +212,11 @@ try {
     if(vol(d.music)!==null)settings.music=vol(d.music);
     if(vol(d.sfx)!==null)settings.sfx=vol(d.sfx);
     if(typeof d.vibration==='boolean')settings.vibration=d.vibration;
-
+    if(typeof d.mute==='boolean')settings.mute=d.mute;
     if(typeof d.fsOff==='boolean')settings.fsOff=d.fsOff;
     if(Number.isInteger(d.gfx)&&d.gfx>=0&&d.gfx<=3)settings.gfx=d.gfx;
     if(Number.isInteger(d.gore)&&d.gore>=0&&d.gore<=2)settings.gore=d.gore;
+    if(Number.isInteger(d.bot)&&d.bot>=0&&d.bot<=2)settings.bot=d.bot;
     if(d.lastMode==='free'||d.lastMode==='bot'||d.lastMode==='local')settings.lastMode=d.lastMode;
   }
 }catch(e){}
@@ -310,7 +312,7 @@ function updateCornerUI() {
   if(key===cornerKey)return;
   cornerKey=key;muteBtn.hidden=!inMenu;fsBtn.hidden=!inMenu||!FS_OK;padHintEl.hidden=!txt;padHintEl.innerHTML=txt;
 }
-
+muteBtn.addEventListener('click',e=>{e.stopPropagation();toggleMute();muteBtn.blur();});
 // Vollbild-Knopf (ganz rechts): Umschalter; selbst ausgeschaltet -> settings.fsOff, dann kein automatisches Vollbild mehr bei Eingaben
 const fsBtn=document.getElementById('fsBtn'),FS_OK=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
 if(!FS_OK)document.documentElement.classList.add('fs-none');
@@ -658,7 +660,7 @@ function renderSettings() {
     const row=settingRows[i],key=row.dataset.set,val=row.querySelector('.set-val');
     row.classList.toggle('pad-focus',i===settingFocus);
     if(!val)continue;
-    val.textContent=key==='music'||key==='sfx'?'◀ '+Math.round(settings[key]*100)+'% ▶':key==='vibration'?(settings.vibration?TXT.on:TXT.off):key==='gore'?GORE_NAMES[settings.gore]:
+    val.textContent=key==='music'||key==='sfx'?'◀ '+Math.round(settings[key]*100)+'% ▶':key==='vibration'?(settings.vibration?TXT.on:TXT.off):key==='gore'?GORE_NAMES[settings.gore]:key==='bot'?TXT.botNames[settings.bot]:
       GFX_NAMES[settings.gfx]+(settings.gfx===0?' · '+GFX_LEVELS[gfxAuto]:'');
   }
 }
@@ -674,6 +676,7 @@ function changeSetting(key,dir,wrap) {
   } else if(key==='vibration'){settings.vibration=!settings.vibration;if(settings.vibration)rumble(0,.5,.5,120);}
   else if(key==='gfx'){settings.gfx=(settings.gfx+dir+4)%4;if(settings.gfx===0)gfxAuto=2;applyGfx();}
   else if(key==='gore')settings.gore=(settings.gore+dir+3)%3;
+  else if(key==='bot')settings.bot=(settings.bot+dir+3)%3;
   saveSettings();renderSettings();
 }
 function moveSettingFocus(d){settingFocus=(settingFocus+d+settingRows.length)%settingRows.length;renderSettings();}
@@ -888,28 +891,42 @@ function damage(f,from,p) {
   rumble(f===fighters[0]?0:1,p.big?.8:.35,p.big?.6:.3,p.big?140:60);
   if(p.big)makeCrater(f.x,true);
 }
-function updateBot(f,target,input) {
-  const dx=target.x-f.x,dy=target.y-f.y,d=Math.abs(dx);
-  const aimLen=Math.hypot(dx,dy)||1;input.aimX=dx/aimLen;input.aimY=dy/aimLen;
-  input.right=dx>115;input.left=dx<-115;
-  // Höhe: y wächst nach unten – steigen, wenn das Ziel höher ist; sinken, wenn es tiefer ist
-  input.up=dy<-32;
-  input.down=dy>35;
-  if(d<145&&Math.abs(dy)<95&&target.punch>0) {
-    input.down=true;
-    input.left=dx>0;input.right=dx<0;
+// KI-Stärke (settings.bot): ändert nur die Entscheidungen der KI, nie Physik, Schaden oder Reichweiten.
+// think = Schritte bis zur nächsten Entscheidung (dazwischen bleibt die letzte), punch/heavy = Schwelle für den Angriffstakt,
+// block/shot = Wahrscheinlichkeit je Entscheidung, beamFull = Kamehameha nur bei vollem Ki, kiai = Chance je Schritt, sich aus Combos zu befreien
+const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0},{think:6,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.05},{think:2,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.12}];
+const BOT_KEYS=['right','left','up','down','beam','heavy','punch','shot','charge','dash'];
+const BOT_MEM=[0,1].map(()=>({t:0,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
+function updateBot(f,target,input,index) {
+  const lv=BOT_LVL[settings.bot]||BOT_LVL[0],mem=BOT_MEM[index];
+  if(--mem.t<=0) {
+    mem.t=lv.think;
+    const dx=target.x-f.x,dy=target.y-f.y,d=Math.abs(dx);
+    const aimLen=Math.hypot(dx,dy)||1;mem.aimX=dx/aimLen;mem.aimY=dy/aimLen;
+    mem.right=dx>115;mem.left=dx<-115;
+    // Höhe: y wächst nach unten – steigen, wenn das Ziel höher ist; sinken, wenn es tiefer ist
+    mem.up=dy<-32;
+    mem.down=dy>35;
+    if(d<145&&Math.abs(dy)<95&&target.punch>0&&Math.random()<lv.block) {
+      mem.down=true;
+      mem.left=dx>0;mem.right=dx<0;
+    }
+    mem.beam=d<360&&f.beamCooldown<=0&&f.ki>=(lv.beamFull?100:BEAM_COST);
+    const attackPulse=Math.sin(clock*7.5);
+    mem.heavy=false;mem.punch=false;mem.shot=false;
+    if(d<125&&Math.abs(dy)<100&&f.punchCooldown<=0) {
+      if(f.ki>=12&&attackPulse>lv.heavy)mem.heavy=true;
+      else mem.punch=attackPulse>lv.punch;
+    } else if(d<590&&f.fire<=0&&f.ki>=7)mem.shot=Math.random()<lv.shot;
+    mem.charge=f.ki<35&&d>220;
+    mem.dash=d>520&&!mem.charge;
   }
+  input.aimX=mem.aimX;input.aimY=mem.aimY;
+  for(const k of BOT_KEYS)input[k]=mem[k];
+  // Kamehameha halten/loslassen jeden Schritt (sonst würde die Verzögerung die Ladung verändern)
   if(f.beamHeld)input.beam=f.beamCharge<.52;
-  else if(d<360&&f.beamCooldown<=0&&f.ki>=BEAM_COST)input.beam=true;
-  const attackPulse=Math.sin(clock*7.5);
-  if(d<125&&Math.abs(dy)<100&&f.punchCooldown<=0) {
-    if(f.ki>=12&&attackPulse>.86)input.heavy=true;
-    else input.punch=attackPulse>.15;
-  } else if(d<590&&f.fire<=0&&f.ki>=7)input.shot=true;
-  if(f.ki<35&&d>220)input.charge=true;
-  input.dash=d>520&&!input.charge;
   // KI befreit sich manchmal aus langen Combos mit der Druckwelle
-  if(f.stun>0&&f.comboCount>=3&&!f.beamHeld&&Math.random()<.05)kiai(f,1,target);
+  if(f.stun>0&&f.comboCount>=3&&!f.beamHeld&&Math.random()<lv.kiai)kiai(f,1,target);
 }
 function startPunch(f,step,type=0) {
   f.attackStep=step;
@@ -949,7 +966,7 @@ function updateFighter(f,index,dt) {
   const enemy=fighters[1-index];
   let input=readInput(f,index);
   if(f.bot&&enemy.active) {
-    updateBot(f,enemy,input);
+    updateBot(f,enemy,input,index);
     input.super=f.ki>=100&&f.superTime<=0;
   }
   f.charging=input.charge&&!f.beamHeld;
