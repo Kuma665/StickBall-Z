@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24h</p>
+        <p class="version">v2026-11-24i</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -163,7 +163,7 @@ const TXT={
   // Hauptmenü, Pause, Einstellungen
   modeFree:'FREIFLUG',modeBot:'GEGEN KI',modeLocal:'2–4 SPIELER',
   // Kämpfer-Auswahl und Teams (Figurennamen: Reihenfolge wie CHARS)
-  charNames:['BLAZE','VOLT','SORA','JIN','SAGE','VEXA','KRYX','BLOBB','TORAK'],
+  charNames:['BLAZE','VOLT','SORA','JIN','SAGE','VEXA','KRYX','BLOBB','TORAK','NOVA'],
   selTitle:'KÄMPFER WÄHLEN',selSize:'Team-Größe',selGo:'LOS!',team:'TEAM ',sizeNames:['1 GEGEN 1','2 GEGEN 2','3 GEGEN 3','4 GEGEN 4'],soloNames:['1 KÄMPFER','2 KÄMPFER','3 KÄMPFER','4 KÄMPFER'],
   ctrlNames:['SPIELER 1','SPIELER 2','SPIELER 3','SPIELER 4'],ctrlBot:'KI',ctrlTag:' · S',teamWins:'TEAM {n} GEWINNT',menuHelp:'STEUERUNG',menuSettings:'Einstellungen',back:'ZURÜCK',
   pause:'PAUSE',pResume:'WEITER',pSettings:'EINSTELLUNGEN',pMenu:'ZUM MENÜ',
@@ -219,7 +219,8 @@ const CHARS=[
   {color:'#e6e0ff',dark:'#8f78d8',belt:'#c04bff',hair:6,hairColor:'#b04cff',fixHair:true,cross:true,horns:true,tail:'tail'},
   {color:'#c2ea5a',dark:'#6c8f1f',belt:'#2c3318',hair:5,hairColor:'#4d6a12',fixHair:true,tail:'sting'},
   {color:'#ff7fc8',dark:'#c2468f',belt:'#5a2a7a',hair:-1,antenna:true,belly:true,size:1.05},
-  {color:'#5c6178',dark:'#33374a',belt:'#ffd34d',hair:4,hairColor:'#3a1208',size:1.14}
+  {color:'#5c6178',dark:'#33374a',belt:'#ffd34d',hair:4,hairColor:'#3a1208',size:1.14},
+  {color:'#e4f3ff',dark:'#2a6ef0',belt:'#ffc23e',hair:0,hairColor:'#0d2a66',acc:'scarf',accColor:'#ffffff'}
 ];
 function fmt(s,o){return s.replace(/\{(\w+)\}/g,(m,k)=>k in o?o[k]:m);}
 function applyTexts(){
