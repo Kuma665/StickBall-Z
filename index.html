@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24f</p>
+        <p class="version">v2026-11-24g</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -163,7 +163,7 @@ const TXT={
   // Hauptmenü, Pause, Einstellungen
   modeFree:'FREIFLUG',modeBot:'GEGEN KI',modeLocal:'2–4 SPIELER',
   // Kämpfer-Auswahl und Teams (Figurennamen: Reihenfolge wie CHARS)
-  charNames:['BLAZE','VOLT','SORA','JIN','VEXA','KRYX','BLOBB','TORAK'],
+  charNames:['BLAZE','VOLT','SORA','JIN','SAGE','VEXA','KRYX','BLOBB','TORAK'],
   selTitle:'KÄMPFER WÄHLEN',selSize:'Team-Größe',selGo:'LOS!',team:'TEAM ',sizeNames:['1 GEGEN 1','2 GEGEN 2','3 GEGEN 3','4 GEGEN 4'],soloNames:['1 KÄMPFER','2 KÄMPFER','3 KÄMPFER','4 KÄMPFER'],
   ctrlNames:['SPIELER 1','SPIELER 2','SPIELER 3','SPIELER 4'],ctrlBot:'KI',ctrlTag:' · S',teamWins:'TEAM {n} GEWINNT',menuHelp:'STEUERUNG',menuSettings:'Einstellungen',back:'ZURÜCK',
   pause:'PAUSE',pResume:'WEITER',pSettings:'EINSTELLUNGEN',pMenu:'ZUM MENÜ',
@@ -213,12 +213,13 @@ const TXT={
 const CHARS=[
   {color:'#ff3f55',dark:'#a9233b',belt:'#ffb23e',hair:0,hairColor:'#2a0c14',acc:'band',accColor:'#ffb23e'},
   {color:'#36a9ff',dark:'#155fb6',belt:'#e8f6ff',hair:1,hairColor:'#0c1a33',acc:'scarf',accColor:'#e8f6ff',cross:true},
-  {color:'#a46bff',dark:'#5b32a8',belt:'#ffd34d',hair:2,hairColor:'#1a0f2e',acc:'cape',accColor:'#eef0ff'},
-  {color:'#3fd28a',dark:'#1d8152',belt:'#e2e8f2',hair:3,hairColor:'#2b1a10',acc:'scarf',accColor:'#2b3a4e',sword:true},
+  {color:'#ff8a2a',dark:'#a34a12',belt:'#f2f0e6',hair:2,hairColor:'#1a0f2e'},
+  {color:'#a46bff',dark:'#5b32a8',belt:'#e2e8f2',hair:3,hairColor:'#2b1a10',acc:'scarf',accColor:'#2b3a4e',sword:true},
+  {color:'#4cc35e',dark:'#237a35',belt:'#2b2140',hair:7,hairColor:'#f2f0e6',fixHair:true,acc:'cape',accColor:'#f2f0e6',cross:true},
   {color:'#e6e0ff',dark:'#8f78d8',belt:'#c04bff',hair:6,hairColor:'#b04cff',fixHair:true,cross:true,horns:true,tail:'tail'},
   {color:'#7fe06a',dark:'#3a8a2f',belt:'#24331e',hair:5,hairColor:'#2f6e28',fixHair:true,tail:'sting'},
-  {color:'#4fe0d0',dark:'#1f8f86',belt:'#ffd34d',hair:-1,antenna:true,belly:true,size:1.05},
-  {color:'#ff8a2a',dark:'#a34a12',belt:'#ffd34d',hair:4,hairColor:'#3a1208',size:1.14}
+  {color:'#ff7fc8',dark:'#c2468f',belt:'#5a2a7a',hair:-1,antenna:true,belly:true,size:1.05},
+  {color:'#5c6178',dark:'#33374a',belt:'#ffd34d',hair:4,hairColor:'#3a1208',size:1.14}
 ];
 function fmt(s,o){return s.replace(/\{(\w+)\}/g,(m,k)=>k in o?o[k]:m);}
 function applyTexts(){
@@ -242,7 +243,7 @@ let padKind = '', overParts = null, overText = TXT.overKey;
 const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=TXT.gfxNames,GFX_LEVELS=TXT.gfxLevels,GFX_DPR=[1,1.5,2],GORE_NAMES=TXT.goreNames;
 const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,bot:0,mute:false,fsOff:false,lastMode:'free',teams:null};
 // Teams je Modus: size 1–4, p = Figuren [Team][Platz], c = Steuerung [Team][Platz] (0–3 = Spieler 1–4, -1 = KI; Freiflug ohne KI)
-const TEAM_PICKS=[[0,2,3,6],[1,4,5,7]];
+const TEAM_PICKS=[[0,2,3,4],[1,5,6,7]];
 function defaultTeams(m){return {size:1,p:TEAM_PICKS.map(a=>a.slice()),c:[[0,0,0,0],m==='bot'?[-1,-1,-1,-1]:[1,1,1,1]]};}
 function readTeams(d,m){
   const t=defaultTeams(m);if(!d||typeof d!=='object')return t;
@@ -1558,7 +1559,10 @@ const HAIR=[
    [5,-7, 1,-13, -4,-10, -13,-19, -8,-8, -18,-9, -9,-1, -7,3, -4,-3, 2,-5]],
   // 6 glatte Kopfkappe (VEXA)
   [[7,-5, 4,-8, -1,-9, -6,-7, -8.5,-2, -6,-3, -1,-5, 4,-4.5],
-   [7,-5, 4,-8, -1,-9, -6,-7, -8.5,-2, -6,-3, -1,-5, 4,-4.5]]
+   [7,-5, 4,-8, -1,-9, -6,-7, -8.5,-2, -6,-3, -1,-5, 4,-4.5]],
+  // 7 Kopftuch (SAGE)
+  [[7,-4, 6,-9, 2,-12, -3,-13, -8,-11, -10,-6, -9,-1, -6,-4, 0,-6, 5,-5],
+   [7,-4, 6,-9, 2,-12, -3,-13, -8,-11, -10,-6, -9,-1, -6,-4, 0,-6, 5,-5]]
 ];
 // Flammen-Aura um den Körper (lokale Koordinaten): Zungen steigen nach oben, zwei Schichten + Umriss
 function drawAura(level,color,core,seed) {
