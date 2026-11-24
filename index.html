@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24q</p>
+        <p class="version">v2026-11-24r</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -171,7 +171,7 @@ const TXT={
   on:'AN',off:'AUS',gfxNames:['AUTO','NIEDRIG','MITTEL','HOCH'],gfxLevels:['NIEDRIG','MITTEL','HOCH'],goreNames:['AUS','WENIG','BRUTAL'],
   rotate:'BITTE HANDY QUER HALTEN',
   // Credits (Tippen auf die Versionsnummer im Hauptmenü); fremde Musik/Sounds hier mit Künstler und Quelle eintragen
-  credits:'Ein Spiel von Arox Games · Entwickelt von Aram Simon\n♪ Musik und Soundeffekte: im Spiel erzeugt (eigener Code)',
+  credits:'Ein Spiel von Arox Games · Entwickelt von Aram Simon\n♪ Musik: „My True Strength“ von BeatKitchen (Pixabay) · Soundeffekte: im Spiel erzeugt (eigener Code)',
   // Eckhinweis (nur mit Controller) und Stumm-Knopf
   ok:'OK',change:'Ändern',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',fsOn:'Vollbild an',fsOff:'Vollbild aus',
   // Touch-Buttons und Bildschirmleser-Namen
@@ -316,8 +316,8 @@ function autoGfx(dt) {
   else autoTimer=Math.max(0,autoTimer-dt);
 }
 // Zwei Kanäle: Musik und Soundeffekte (je 0–100 %, 0 = aus); audioEnabled = Audio verfügbar
-let audioContext=null,audioMaster=null,musicBus=null,sfxBus=null,musicTimer=0,musicStep=0,audioEnabled=true;
-const musicNotes=[0,440,0,523,587,0,523,440,0,392,0,440,523,0,392,349];
+let audioContext=null,audioMaster=null,musicBus=null,sfxBus=null,audioEnabled=true,musicEl=null,musicNode=null;
+const MUSIC_SRC='thisisbeatkitchen-beatkitchen-my-true-strength-91-bpm-377763.mp3?v=1',MUSIC_GAIN=.55;  // MUSIC_GAIN: Datei ist lauter als die Code-Töne
 function ensureAudio() {
   if(audioContext)return;
   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
@@ -326,7 +326,7 @@ function ensureAudio() {
   }
   audioContext=new AudioContextClass();
   audioMaster=audioContext.createGain();audioMaster.gain.value=settings.mute?0:MASTER_VOL;audioMaster.connect(audioContext.destination);
-  musicBus=audioContext.createGain();musicBus.gain.value=settings.music;musicBus.connect(audioMaster);
+  musicBus=audioContext.createGain();musicBus.gain.value=settings.music*MUSIC_GAIN;musicBus.connect(audioMaster);
   sfxBus=audioContext.createGain();sfxBus.gain.value=settings.sfx;sfxBus.connect(audioMaster);
 }
 function playTone(frequency,duration,wave,volume,when,bus) {
@@ -350,20 +350,21 @@ function playSfx(kind,heavy=false) {
   else playTone(heavy?92:145,heavy?.24:.12,'triangle',heavy?.5:.34,now,b);
 }
 function startMusic() {
-  if(!audioEnabled||musicTimer||settings.music<=0)return;
+  if(!audioEnabled||settings.music<=0)return;
   ensureAudio();
   if(!audioContext||!audioEnabled)return;
-  musicStep=0;
-  musicTimer=window.setInterval(()=>{
-    if(!audioEnabled||state!=='playing'||!audioContext)return;
-    const when=audioContext.currentTime+.025,note=musicNotes[musicStep];
-    if(note)playTone(note,.105,'square',.075,when,musicBus);
-    if(musicStep%4===0)playTone([110,98,87,98][(musicStep>>2)%4],.19,'triangle',.12,when,musicBus);
-    musicStep=(musicStep+1)%musicNotes.length;
-  },125);
+  // Musik-Datei (siehe TXT.credits) über musicBus: Regler, Stumm und Aussetzen beim App-Verlassen wirken wie bei den Effekten
+  if(!musicEl) {
+    musicEl=new Audio(MUSIC_SRC);musicEl.loop=true;musicEl.preload='auto';
+    try{musicNode=audioContext.createMediaElementSource(musicEl);musicNode.connect(musicBus);}catch(e){musicNode=null;}
+    applyVolumes();
+  }
+  if(musicEl.paused)musicEl.play().catch(()=>{});
 }
-function stopMusic() {
-  if(musicTimer){window.clearInterval(musicTimer);musicTimer=0;}
+function stopMusic(rewind) {
+  if(!musicEl)return;
+  if(!musicEl.paused)musicEl.pause();
+  if(rewind)musicEl.currentTime=0;
 }
 function startAudio() {
   ensureAudio();
@@ -375,8 +376,9 @@ function startAudio() {
 }
 function applyVolumes() {
   if(audioMaster)audioMaster.gain.setTargetAtTime(settings.mute?0:MASTER_VOL,audioContext.currentTime,.04);
-  if(musicBus)musicBus.gain.setTargetAtTime(settings.music,audioContext.currentTime,.04);
+  if(musicBus)musicBus.gain.setTargetAtTime(settings.music*MUSIC_GAIN,audioContext.currentTime,.04);
   if(sfxBus)sfxBus.gain.setTargetAtTime(settings.sfx,audioContext.currentTime,.04);
+  if(musicEl&&!musicNode)musicEl.volume=settings.mute?0:clamp(settings.music*MUSIC_GAIN*MASTER_VOL*4,0,1);  // ohne Web-Audio-Anbindung direkt regeln
   if(settings.music<=0)stopMusic();else if(state==='playing')startMusic();
 }
 // Stumm-Knopf (Menü und Pause): schaltet alles aus, Reglerwerte bleiben; Taste M, Controller △/Y
@@ -954,9 +956,9 @@ function rumble(index,strong,weak,ms) {
 }
 function pauseGame(){state='paused';setPauseFocus(0);stopMusic();pauseLayer.hidden=false;updateTouch();}
 function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);state='playing';pauseLayer.hidden=true;updateTouch();if(audioEnabled)startMusic();}
-function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;}
+function backToMenu(){state='menu';stopMusic(true);pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;}
 function endMatch(w) {
-  state='over';winner=w;stopMusic();updateTouch();
+  state='over';winner=w;stopMusic(true);updateTouch();
   ultra.on=false;gameSpeed=KO_SPEED;slowT=KO_SLOW_T;  // letzter K.o.: kurz Zeitlupe
   screenShake=Math.max(screenShake,14);
   // K.O.: Druckwelle, Blitz, bei Blut großer Spritzer (Partikel laufen im Endbildschirm weiter)
