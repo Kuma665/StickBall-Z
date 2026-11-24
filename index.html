@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24j</p>
+        <p class="version">v2026-11-24k</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -258,10 +258,18 @@ function readTeams(d,m){
   return t;
 }
 const inTeam=(cfg,t,k)=>{for(let s=0;s<cfg.size;s++)if(cfg.c[t][s]===k)return true;return false;};
+// Figur im Team schon belegt (sichtbare Plätze außer Platz skip)?
+const charInTeam=(cfg,t,c,skip)=>{for(let s=0;s<cfg.size;s++)if(s!==skip&&cfg.p[t][s]===c)return true;return false;};
+// Jede Figur nur einmal pro Team (auch Freiflug): doppelte bekommt die nächste freie Figur.
 // Ein Spieler nur in einem Team (nicht im Freiflug): kommt er in beiden vor, bekommt Team 2 den nächsten freien Spieler, sonst KI
 function fixTeams(cfg,m){
-  if(m==='free')return false;
   let ch=false;
+  for(let t=0;t<2;t++)for(let s=1;s<cfg.size;s++){
+    let c=cfg.p[t][s];
+    for(let n=0;n<CHARS.length;n++){let dup=false;for(let q=0;q<s;q++)if(cfg.p[t][q]===c)dup=true;if(!dup)break;c=(c+1)%CHARS.length;}
+    if(c!==cfg.p[t][s]){cfg.p[t][s]=c;ch=true;}
+  }
+  if(m==='free')return ch;
   for(let s=0;s<cfg.size;s++){
     const k=cfg.c[1][s];if(k<0||!inTeam(cfg,0,k))continue;
     let n=-1;for(let i=1;i<4;i++){const j=(k+i)%4;if(!inTeam(cfg,0,j)){n=j;break;}}
@@ -843,7 +851,12 @@ function openSelect(m){selMode=m;selectOpen=true;selectLayer.hidden=false;selRow
 function closeSelect(){selectOpen=false;selectLayer.hidden=true;}
 function startFromSelect(){saveSettings();closeSelect();begin(selMode);}
 function changeSize(d,wrap){const cfg=selCfg();cfg.size=wrap?(cfg.size+d+3)%4+1:clamp(cfg.size+d,1,4);saveSettings();renderSelect();}
-function changeChar(sl,d){const cfg=selCfg();cfg.p[sl.t][sl.s]=(cfg.p[sl.t][sl.s]+d+CHARS.length)%CHARS.length;saveSettings();renderSelect();}
+// Nächste/vorige Figur; im selben Team schon gewählte werden übersprungen
+function changeChar(sl,d){
+  const cfg=selCfg(),N=CHARS.length;let c=cfg.p[sl.t][sl.s];
+  for(let n=0;n<N;n++){c=(c+d+N)%N;if(!charInTeam(cfg,sl.t,c,sl.s))break;}
+  cfg.p[sl.t][sl.s]=c;saveSettings();renderSelect();
+}
 // Nächster Spieler/KI; außer im Freiflug werden Spieler übersprungen, die im anderen Team (sichtbare Plätze) schon spielen
 function cycleCtrl(sl){
   const cfg=selCfg(),free=selMode==='free',lo=free?0:-1;let k=cfg.c[sl.t][sl.s];
