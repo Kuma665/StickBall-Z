@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24w</p>
+        <p class="version">v2026-11-24x</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -360,18 +360,30 @@ function playSweep(f0,f1,dur,wave,vol,when,bus) {
   g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+.008);g.gain.exponentialRampToValueAtTime(.0001,when+dur);
   o.connect(g);g.connect(bus);o.start(when);o.stop(when+dur+.03);
 }
+// Gemeinsame Verzerrung für Schlag-Thumps (einmal angelegt, hängt am Effekt-Kanal): macht den Bass dumpf und "dreckig"
+let driveNode=null;
+function getDrive() {
+  if(!driveNode) {
+    const n=1024,curve=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;curve[i]=Math.tanh(x*3)/Math.tanh(3);}
+    driveNode=audioContext.createWaveShaper();driveNode.curve=curve;driveNode.oversample='2x';driveNode.connect(sfxBus);
+  }
+  return driveNode;
+}
 function playSfx(kind,heavy=false) {
   if(!audioEnabled||!audioContext||settings.sfx<=0)return;
   const t=audioContext.currentTime,b=sfxBus;
   if(kind==='hit') {
-    if(heavy) {  // schwerer Treffer: tiefer Wumms + Knall + Nachhall-Rauschen
-      playSweep(140,38,.32,'sine',.95,t,b);playSweep(260,70,.12,'triangle',.5,t,b);
-      playNoise(.09,.8,'bandpass',2600,900,t,b);playNoise(.38,.55,'lowpass',1400,180,t+.01,b);
-    } else {     // leichter Treffer: kurzer Klatsch + Thump
-      playSweep(210,70,.11,'sine',.75,t,b);playNoise(.06,.65,'bandpass',1800+Math.random()*600,700,t,b);
+    // Schlag wie aufgenommen: Knack (sehr kurzes hohes Rauschen) + Körper-Thump (tief, schnell abfallend, verzerrt) + Klatsch (Mitten-Rauschen); Tonhöhe leicht zufällig
+    const v=.9+Math.random()*.2,d=getDrive();
+    playNoise(.012,.9,'highpass',3500,0,t,b);
+    if(heavy) {
+      playSweep(85*v,38,.22,'sine',1,t,d);playSweep(60*v,32,.3,'sine',.8,t+.018,d);
+      playNoise(.11,.85,'bandpass',800*v,350,t,b);playNoise(.26,.5,'lowpass',700,120,t+.01,b);
+    } else {
+      playSweep(105*v,55,.09,'sine',1,t,d);playNoise(.05,.8,'bandpass',1100*v,500,t,b);
     }
   }
-  else if(kind==='block'){playTone(980,.08,'square',.22,t,b);playTone(1470,.06,'square',.14,t,b);playNoise(.07,.45,'highpass',3000,0,t,b);playSweep(300,150,.08,'triangle',.35,t,b);}
+  else if(kind==='block'){const d=getDrive();playNoise(.01,.6,'highpass',2500,0,t,b);playSweep(150,80,.07,'sine',.7,t,d);playNoise(.06,.6,'bandpass',600,300,t,b);playNoise(.04,.25,'highpass',5000,0,t+.005,b);}
   else if(kind==='shot'){playNoise(.16,.5,'bandpass',2400,600,t,b);playSweep(heavy?260:520,heavy?110:220,.16,'triangle',.45,t,b);if(heavy)playSweep(90,45,.25,'sine',.6,t,b);}
   else if(kind==='beam'){playSweep(90,180,.6,'sawtooth',.35,t,b);playSweep(180,420,.5,'triangle',.25,t,b);playNoise(.7,.5,'lowpass',900,300,t,b);playNoise(.5,.35,'bandpass',3000,1200,t+.05,b);}
   else if(kind==='crater'){playSweep(110,28,.55,'sine',1,t,b);playNoise(.6,.85,'lowpass',900,120,t,b);playNoise(.15,.5,'bandpass',1800,500,t,b);}
