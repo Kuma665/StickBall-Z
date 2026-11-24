@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24s</p>
+        <p class="version">v2026-11-24t</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -356,7 +356,8 @@ function startMusic() {
   // Musik-Datei (siehe TXT.credits) über musicBus: Regler, Stumm und Aussetzen beim App-Verlassen wirken wie bei den Effekten
   if(!musicEl) {
     musicEl=new Audio(MUSIC_SRC);musicEl.loop=true;musicEl.preload='auto';
-    try{musicNode=audioContext.createMediaElementSource(musicEl);musicNode.connect(musicBus);}catch(e){musicNode=null;}
+    // Lokal (file://) liefert Web-Audio aus Sicherheitsgründen nur Stille -> dort direkt über das Element regeln
+    if(location.protocol!=='file:')try{musicNode=audioContext.createMediaElementSource(musicEl);musicNode.connect(musicBus);}catch(e){musicNode=null;}
     applyVolumes();
   }
   if(musicEl.paused)musicEl.play().catch(()=>{});
@@ -378,7 +379,7 @@ function applyVolumes() {
   if(audioMaster)audioMaster.gain.setTargetAtTime(settings.mute?0:MASTER_VOL,audioContext.currentTime,.04);
   if(musicBus)musicBus.gain.setTargetAtTime(settings.music*MUSIC_GAIN,audioContext.currentTime,.04);
   if(sfxBus)sfxBus.gain.setTargetAtTime(settings.sfx,audioContext.currentTime,.04);
-  if(musicEl&&!musicNode)musicEl.volume=settings.mute?0:clamp(settings.music*MUSIC_GAIN*MASTER_VOL*4,0,1);  // ohne Web-Audio-Anbindung direkt regeln
+  if(musicEl&&!musicNode){musicEl.muted=settings.mute;musicEl.volume=clamp(settings.music*MUSIC_GAIN*MASTER_VOL*4,0,1);}  // ohne Web-Audio-Anbindung direkt regeln
   if(settings.music<=0)stopMusic();else if(state==='playing')startMusic();
 }
 // Stumm-Knopf (Menü und Pause): schaltet alles aus, Reglerwerte bleiben; Taste M, Controller △/Y
