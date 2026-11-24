@@ -97,7 +97,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24</p>
+        <p class="version">v2026-11-24b</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -892,8 +892,9 @@ function updateBot(f,target,input) {
   const dx=target.x-f.x,dy=target.y-f.y,d=Math.abs(dx);
   const aimLen=Math.hypot(dx,dy)||1;input.aimX=dx/aimLen;input.aimY=dy/aimLen;
   input.right=dx>115;input.left=dx<-115;
-  input.up=dy>32||f.y>terrainY(f.x)-115;
-  input.down=dy<-35;
+  // Höhe: y wächst nach unten – steigen, wenn das Ziel höher ist; sinken, wenn es tiefer ist
+  input.up=dy<-32;
+  input.down=dy>35;
   if(d<145&&Math.abs(dy)<95&&target.punch>0) {
     input.down=true;
     input.left=dx>0;input.right=dx<0;
