@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24x</p>
+        <p class="version">v2026-11-24y</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -359,6 +359,41 @@ function playSweep(f0,f1,dur,wave,vol,when,bus) {
   o.type=wave;o.frequency.setValueAtTime(f0,when);o.frequency.exponentialRampToValueAtTime(f1,when+dur);
   g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+.008);g.gain.exponentialRampToValueAtTime(.0001,when+dur);
   o.connect(g);g.connect(bus);o.start(when);o.stop(when+dur+.03);
+}
+// Ki-Laden-Ton je Kämpfer (läuft, solange geladen wird): zwei verstimmte Sägezähne durch Tiefpass + pulsierende Lautstärke + Energie-Rauschen.
+// Tonhöhe, Helligkeit und Lautstärke steigen mit der Ki; bei 100 Ki kurzer "Bereit"-Klang. Aus bei Pause/Menü/verdeckter Seite.
+const chargeSnd=[null,null];
+function updateChargeSounds() {
+  for(let i=0;i<2;i++) {
+    const f=fighters[i],on=!!(audioEnabled&&audioContext&&settings.sfx>0&&state==='playing'&&f.active&&f.charging&&!document.hidden);
+    let s=chargeSnd[i];
+    if(on&&!s) {
+      const ac=audioContext,o1=ac.createOscillator(),o2=ac.createOscillator(),lp=ac.createBiquadFilter(),g=ac.createGain();
+      const lfo=ac.createOscillator(),lg=ac.createGain(),src=ac.createBufferSource(),bp=ac.createBiquadFilter(),ng=ac.createGain();
+      o1.type='sawtooth';o2.type='sawtooth';o1.frequency.value=55;o2.frequency.value=55;o2.detune.value=14;
+      lp.type='lowpass';lp.frequency.value=350;lp.Q.value=4;g.gain.value=0;
+      lfo.frequency.value=7;lg.gain.value=.1;lfo.connect(lg);lg.connect(g.gain);
+      o1.connect(lp);o2.connect(lp);lp.connect(g);g.connect(sfxBus);
+      src.buffer=getNoise();src.loop=true;bp.type='bandpass';bp.frequency.value=500;bp.Q.value=.8;ng.gain.value=0;
+      src.connect(bp);bp.connect(ng);ng.connect(sfxBus);
+      o1.start();o2.start();lfo.start();src.start();
+      s=chargeSnd[i]={o1,o2,lfo,src,lp,bp,g,ng,full:f.ki>=100};
+    }
+    if(!s)continue;
+    const now=audioContext.currentTime;
+    if(on) {
+      const k=clamp(f.ki/100,0,1);
+      s.o1.frequency.setTargetAtTime(55+k*55,now,.08);s.o2.frequency.setTargetAtTime(55+k*55,now,.08);
+      s.lp.frequency.setTargetAtTime(350+k*1400,now,.08);s.bp.frequency.setTargetAtTime(500+k*1500,now,.08);
+      s.g.gain.setTargetAtTime(.3+k*.2,now,.06);s.ng.gain.setTargetAtTime(.15+k*.25,now,.06);
+      if(k>=1&&!s.full){s.full=true;playSweep(420,950,.28,'triangle',.5,now,sfxBus);playNoise(.25,.4,'highpass',2500,6000,now,sfxBus);}
+      else if(k<1)s.full=false;
+    } else {
+      s.g.gain.setTargetAtTime(0,now,.05);s.ng.gain.setTargetAtTime(0,now,.05);
+      for(const n of [s.o1,s.o2,s.lfo,s.src])n.stop(now+.3);
+      chargeSnd[i]=null;
+    }
+  }
 }
 // Gemeinsame Verzerrung für Schlag-Thumps (einmal angelegt, hängt am Effekt-Kanal): macht den Bass dumpf und "dreckig"
 let driveNode=null;
@@ -2266,6 +2301,7 @@ function frame(now) {
   pollPads();
   updateCornerUI();
   while(accumulator>=DT){update(DT);accumulator-=DT;}
+  updateChargeSounds();
   render(accumulator/DT);requestAnimationFrame(frame);
 }
 window.addEventListener('keydown',e=>{
