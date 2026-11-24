@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24m</p>
+        <p class="version">v2026-11-24n</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -1235,7 +1235,7 @@ function startPunch(f,step,type=0) {
   const heavy=type===3||type===5||type===6;
   f.heavyPowered=(heavy&&f.ki>=12)||(type===4&&f.ki>=10);
   f.ultra=heavy&&f.ki>=100;
-  if(f.ultra){f.ki=0;f.heavyPowered=true;}
+  if(f.ultra){f.ki-=50;f.heavyPowered=true;}  // Einsatz: halbe Leiste (bleibt bei Fehlschlag/Block weg), Treffer nimmt den Rest
   else if(heavy&&f.heavyPowered)f.ki-=12;
   else if(type===4&&f.heavyPowered)f.ki-=10;
   f.attackDuration=heavy?.5:type===4?.4:type===1||type===2?.42:step===3?.46:.34;
@@ -1471,9 +1471,9 @@ function updateFighter(f,index,dt) {
           hitStop=Math.max(hitStop,Math.min(.2,(finisher?.11:.06)*kb));
           playSfx('hit',finisher);
           rumble(1-index,finisher?.85:.45,finisher?.6:.35,finisher?150:70);rumble(index,.15,.3,45);
-          if(f.ultra){f.ultra=false;startUltra(index);}
+          if(f.ultra){f.ultra=false;f.ki=0;startUltra(index);}
         }
-        f.ultra=false;  // geblockt: Ki ist trotzdem weg
+        f.ultra=false;  // geblockt: nur der halbe Einsatz ist weg
       }
     }
     if(attackProgress>.76)f.punchHit=true;
