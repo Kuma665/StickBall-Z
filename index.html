@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24z</p>
+        <p class="version">v2026-11-24za</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -372,7 +372,7 @@ function updateChargeSounds() {
       const lfo=ac.createOscillator(),lg=ac.createGain(),src=ac.createBufferSource(),bp=ac.createBiquadFilter(),ng=ac.createGain();
       o1.type='sawtooth';o2.type='sawtooth';o1.frequency.value=55;o2.frequency.value=55;o2.detune.value=14;
       lp.type='lowpass';lp.frequency.value=350;lp.Q.value=4;g.gain.value=0;
-      lfo.frequency.value=7;lg.gain.value=.02;lfo.connect(lg);lg.connect(g.gain);
+      lfo.frequency.value=7;lg.gain.value=.01;lfo.connect(lg);lg.connect(g.gain);
       o1.connect(lp);o2.connect(lp);lp.connect(g);g.connect(sfxBus);
       src.buffer=getNoise();src.loop=true;bp.type='bandpass';bp.frequency.value=500;bp.Q.value=.8;ng.gain.value=0;
       src.connect(bp);bp.connect(ng);ng.connect(sfxBus);
@@ -385,8 +385,8 @@ function updateChargeSounds() {
       const k=clamp(f.ki/100,0,1);
       s.o1.frequency.setTargetAtTime(55+k*55,now,.08);s.o2.frequency.setTargetAtTime(55+k*55,now,.08);
       s.lp.frequency.setTargetAtTime(350+k*1400,now,.08);s.bp.frequency.setTargetAtTime(500+k*1500,now,.08);
-      s.g.gain.setTargetAtTime(.06+k*.04,now,.06);s.ng.gain.setTargetAtTime(.03+k*.05,now,.06);  // v2026-11-24z: viel leiser (vorher .3+k*.2 / .15+k*.25)
-      if(k>=1&&!s.full){s.full=true;playSweep(420,950,.28,'triangle',.2,now,sfxBus);playNoise(.25,.15,'highpass',2500,6000,now,sfxBus);}
+      s.g.gain.setTargetAtTime(.03+k*.02,now,.06);s.ng.gain.setTargetAtTime(.015+k*.025,now,.06);  // leise (v2026-11-24za; ursprünglich .3+k*.2 / .15+k*.25)
+      if(k>=1&&!s.full){s.full=true;playSweep(420,950,.28,'triangle',.1,now,sfxBus);playNoise(.25,.08,'highpass',2500,6000,now,sfxBus);}
       else if(k<1)s.full=false;
     } else {
       s.g.gain.setTargetAtTime(0,now,.05);s.ng.gain.setTargetAtTime(0,now,.05);
