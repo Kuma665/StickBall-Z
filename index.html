@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24i</p>
+        <p class="version">v2026-11-24j</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -1701,6 +1701,13 @@ function drawFighter(f,alpha) {
     }
   }
   if(ssj) {
+    // Super: zuckende Blitze an wechselnden Stellen
+    const bt=Math.floor(clock*9);
+    if(Math.sin(bt*12.9898+f.style*7.1)>.1) {
+      const side=bt%2?1:-1,j=Math.sin(bt*3.7)*3,by0=-64+(bt%3)*15;
+      ctx.globalAlpha=.85;ctx.strokeStyle='#e8fbff';ctx.lineWidth=1.4;ctx.beginPath();
+      ctx.moveTo(side*(15+j*.5),by0);ctx.lineTo(side*21,by0+6+j);ctx.lineTo(side*16,by0+11);ctx.lineTo(side*23,by0+19-j);ctx.stroke();ctx.globalAlpha=1;
+    }
     const pulse=.55+.3*Math.sin(clock*17);
     ctx.globalAlpha=pulse;ctx.strokeStyle='#ffe66d';ctx.lineWidth=3;
     ctx.beginPath();ctx.moveTo(-12,-4);ctx.lineTo(-17,-18+Math.sin(clock*13)*3);ctx.lineTo(-12,-30);
@@ -1739,7 +1746,10 @@ function drawFighter(f,alpha) {
     const ph=f.t*12,w=walking;
     ffX=10*(1-w)+Math.sin(ph)*13*w;ffY=-Math.max(0,Math.cos(ph))*6*w;
     bfX=-9*(1-w)-Math.sin(ph)*13*w;bfY=-Math.max(0,-Math.cos(ph))*6*w;
-    fkX=ffX*.5+4;fkY=hipY*.5+ffY*.5-1;bkX=bfX*.5+3;bkY=hipY*.5+bfY*.5-1;
+    // Im Stand Kampfhaltung: Füße weiter, Knie gebeugt, Körper atmet
+    const idle=kind||f.guarding?0:1-w;
+    ffX+=idle*2;bfX-=idle*2;hipY+=idle*(1.4+breathe*.6);neckY+=idle*breathe*.5;
+    fkX=ffX*.5+4+idle*1.5;fkY=hipY*.5+ffY*.5-1;bkX=bfX*.5+3+idle*1.5;bkY=hipY*.5+bfY*.5-1;
   }
   if(kind===2) {
     if(ext<0){fkX=7;fkY=-22;ffX=1;ffY=-13;}else{fkX=7+k*8;fkY=-21-k*9;ffX=9+k*23;ffY=-12-k*28;}
@@ -1809,10 +1819,10 @@ function drawFighter(f,alpha) {
   ctx.moveTo(0,hipY);ctx.quadraticCurveTo(2,(hipY+neckY)*.5,neckX,neckY);
   ctx.moveTo(hx+8.5,hy);ctx.arc(hx,hy,8.5,0,Math.PI*2);ctx.stroke();
   // Wehendes Accessoire (hinter dem Kopf)
-  const wind=clamp(speed/520,0,1),wave=Math.sin(f.t*15)*(1.5+wind*3),lift=clamp(-f.vy/420,-1,1)*5;
+  const wind=Math.max(clamp(speed/520,0,1),.16+.08*Math.sin(f.t*1.9+f.style)),wave=Math.sin(f.t*15)*(1.5+wind*3),lift=clamp(-f.vy/420,-1,1)*5;
   ctx.beginPath();
   if(L.acc==='band') {
-    const kx=hx-7,ky=hy-3,len=11+wind*15;
+    const kx=hx-7,ky=hy-4.2,len=11+wind*15;
     ctx.strokeStyle=ssj?'#fff2b0':L.accColor;ctx.lineWidth=2.6;
     ctx.moveTo(kx,ky);ctx.quadraticCurveTo(kx-len*.5,ky+wave,kx-len,ky+3+lift-wave);
     ctx.moveTo(kx,ky+1);ctx.quadraticCurveTo(kx-len*.4,ky+5-wave,kx-len*.8,ky+8+lift+wave);
@@ -1863,13 +1873,18 @@ function drawFighter(f,alpha) {
   ctx.fillStyle='#0b1120';ctx.strokeStyle=lineColor;ctx.lineWidth=3;
   ctx.beginPath();ctx.arc(hx,hy,8.5,0,Math.PI*2);ctx.fill();ctx.stroke();
   if(L.hair>=0) {
-    const gold=ssj&&!L.fixHair,hair=HAIR[L.hair][gold?1:0],fl=clock*18;
-    ctx.fillStyle=gold?'#ffe66d':L.hairColor;ctx.strokeStyle=gold?'#fff6c4':lineColor;ctx.lineWidth=1.6;
-    ctx.beginPath();ctx.moveTo(hx+hair[0],hy+hair[1]);
-    for(let i=2;i<hair.length;i+=2){const tip=gold&&(i>>1)%2===1?Math.sin(fl+i)*1.6:0;ctx.lineTo(hx+hair[i]+tip*.5,hy+hair[i+1]+tip);}
-    ctx.closePath();ctx.fill();ctx.stroke();
+    // Haare: etwas größer (im Super noch höher), dunkler Umriss, Füllung, Glanzstreifen (auf die Haarform beschnitten)
+    const gold=ssj&&!L.fixHair,hair=HAIR[L.hair][gold?1:0],fl=clock*18,hs=L.fixHair?1:gold?1.18:1.1;
+    ctx.beginPath();ctx.moveTo(hx+hair[0]*hs,hy+hair[1]*hs);
+    for(let i=2;i<hair.length;i+=2){const tip=gold&&(i>>1)%2===1?Math.sin(fl+i)*1.6:0;ctx.lineTo(hx+(hair[i]+tip*.5)*hs,hy+(hair[i+1]+tip)*hs);}
+    ctx.closePath();
+    ctx.strokeStyle='#060a14';ctx.lineWidth=4;ctx.stroke();
+    ctx.fillStyle=gold?'#ffe66d':L.hairColor;ctx.fill();
+    ctx.strokeStyle=gold?'#fff6c4':lineColor;ctx.lineWidth=1.6;ctx.stroke();
+    ctx.save();ctx.clip();ctx.globalAlpha=gold?.6:.32;ctx.strokeStyle='#fff';ctx.lineWidth=2.4;
+    ctx.beginPath();ctx.moveTo(hx-15,hy-5);ctx.quadraticCurveTo(hx-5,hy-14,hx+6,hy-15);ctx.stroke();ctx.restore();
   }
-  if(L.acc==='band'){ctx.strokeStyle=ssj?'#fff2b0':L.accColor;ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(hx-8.2,hy-3);ctx.lineTo(hx+8.2,hy-3.6);ctx.stroke();}
+  if(L.acc==='band'){ctx.strokeStyle=ssj?'#fff2b0':L.accColor;ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(hx-8.2,hy-4.2);ctx.lineTo(hx+8.2,hy-4.8);ctx.stroke();}
   if(L.horns) {
     ctx.fillStyle=ssj?'#fff6c4':'#f2eee6';ctx.strokeStyle='#060a14';ctx.lineWidth=1.2;ctx.beginPath();
     ctx.moveTo(hx-5,hy-6);ctx.quadraticCurveTo(hx-10,hy-12,hx-8,hy-18);ctx.quadraticCurveTo(hx-5,hy-12,hx-1,hy-8);ctx.closePath();
@@ -1881,10 +1896,20 @@ function drawFighter(f,alpha) {
     ctx.strokeStyle=lineColor;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(hx,hy-8);ctx.quadraticCurveTo(hx-2,hy-18,hx-9+aw,hy-20);ctx.stroke();
     ctx.fillStyle=lineColor;ctx.beginPath();ctx.arc(hx-9+aw,hy-20,2.6,0,Math.PI*2);ctx.fill();
   }
-  ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();
-  if(stunned){ctx.moveTo(hx+1.5,hy-2.5);ctx.lineTo(hx+5.5,hy+1.5);ctx.moveTo(hx+5.5,hy-2.5);ctx.lineTo(hx+1.5,hy+1.5);}
-  else {const fierce=f.punch>0||f.charging||ready?1.6:0;ctx.moveTo(hx+1.5,hy-.2-fierce*.4);ctx.lineTo(hx+5.8,hy+.6-fierce);}
-  ctx.stroke();
+  // Gesicht: Auge mit Pupille und Braue (wütend bei Angriff/Laden), zugekniffen bei Treffer, blinzelt, im Super leuchtend
+  const fierce=f.punch>0||f.charging||ready||smashing;
+  if(stunned){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hx+1.5,hy-2.5);ctx.lineTo(hx+5.5,hy+1.5);ctx.moveTo(hx+5.5,hy-2.5);ctx.lineTo(hx+1.5,hy+1.5);ctx.stroke();}
+  else if(f.hitFlash>0){ctx.strokeStyle='#fff';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(hx+2,hy-1.6);ctx.lineTo(hx+5.8,hy+.2);ctx.lineTo(hx+2,hy+2);ctx.stroke();}
+  else {
+    const ex=hx+4.4,ey=hy+.8,blink=!fierce&&(f.t+f.style*.73)%3.6<.12;
+    if(ssj){ctx.globalAlpha=.35+.2*Math.sin(clock*12);ctx.fillStyle='#fff6c4';ctx.beginPath();ctx.arc(ex,ey,4.6,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(ex,ey,2.4,blink?.35:fierce?1.25:1.8,0,0,Math.PI*2);ctx.fill();
+    if(!blink&&!ssj){ctx.fillStyle='#0b1120';ctx.beginPath();ctx.arc(ex+.9,ey+.1,fierce?.9:1.05,0,Math.PI*2);ctx.fill();}
+    ctx.strokeStyle=lineColor;ctx.lineWidth=1.5;ctx.beginPath();
+    if(fierce){ctx.moveTo(ex-3.2,ey-3.4);ctx.lineTo(ex+2.6,ey-1.6);}else{ctx.moveTo(ex-3,ey-2.9);ctx.lineTo(ex+2.6,ey-2.7);}
+    ctx.stroke();
+    if(kind&&atkT>.15&&atkT<.6){ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(hx+4.3,hy+4.7,1.3,1.1,0,0,Math.PI*2);ctx.fill();}
+  }
   if(gore) drawWounds(f,true,hipY,neckX,neckY,hx,hy,woundMax,gore);
   if(f.charging){ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(hx+4.3,hy+3.8,1.6,1.5+Math.abs(Math.sin(clock*9))*1.3,0,0,Math.PI*2);ctx.fill();}
   if(shot>0) {
