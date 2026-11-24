@@ -94,7 +94,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
 .sel-teams{display:grid;grid-template-columns:1fr 1fr;gap:14px}.select.solo .sel-teams{grid-template-columns:1fr;width:52%;margin:0 auto}.select.solo .sel-team h3{display:none}
 .sel-team h3{margin:2px 0 2px;color:var(--muted);font-size:10px;letter-spacing:.16em;text-align:center}
 .sel-slot{display:flex;align-items:center;gap:6px;margin:2px 0;padding:1px 5px;border-radius:5px}.sel-slot[hidden]{display:none}
-.sel-slot.pad-focus,.sel-size.pad-focus{outline:2px solid var(--cyan);outline-offset:1px}
+.sel-slot .set-val.pad-focus,.sel-size.pad-focus{outline:2px solid var(--cyan);outline-offset:1px}
 .sel-pic{width:34px;height:44px;flex-shrink:0;cursor:pointer}
 .sel-char{flex:1;min-width:0}.sel-ctrl{min-width:84px;flex-shrink:0;color:#c7d3ea}
 .sel-btns{display:flex;justify-content:center;gap:8px;margin-top:7px}.sel-btns .set-back{width:auto;min-width:120px;margin:0}
@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24g</p>
+        <p class="version">v2026-11-24h</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -173,7 +173,7 @@ const TXT={
   // Credits (Tippen auf die Versionsnummer im Hauptmenü); fremde Musik/Sounds hier mit Künstler und Quelle eintragen
   credits:'Ein Spiel von Arox Games · Entwickelt von Aram Simon\n♪ Musik und Soundeffekte: im Spiel erzeugt (eigener Code)',
   // Eckhinweis (nur mit Controller) und Stumm-Knopf
-  ok:'OK',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',fsOn:'Vollbild an',fsOff:'Vollbild aus',
+  ok:'OK',change:'Ändern',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',fsOn:'Vollbild an',fsOff:'Vollbild aus',
   // Touch-Buttons und Bildschirmleser-Namen
   tCharge:'KI',tSuper:'SSJ',tHeavy:'H',tBeam:'KAME',tShot:'KI!',
   ariaFrame:'StickBall Z Spiel',ariaCanvas:'2D-Flugkampf',ariaPause:'Pause',ariaLeft:'Links',ariaUp:'Hoch',ariaDown:'Runter',ariaRight:'Rechts',
@@ -215,9 +215,9 @@ const CHARS=[
   {color:'#36a9ff',dark:'#155fb6',belt:'#e8f6ff',hair:1,hairColor:'#0c1a33',acc:'scarf',accColor:'#e8f6ff',cross:true},
   {color:'#ff8a2a',dark:'#a34a12',belt:'#f2f0e6',hair:2,hairColor:'#1a0f2e'},
   {color:'#a46bff',dark:'#5b32a8',belt:'#e2e8f2',hair:3,hairColor:'#2b1a10',acc:'scarf',accColor:'#2b3a4e',sword:true},
-  {color:'#4cc35e',dark:'#237a35',belt:'#2b2140',hair:7,hairColor:'#f2f0e6',fixHair:true,acc:'cape',accColor:'#f2f0e6',cross:true},
+  {color:'#1f9e5c',dark:'#0e5c36',belt:'#2b2140',hair:7,hairColor:'#f2f0e6',fixHair:true,acc:'cape',accColor:'#f2f0e6',cross:true},
   {color:'#e6e0ff',dark:'#8f78d8',belt:'#c04bff',hair:6,hairColor:'#b04cff',fixHair:true,cross:true,horns:true,tail:'tail'},
-  {color:'#7fe06a',dark:'#3a8a2f',belt:'#24331e',hair:5,hairColor:'#2f6e28',fixHair:true,tail:'sting'},
+  {color:'#c2ea5a',dark:'#6c8f1f',belt:'#2c3318',hair:5,hairColor:'#4d6a12',fixHair:true,tail:'sting'},
   {color:'#ff7fc8',dark:'#c2468f',belt:'#5a2a7a',hair:-1,antenna:true,belly:true,size:1.05},
   {color:'#5c6178',dark:'#33374a',belt:'#ffd34d',hair:4,hairColor:'#3a1208',size:1.14}
 ];
@@ -253,7 +253,20 @@ function readTeams(d,m){
     if(Number.isInteger(p)&&p>=0&&p<CHARS.length)t.p[k][s]=p;
     if(Number.isInteger(c)&&c>=(m==='free'?0:-1)&&c<=3)t.c[k][s]=c;
   }
+  fixTeams(t,m);
   return t;
+}
+const inTeam=(cfg,t,k)=>{for(let s=0;s<cfg.size;s++)if(cfg.c[t][s]===k)return true;return false;};
+// Ein Spieler nur in einem Team (nicht im Freiflug): kommt er in beiden vor, bekommt Team 2 den nächsten freien Spieler, sonst KI
+function fixTeams(cfg,m){
+  if(m==='free')return false;
+  let ch=false;
+  for(let s=0;s<cfg.size;s++){
+    const k=cfg.c[1][s];if(k<0||!inTeam(cfg,0,k))continue;
+    let n=-1;for(let i=1;i<4;i++){const j=(k+i)%4;if(!inTeam(cfg,0,j)){n=j;break;}}
+    cfg.c[1][s]=n;ch=true;
+  }
+  return ch;
 }
 settings.teams={free:defaultTeams('free'),bot:defaultTeams('bot'),local:defaultTeams('local')};
 try {
@@ -361,7 +374,7 @@ function updateCornerUI() {
   let txt='';
   if(padKind&&inMenu&&!helpOpen) {
     const s=k=>padBadge(padKind,k);
-    txt=settingsOpen||selectOpen?s('a')+' '+TXT.ok+' · '+s('b')+' '+TXT.hintBack:state==='paused'?s('a')+' '+TXT.select+' · '+s('b')+' '+TXT.resume:s('a')+' '+TXT.ok;
+    txt=selectOpen?s('a')+' '+TXT.change+' · '+s('b')+' '+TXT.hintBack:settingsOpen?s('a')+' '+TXT.ok+' · '+s('b')+' '+TXT.hintBack:state==='paused'?s('a')+' '+TXT.select+' · '+s('b')+' '+TXT.resume:s('a')+' '+TXT.ok;
   }
   const key=(inMenu?'1':'0')+(creditsOpen?'c':'')+txt;
   if(key===cornerKey)return;
@@ -589,6 +602,7 @@ function begin(nextMode) {
   resetFighter(fighters[0],0);resetFighter(fighters[1],1);
   // Teams aus der Auswahl übernehmen (Freiflug: nur Team 1)
   const cfg=settings.teams[mode],humans=new Set();
+  fixTeams(cfg,mode);
   for(let t=0;t<2;t++) {
     const tm=teams[t];tm.size=t===1&&mode==='free'?1:cfg.size;tm.cur=0;tm.cd=0;
     for(let s=0;s<4;s++){const m=tm.m[s];m.c=cfg.p[t][s];m.ctrl=cfg.c[t][s];m.hp=MAX_HP;m.ki=65;m.out=s>=tm.size;if(fighters[t].active&&s<tm.size&&m.ctrl>=0)humans.add(m.ctrl);}
@@ -767,7 +781,8 @@ settingRows.forEach((row,i)=>{
 // ---- Kämpfer-Auswahl (aus dem Hauptmenü vor jedem Kampf): Team-Größe, je Platz Figur (◀▶) und Steuerung (✕/Klick wechselt Spieler 1–4 / KI) ----
 const selectLayer=document.getElementById('select'),selSizeRow=document.getElementById('selSizeRow'),selSizeBtn=document.getElementById('selSize');
 const selGo=document.getElementById('selGo'),selBack=document.getElementById('selBack'),selSlots=[];
-let selectOpen=false,selMode='bot',selFocus=0,selItems=[];
+let selectOpen=false,selMode='bot',selRow=0,selCol=0,selSlotLen=4,selGrid=[];
+const SEL_SIZE={k:'size',el:selSizeRow},SEL_GO={k:'go',el:selGo},SEL_BACK={k:'back',el:selBack},SEL_BTNS=[SEL_GO,SEL_BACK],SEL_ALL=[SEL_SIZE,SEL_GO,SEL_BACK];
 const portraitF=Object.assign({},fighters[0]);  // Vorschau-Figur (eigene Kopie, nie im Spiel)
 function drawPortrait(pic,c) {
   if(pic.dataset.c===String(c))return;
@@ -786,12 +801,14 @@ for(let t=0;t<2;t++) {
     el.innerHTML='<canvas class="sel-pic" width="68" height="88"></canvas><button type="button" class="set-val sel-char"></button><button type="button" class="set-val sel-ctrl"></button>';
     col.appendChild(el);
     const slot={t,s,el,pic:el.querySelector('canvas'),charBtn:el.querySelector('.sel-char'),ctrlBtn:el.querySelector('.sel-ctrl')};
+    slot.cells=[{k:'char',el:slot.charBtn,sl:slot},{k:'ctrl',el:slot.ctrlBtn,sl:slot}];
     selSlots.push(slot);
-    const pick=()=>{selFocus=selItems.indexOf(slot);changeChar(slot,1);};
+    const pick=()=>{focusSelCell(slot.cells[0]);changeChar(slot,1);};
     slot.charBtn.addEventListener('click',pick);slot.pic.addEventListener('click',pick);
-    slot.ctrlBtn.addEventListener('click',()=>{selFocus=selItems.indexOf(slot);cycleCtrl(slot);});
+    slot.ctrlBtn.addEventListener('click',()=>{focusSelCell(slot.cells[1]);cycleCtrl(slot);});
   }
 }
+for(const sl of selSlots)SEL_ALL.push(...sl.cells);
 function selCfg(){return settings.teams[selMode];}
 function renderSelect() {
   const cfg=selCfg(),solo=selMode==='free';
@@ -799,7 +816,7 @@ function renderSelect() {
   selSizeBtn.textContent='◀ '+(solo?TXT.soloNames:TXT.sizeNames)[cfg.size-1]+' ▶';
   for(let t=0;t<2;t++)document.querySelector('#selT'+t+' h3').textContent=TXT.team+(t+1);
   document.getElementById('selT1').hidden=solo;
-  selItems=[selSizeRow];
+  if(fixTeams(cfg,selMode))saveSettings();
   for(const sl of selSlots) {
     const show=sl.s<cfg.size&&!(solo&&sl.t===1);sl.el.hidden=!show;
     if(!show)continue;
@@ -808,33 +825,43 @@ function renderSelect() {
     sl.ctrlBtn.textContent=k<0?TXT.ctrlBot:TXT.ctrlNames[k];
     drawPortrait(sl.pic,c);
   }
-  // Fokus-Reihenfolge: Größe, Team 1, Team 2, LOS, ZURÜCK
-  for(let t=0;t<2;t++)for(const sl of selSlots)if(sl.t===t&&!sl.el.hidden)selItems.push(sl);
-  selItems.push(selGo,selBack);
-  selFocus=clamp(selFocus,0,selItems.length-1);
-  for(let i=0;i<selItems.length;i++){const it=selItems[i];(it.el||it).classList.toggle('pad-focus',i===selFocus);}
+  // Fokus-Raster: oben Größe, je Platz eine Zeile [T1 Figur, T1 Steuerung, T2 Figur, T2 Steuerung], unten LOS/ZURÜCK
+  selSlotLen=solo?2:4;selGrid=[[SEL_SIZE]];
+  for(let s=0;s<cfg.size;s++){const row=[];for(let t=0;t<(solo?1:2);t++)row.push(...selSlots[t*4+s].cells);selGrid.push(row);}
+  selGrid.push(SEL_BTNS);
+  selRow=clamp(selRow,0,selGrid.length-1);selCol=clamp(selCol,0,selSlotLen-1);
+  const cur=selCell();
+  for(const c of SEL_ALL)c.el.classList.toggle('pad-focus',c===cur);
 }
-function openSelect(m){selMode=m;selectOpen=true;selectLayer.hidden=false;selFocus=99;renderSelect();selFocus=selItems.indexOf(selGo);renderSelect();}
+// Aktuelle Zelle; in der Knopfzeile entscheidet die Spalte: linke Hälfte LOS, rechte ZURÜCK
+function selCell(){const row=selGrid[selRow];return row.length===1?row[0]:row===SEL_BTNS?row[selCol*2>=selSlotLen?1:0]:row[selCol];}
+function focusSelCell(cell){
+  for(let r=0;r<selGrid.length;r++){const c=selGrid[r].indexOf(cell);if(c<0)continue;selRow=r;if(selGrid[r]===SEL_BTNS)selCol=c?selSlotLen/2:0;else if(selGrid[r].length>1)selCol=c;return;}
+}
+function openSelect(m){selMode=m;selectOpen=true;selectLayer.hidden=false;selRow=99;selCol=0;renderSelect();}
 function closeSelect(){selectOpen=false;selectLayer.hidden=true;}
 function startFromSelect(){saveSettings();closeSelect();begin(selMode);}
 function changeSize(d,wrap){const cfg=selCfg();cfg.size=wrap?(cfg.size+d+3)%4+1:clamp(cfg.size+d,1,4);saveSettings();renderSelect();}
 function changeChar(sl,d){const cfg=selCfg();cfg.p[sl.t][sl.s]=(cfg.p[sl.t][sl.s]+d+CHARS.length)%CHARS.length;saveSettings();renderSelect();}
+// Nächster Spieler/KI; außer im Freiflug werden Spieler übersprungen, die im anderen Team (sichtbare Plätze) schon spielen
 function cycleCtrl(sl){
-  const cfg=selCfg(),lo=selMode==='free'?0:-1;let k=cfg.c[sl.t][sl.s]+1;if(k>3)k=lo;
+  const cfg=selCfg(),free=selMode==='free',lo=free?0:-1;let k=cfg.c[sl.t][sl.s];
+  for(let n=0;n<5;n++){k=k+1>3?lo:k+1;if(k<0||free||!inTeam(cfg,1-sl.t,k))break;}
   cfg.c[sl.t][sl.s]=k;saveSettings();renderSelect();
 }
-function moveSelFocus(d){selFocus=(selFocus+d+selItems.length)%selItems.length;renderSelect();const it=selItems[selFocus];if(it.el)it.el.scrollIntoView({block:'nearest'});}
+function moveSelFocus(d){selRow=(selRow+d+selGrid.length)%selGrid.length;renderSelect();selCell().el.scrollIntoView({block:'nearest'});}
 function selLeftRight(d) {
-  const it=selItems[selFocus];
-  if(it===selSizeRow)changeSize(d,false);
-  else if(it===selGo||it===selBack){selFocus=selItems.indexOf(it===selGo?selBack:selGo);renderSelect();}
-  else changeChar(it,d);
+  const cell=selCell();
+  if(cell===SEL_SIZE)changeSize(d,false);
+  else{selCol=cell===SEL_GO?selSlotLen/2:cell===SEL_BACK?0:(selCol+d+selSlotLen)%selSlotLen;renderSelect();}
 }
 function selActivate() {
-  const it=selItems[selFocus];
-  if(it===selSizeRow)changeSize(1,true);else if(it===selGo)startFromSelect();else if(it===selBack)closeSelect();else cycleCtrl(it);
+  const cell=selCell();
+  if(cell===SEL_SIZE)changeSize(1,true);else if(cell===SEL_GO)startFromSelect();else if(cell===SEL_BACK)closeSelect();
+  else if(cell.k==='char')changeChar(cell.sl,1);else cycleCtrl(cell.sl);
 }
-selSizeBtn.addEventListener('click',()=>{selFocus=0;changeSize(1,true);});
+function selCharStep(d){const cell=selCell();if(cell.k==='char')changeChar(cell.sl,d);}  // □ zurück, L1/R1 blättern
+selSizeBtn.addEventListener('click',()=>{focusSelCell(SEL_SIZE);changeSize(1,true);});
 selGo.addEventListener('click',startFromSelect);selBack.addEventListener('click',closeSelect);
 function setPauseFocus(i){pauseFocus=(i+pauseButtons.length)%pauseButtons.length;for(let k=0;k<pauseButtons.length;k++)pauseButtons[k].classList.toggle('pad-focus',k===pauseFocus);}
 function setMenuFocus(i) {
@@ -864,10 +891,13 @@ function handlePadUI() {
       continue;
     }
     if(selectOpen) {
-      // Auswahl: hoch/runter wählt, links/rechts ändert Figur/Größe, ✕ Steuerung bzw. Knopf, ○ zurück, Options startet
+      // Auswahl als Raster: Steuerkreuz bewegt frei (auf Team-Größe ←/→ ändern), ✕ ändert, □ vorige Figur, L1/R1 blättern, ○ zurück, Options startet
       if(navY)moveSelFocus(navY);
       else if(nav)selLeftRight(nav);
       else if(padPressed(st,0)){selActivate();return;}
+      else if(padPressed(st,2))selCharStep(-1);
+      else if(padPressed(st,4))selCharStep(-1);
+      else if(padPressed(st,5))selCharStep(1);
       else if(padPressed(st,1)){closeSelect();return;}
       else if(padPressed(st,9)){startFromSelect();return;}
       continue;
@@ -2048,7 +2078,7 @@ window.addEventListener('keydown',e=>{
     return;
   }
   if(selectOpen) {
-    // Auswahl per Tastatur: hoch/runter wählt, links/rechts ändert, Enter Steuerung/Knopf, Esc zurück
+    // Auswahl per Tastatur: Pfeile bewegen frei im Raster (auf Team-Größe ←/→ ändern), Enter ändert, Esc zurück
     e.preventDefault();
     if(e.code==='ArrowUp')moveSelFocus(-1);else if(e.code==='ArrowDown')moveSelFocus(1);
     else if(e.code==='ArrowLeft'||e.code==='ArrowRight')selLeftRight(e.code==='ArrowRight'?1:-1);
