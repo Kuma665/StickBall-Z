@@ -85,7 +85,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
 .psg2{color:transparent;background:linear-gradient(#23272d,#23272d) center/.42em .42em no-repeat,linear-gradient(#ff7fd0,#ff7fd0) center/.64em .64em no-repeat,radial-gradient(circle at 50% 30%,#3a3f47,#121418 70%);filter:drop-shadow(0 0 2px rgba(255,127,208,.5))}
 .psg3{color:transparent;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 5.6L14.6 13.7H5.4Z' fill='none' stroke='%233fe0a8' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat,radial-gradient(circle at 50% 30%,#3a3f47,#121418 70%);filter:drop-shadow(0 0 2px rgba(63,224,168,.5))}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
-.version{position:absolute;right:10px;bottom:3px;margin:0;color:var(--muted);font-size:9px;letter-spacing:.08em;opacity:.65;pointer-events:none}
+.version{position:absolute;right:10px;bottom:3px;margin:0;color:var(--muted);font-size:9px;letter-spacing:.08em;opacity:.65;white-space:pre-line;text-align:right;line-height:1.4;cursor:pointer}
 .rotate{display:none}
 @media(orientation:portrait) and (pointer:coarse){.rotate{position:fixed;inset:0;z-index:60;display:grid;place-items:center;align-content:center;gap:10px;background:#070a15f5;color:var(--white);font-size:15px;font-weight:800;letter-spacing:.12em;text-align:center}.rotate b{font-size:42px;color:var(--orange)}}
 </style>
@@ -97,7 +97,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24c</p>
+        <p class="version">v2026-11-24d</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -147,6 +147,8 @@ const TXT={
   setTitle:'EINSTELLUNGEN',setMusic:'Musik',setSfx:'Soundeffekte',setVib:'Vibration',setGfx:'Grafik',setGore:'Blut & Wunden',setBot:'KI-Stärke',botNames:['LEICHT','NORMAL','SCHWER'],
   on:'AN',off:'AUS',gfxNames:['AUTO','NIEDRIG','MITTEL','HOCH'],gfxLevels:['NIEDRIG','MITTEL','HOCH'],goreNames:['AUS','WENIG','BRUTAL'],
   rotate:'BITTE HANDY QUER HALTEN',
+  // Credits (Tippen auf die Versionsnummer im Hauptmenü); fremde Musik/Sounds hier mit Künstler und Quelle eintragen
+  credits:'Ein Spiel von Arox Games · Entwickelt von Aram Simon\n♪ Musik und Soundeffekte: im Spiel erzeugt (eigener Code)',
   // Eckhinweis (nur mit Controller) und Stumm-Knopf
   ok:'OK',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',fsOn:'Vollbild an',fsOff:'Vollbild aus',
   // Touch-Buttons und Bildschirmleser-Namen
@@ -308,11 +310,14 @@ function updateCornerUI() {
     const s=k=>padBadge(padKind,k);
     txt=settingsOpen?s('a')+' '+TXT.ok+' · '+s('b')+' '+TXT.hintBack:state==='paused'?s('a')+' '+TXT.select+' · '+s('b')+' '+TXT.resume:s('a')+' '+TXT.ok;
   }
-  const key=(inMenu?'1':'0')+txt;
+  const key=(inMenu?'1':'0')+(creditsOpen?'c':'')+txt;
   if(key===cornerKey)return;
-  cornerKey=key;muteBtn.hidden=!inMenu;fsBtn.hidden=!inMenu||!FS_OK;padHintEl.hidden=!txt;padHintEl.innerHTML=txt;
+  cornerKey=key;muteBtn.hidden=!inMenu;fsBtn.hidden=!inMenu||!FS_OK;padHintEl.hidden=!txt||creditsOpen;padHintEl.innerHTML=txt;
 }
 muteBtn.addEventListener('click',e=>{e.stopPropagation();toggleMute();muteBtn.blur();});
+// Credits: Tippen auf die Versionsnummer wechselt zwischen Version und Credits (Eckhinweis solange aus)
+const verEl=document.querySelector('.version'),VER_TXT=verEl.textContent;let creditsOpen=false;
+verEl.addEventListener('click',e=>{e.stopPropagation();creditsOpen=!creditsOpen;verEl.textContent=creditsOpen?TXT.credits:VER_TXT;});
 // Vollbild-Knopf (ganz rechts): Umschalter; selbst ausgeschaltet -> settings.fsOff, dann kein automatisches Vollbild mehr bei Eingaben
 const fsBtn=document.getElementById('fsBtn'),FS_OK=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
 if(!FS_OK)document.documentElement.classList.add('fs-none');
