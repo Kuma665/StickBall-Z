@@ -73,7 +73,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
 .pause-card button.pad-focus{outline:2px solid var(--cyan);outline-offset:3px}
 /* Ein Layout fuer alle Bildschirme: entworfen fuer ca. 680x400, per JS (fitShell) proportional skaliert */
 .topbar{font-size:9px}.brand{font-size:10px}.hint{display:none}.frame{border-radius:8px}.menu{gap:3%;padding:3% 3.5%;background:linear-gradient(90deg,#070b16ed 0%,#080d1bdc 50%,#080d1b90 100%)}.intro{max-width:none}.eyebrow{margin-bottom:6px;font-size:9px;letter-spacing:.18em}h1{font-size:60px}.lead{max-width:460px;margin:8px 0 10px;font-size:11px;line-height:1.4}.modes{gap:6px}.mode{min-height:32px;padding:0 10px;font-size:10px}.guide{padding:8px 10px}.guide h2{margin-bottom:4px;font-size:9px}.guide p{margin:2px 0;font-size:10px;gap:6px}.guide kbd{min-width:18px;padding:1px 4px;font-size:9px}.guide .rule{margin-top:5px;padding-top:4px;font-size:9px;line-height:1.35}.version{bottom:3px}
-.mute-btn{position:absolute;top:8px;right:8px;z-index:7;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #46536e;border-radius:50%;background:#0c1323d9;color:var(--white);font-size:13px;line-height:1;cursor:pointer}.mute-btn[hidden]{display:none}.mute-btn.below-hud{top:54px}
+.mute-btn{position:absolute;top:8px;right:8px;z-index:7;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid #46536e;border-radius:50%;background:#0c1323d9;color:var(--white);font-size:13px;line-height:1;cursor:pointer}.mute-btn[hidden]{display:none}#muteBtn{right:42px}.fs-none #muteBtn{right:8px}
 .intro h1{margin-bottom:16px}
 .pad-hint{position:absolute;right:10px;bottom:15px;z-index:6;margin:0;color:#c7d3ea;font-size:10px;font-weight:700;letter-spacing:.04em;text-shadow:0 1px 3px #000c;pointer-events:none}.pad-hint[hidden]{display:none}
 /* Tastensymbole als runde Plakette (wie UCD .psg); psg0-3 = PS ✕○□△ per SVG/CSS, xb0-3 = Xbox A B X Y, psw = Schultertasten */
@@ -97,7 +97,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-23g</p>
+        <p class="version">v2026-11-24</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -118,6 +118,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
       <div class="set-row" data-set="gore"><span data-t="setGore"></span><button type="button" class="set-val"></button></div>
       <div class="set-row" data-set="back"><button type="button" class="set-back" data-t="back"></button></div>
     </div></div>
+    <button class="mute-btn" id="fsBtn" type="button">⛶</button>
     <button class="mute-btn" id="muteBtn" type="button">🔊</button>
     <p class="pad-hint" id="padHint" hidden></p>
     <div class="touch" id="touch" hidden>
@@ -146,7 +147,7 @@ const TXT={
   on:'AN',off:'AUS',gfxNames:['AUTO','NIEDRIG','MITTEL','HOCH'],gfxLevels:['NIEDRIG','MITTEL','HOCH'],goreNames:['AUS','WENIG','BRUTAL'],
   rotate:'BITTE HANDY QUER HALTEN',
   // Eckhinweis (nur mit Controller) und Stumm-Knopf
-  ok:'OK',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',
+  ok:'OK',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',fsOn:'Vollbild an',fsOff:'Vollbild aus',
   // Touch-Buttons und Bildschirmleser-Namen
   tCharge:'KI',tSuper:'SSJ',tHeavy:'H',tBeam:'KAME',tShot:'KI!',
   ariaFrame:'StickBall Z Spiel',ariaCanvas:'2D-Flugkampf',ariaPause:'Pause',ariaLeft:'Links',ariaUp:'Hoch',ariaDown:'Runter',ariaRight:'Rechts',
@@ -199,7 +200,7 @@ let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, 
 let padKind = '', overParts = null, overText = TXT.overKey;
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
 const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=TXT.gfxNames,GFX_LEVELS=TXT.gfxLevels,GFX_DPR=[1,1.5,2],GORE_NAMES=TXT.goreNames;
-const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,mute:false,lastMode:'free'};
+const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,mute:false,fsOff:false,lastMode:'free'};
 try {
   const d=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
   if(d&&typeof d==='object') {
@@ -210,7 +211,8 @@ try {
     if(vol(d.music)!==null)settings.music=vol(d.music);
     if(vol(d.sfx)!==null)settings.sfx=vol(d.sfx);
     if(typeof d.vibration==='boolean')settings.vibration=d.vibration;
-    if(typeof d.mute==='boolean')settings.mute=d.mute;
+
+    if(typeof d.fsOff==='boolean')settings.fsOff=d.fsOff;
     if(Number.isInteger(d.gfx)&&d.gfx>=0&&d.gfx<=3)settings.gfx=d.gfx;
     if(Number.isInteger(d.gore)&&d.gore>=0&&d.gore<=2)settings.gore=d.gore;
     if(d.lastMode==='free'||d.lastMode==='bot'||d.lastMode==='local')settings.lastMode=d.lastMode;
@@ -304,11 +306,22 @@ function updateCornerUI() {
     const s=k=>padBadge(padKind,k);
     txt=settingsOpen?s('a')+' '+TXT.ok+' · '+s('b')+' '+TXT.hintBack:state==='paused'?s('a')+' '+TXT.select+' · '+s('b')+' '+TXT.resume:s('a')+' '+TXT.ok;
   }
-  const key=(inMenu?'1':state==='over'?'2':'0')+txt;
+  const key=(inMenu?'1':'0')+txt;
   if(key===cornerKey)return;
-  cornerKey=key;muteBtn.hidden=!(inMenu||state==='over');muteBtn.classList.toggle('below-hud',state==='over');padHintEl.hidden=!txt;padHintEl.innerHTML=txt;
+  cornerKey=key;muteBtn.hidden=!inMenu;fsBtn.hidden=!inMenu||!FS_OK;padHintEl.hidden=!txt;padHintEl.innerHTML=txt;
 }
-muteBtn.addEventListener('click',e=>{e.stopPropagation();toggleMute();muteBtn.blur();});
+
+// Vollbild-Knopf (ganz rechts): Umschalter; selbst ausgeschaltet -> settings.fsOff, dann kein automatisches Vollbild mehr bei Eingaben
+const fsBtn=document.getElementById('fsBtn'),FS_OK=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+if(!FS_OK)document.documentElement.classList.add('fs-none');
+function renderFs(){fsBtn.setAttribute('aria-label',isFullscreen()?TXT.fsOff:TXT.fsOn);fsBtn.classList.toggle('on',isFullscreen());}
+function toggleFullscreen(){
+  if(isFullscreen()){settings.fsOff=true;const d=document,ex=d.exitFullscreen||d.webkitExitFullscreen;try{const p=ex&&ex.call(d);if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+  else{settings.fsOff=false;enterFullscreen();}
+  saveSettings();
+}
+fsBtn.addEventListener('click',e=>{e.stopPropagation();toggleFullscreen();fsBtn.blur();});
+renderFs();
 renderMute();
 const keyMaps = [
   { left:'KeyA', right:'KeyD', up:'KeyW', down:'KeyS', shot:'KeyG', beam:'KeyT', charge:'KeyH', punch:'KeyF', heavy:'KeyV', super:'KeyR' },
@@ -680,7 +693,9 @@ function handlePadUI() {
     const nav=dir!==0&&dir!==st.navDir?dir:0;st.navDir=dir;
     const dirY=st.ay>.55||st.btn[13]?1:st.ay<-.55||st.btn[12]?-1:0;
     const navY=dirY!==0&&dirY!==st.navY?dirY:0;st.navY=dirY;
-    if((state==='menu'||state==='paused'||state==='over')&&padPressed(st,3)){toggleMute();return;}
+    // L3 = Stumm, R3 = Vollbild – nur in Menü/Pause (im Spiel lösen beide Super aus)
+    if((state==='menu'||state==='paused')&&padPressed(st,10)){toggleMute();return;}
+    if((state==='menu'||state==='paused')&&padPressed(st,11)){toggleFullscreen();return;}
     if(helpOpen) {
       if(dirY)guideEl.scrollTop+=dirY*6;
       if(padPressed(st,0)||padPressed(st,1)||padPressed(st,9)){closeHelp();return;}
@@ -1719,7 +1734,7 @@ function frame(now) {
 }
 window.addEventListener('keydown',e=>{
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
-  if(e.code==='KeyM'&&!e.repeat&&(state==='menu'||state==='paused'||state==='over')){toggleMute();return;}
+  if(e.code==='KeyM'&&!e.repeat&&(state==='menu'||state==='paused')){toggleMute();return;}
   if(helpOpen) {
     e.preventDefault();
     if(e.code==='ArrowUp')guideEl.scrollTop-=30;else if(e.code==='ArrowDown')guideEl.scrollTop+=30;
@@ -1789,7 +1804,7 @@ function requestWakeLock() {
 function armHistory(){if(historyArmed)return;historyArmed=true;try{history.pushState({sbz:1},'');}catch(e){}}
 function resumeAudioContext(){if(audioEnabled&&audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});}
 // Erst nach echter Eingabe: History-Eintrag, Vollbild, Wake Lock (Browser verlangen eine Nutzergeste)
-function onUserInput(){armHistory();enterFullscreen();requestWakeLock();resumeAudioContext();}
+function onUserInput(){armHistory();if(!settings.fsOff)enterFullscreen();requestWakeLock();resumeAudioContext();}
 window.addEventListener('pointerdown',onUserInput,true);
 window.addEventListener('keydown',onUserInput,true);
 // Zurück: Spiel -> Pause, Pause bleibt, Ergebnis -> Menü, Hauptmenü -> nichts
@@ -1801,7 +1816,7 @@ window.addEventListener('popstate',()=>{
   else if(state==='over')backToMenu();
 });
 // Vollbild verlassen (Esc / erstes Zurück) pausiert ein laufendes Spiel
-function onFullscreenChange(){if(!isFullscreen()&&state==='playing')pauseGame();}
+function onFullscreenChange(){renderFs();if(!isFullscreen()&&state==='playing')pauseGame();}
 document.addEventListener('fullscreenchange',onFullscreenChange);
 document.addEventListener('webkitfullscreenchange',onFullscreenChange);
 document.addEventListener('contextmenu',e=>e.preventDefault());
