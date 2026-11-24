@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24l</p>
+        <p class="version">v2026-11-24m</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -183,23 +183,23 @@ const TXT={
   stAudioNo:'AUDIO NICHT UNTERSTÜTZT',stAudioFail:'AUDIO KANN NICHT STARTEN',lblLocal:'2 SPIELER  ·  ',lblBot:'KI-KAMPF  ·  ',
   // HUD und Ergebnis
   world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
-  botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
+  botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
   guideKeyTitle:'Steuerung · Spieler 1',guidePadTitle:'Steuerung · Controller',guideTouchTitle:'Steuerung · Touch',
   guideKey:[['Fliegen / lenken','<span><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></span>'],['Leichte Combo · bis zu 3 Treffer','<kbd>F</kbd>'],
-    ['Heavy · kostet 12 Ki für Extra-Kraft','<kbd>V</kbd>'],['Hoch + Schlag: Uppercut · Runter + Schlag: Slam','<kbd>W/S</kbd> + <kbd>F</kbd>'],
+    ['Heavy · kostet 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>V</kbd>'],['Hoch + Schlag: Uppercut · Runter + Schlag: Slam','<kbd>W/S</kbd> + <kbd>F</kbd>'],
     ['Im Flug vorwärts + Schlag: Rush','<kbd>A/D</kbd> + <kbd>F</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>S</kbd> + <kbd>A/D</kbd>'],
     ['Ausweichen · Richtung doppelt antippen, halten: Turbo','<kbd>A/D · ←/→</kbd>'],['Ki-Schuss · auch im Flug lenkbar','<kbd>G</kbd> + <kbd>WASD</kbd>'],
     ['Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt','<kbd>T</kbd> + <kbd>W/S</kbd>'],['Ki laden','<kbd>H</kbd>'],
     ['Super-Saiyajin · bei 100 Ki','<kbd>R</kbd>'],['Kämpfer wechseln (Team)','<kbd>Q</kbd>'],['Spieler 2 · Combo / Heavy / Schuss / Wechseln','<span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd> <kbd>P</kbd></span>']],
   ruleKey:'<kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.',
-  guidePad:[['Fliegen / lenken','<kbd>Stick</kbd>'],['Hoch fliegen','a'],['Leichte Combo · bis zu 3 Treffer','x'],['Stark · halten lädt auf, ↑/↓ lenkt','y'],
+  guidePad:[['Fliegen / lenken','<kbd>Stick</kbd>'],['Hoch fliegen','a'],['Leichte Combo · bis zu 3 Treffer','x'],['Stark · halten lädt auf, ↑/↓ lenkt · 100 Ki: ULTRA-SCHLAG','y'],
     ['Ausweichen · halten: Turbo','b'],['Blocken','l1'],['Ki-Schuss · halten: Kanone','r1'],['Antippen: Ki-Druckwelle · halten: Kamehameha','r2'],
     ['Ki laden','l2'],['Super-Saiyajin · bei 100 Ki','l3'],['Kämpfer wechseln (Team)','r3']],
   rulePad:'Stick runter + {r1} zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. {start} pausiert.',
   guideTouch:[['Fliegen / lenken','<span><kbd>◀</kbd> <kbd>▲</kbd> <kbd>▼</kbd> <kbd>▶</kbd></span>'],['Ausweichen · Richtung doppelt tippen, halten: Turbo','<kbd>◀/▶</kbd>'],
-    ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · kostet 12 Ki','<kbd>H</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>▼</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
+    ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>H</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>▼</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
     ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
   ruleTouch:'<kbd>▼</kbd> + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.',
   // alte Hinweiszeile #hint (per CSS ausgeblendet)
@@ -243,6 +243,11 @@ let dpr = 1, state = 'menu', mode = 'free', clock = 0, accumulator = 0, lastTime
 let cameraX = 0, cameraY = 260, zoom = 1, previousCameraX = 0, previousCameraY = 260, previousZoom = 1;
 let renderCameraX = 0, renderCameraY = 260, renderZoom = 1, worldRadius = 2400, maxDistance = 0, screenShake = 0, hitStop = 0;
 let padKind = '', overParts = null, overText = TXT.overKey;
+// Zeitlupe: gameSpeed skaliert in frame() die Zeit (Physik bleibt bei DT); slowT = Rest der K.o.-Zeitlupe (Spielzeit).
+// ULTRA-SCHLAG: volle Ki + schwerer Schlag; Treffer -> Szene (Kämpfer eingefroren, 3 Treffer, Röntgenbild je nach Blut-Einstellung)
+let gameSpeed=1,slowT=0;
+const ultra={on:false,t:0,att:0,vic:1,hits:0,dmg:0};
+const ULTRA_T=.36,ULTRA_HITS=[.06,.17,.28],ULTRA_SPEED=.22,KO_SLOW_T=.3,KO_SPEED=.3;
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
 const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=TXT.gfxNames,GFX_LEVELS=TXT.gfxLevels,GFX_DPR=[1,1.5,2],GORE_NAMES=TXT.goreNames;
 const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,bot:0,mute:false,fsOff:false,lastMode:'free',teams:null};
@@ -590,6 +595,7 @@ function makeCrater(x,big) {
   playSfx('crater');
 }
 function resetFighter(f,index) {
+  f.ultra=false;f.xray=0;f.xrayHits=0;
   clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;f.kiaiCooldown=0;f.r2Held=false;f.r2Time=0;f.comboCount=0;
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
@@ -602,6 +608,7 @@ function begin(nextMode) {
   mode=nextMode;state='playing';menu.hidden=true;pauseLayer.hidden=true;updateTouch();
   startAudio();
   hitStop=0;tagReq.fill(0);
+  ultra.on=false;gameSpeed=1;slowT=0;
   fighters[0].active=true;
   fighters[1].active=mode!=='free';
   for(let i=0;i<MAX_CRATERS;i++)craters[i].active=false;
@@ -950,6 +957,7 @@ function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill
 function backToMenu(){state='menu';stopMusic();pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;}
 function endMatch(w) {
   state='over';winner=w;stopMusic();updateTouch();
+  ultra.on=false;gameSpeed=KO_SPEED;slowT=KO_SLOW_T;  // letzter K.o.: kurz Zeitlupe
   screenShake=Math.max(screenShake,14);
   // K.O.: Druckwelle, Blitz, bei Blut großer Spritzer (Partikel laufen im Endbildschirm weiter)
   const l=fighters[1-w],dir=Math.sign(l.x-fighters[w].x)||1;
@@ -958,6 +966,36 @@ function endMatch(w) {
   if(settings.gore){bloodSpray(l.x,l.y-44,dir,60,420);bloodSpray(l.x,l.y-44,-dir,24,260);flash(.55,settings.gore===2?'#a00010':'#fff');}
   else flash(.5,'#fff');
   rumble(1-w,1,.8,380);rumble(w,.3,.5,160);
+}
+// ---- ULTRA-SCHLAG: Start bei Treffer (nicht geblockt), dann eigene Szene in Spielzeit (in Zeitlupe dargestellt) ----
+function startUltra(att) {
+  const a=fighters[att],v=fighters[1-att];
+  ultra.on=true;ultra.t=0;ultra.att=att;ultra.vic=1-att;ultra.hits=0;ultra.dmg=MAX_HP*.26*(a.superTime>0?1.3:1);
+  v.xray=1;v.xrayHits=0;v.stun=Math.max(v.stun,1);v.vx=0;v.vy=0;a.vx=0;a.vy=0;
+  gameSpeed=ULTRA_SPEED;hitStop=0;flash(.25,'#fff');
+}
+function updateUltra(dt) {
+  const a=fighters[ultra.att],v=fighters[ultra.vic],prev=ultra.t;
+  ultra.t+=dt;clock+=dt;
+  // Kämpfer und Schüsse eingefroren (Interpolation auch)
+  for(let i=0;i<2;i++){const f=fighters[i];f.px=f.x;f.py=f.y;}
+  for(let i=0;i<MAX_PROJECTILES;i++){const p=projectiles[i];p.px=p.x;p.py=p.y;}
+  for(let n=0;n<3;n++)if(prev<ULTRA_HITS[n]&&ultra.t>=ULTRA_HITS[n]) {
+    ultra.hits=n+1;v.xrayHits=n+1;v.hp=Math.max(0,v.hp-ultra.dmg/3);v.hitFlash=.12;
+    const hx=v.x,hy=v.y-(n===0?40:n===1?62:50);
+    impactBurst(hx,hy,n===2?'#fff':a.color,n===2);spawnRing(hx,hy,60+n*30,'#fff',3,.25);
+    if(settings.gore)hurt(v,a.face,ultra.dmg/3,n===2);
+    screenShake=Math.max(screenShake,6+n*4);playSfx('hit',true);rumble(ultra.vic,.6+n*.15,.5,90);rumble(ultra.att,.2,.3,40);
+  }
+  updateEffects(dt);
+  // Kamera fährt auf den Getroffenen
+  previousCameraX=cameraX;previousCameraY=cameraY;previousZoom=zoom;
+  const k=Math.min(1,dt*10);cameraX+=(v.x-cameraX)*k;cameraY+=(v.y-44-cameraY)*k;zoom+=(1.25-zoom)*k;
+  if(ultra.t>=ULTRA_T) {
+    ultra.on=false;gameSpeed=1;v.xray=0;v.xrayHits=0;
+    v.stun=Math.max(v.stun,.7);v.vx=a.face*560;v.vy=-320;a.vx=-a.face*60;
+    spawnRing(v.x,v.y-44,180,'#fff',6,.5);flash(.3,'#fff');screenShake=Math.max(screenShake,14);hitStop=.08;
+  }
 }
 // ---- Team-Wechsel: nur ein Kämpfer je Team auf dem Platz; Leben/Ki der Wartenden bleiben gespeichert ----
 const TAG_COOLDOWN=1.2;
@@ -1153,11 +1191,13 @@ function damage(f,from,p) {
 // think = Schritte bis zur nächsten Entscheidung (dazwischen bleibt die letzte), punch/heavy = Schwelle für den Angriffstakt,
 // block/shot = Wahrscheinlichkeit je Entscheidung, beamFull = Kamehameha nur bei vollem Ki, kiai = Chance je Schritt, sich aus Combos zu befreien
 // tag = Chance je Schritt, bei wenig Leben den Kämpfer zu wechseln
-const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004},{think:6,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.05,tag:.012},{think:2,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.12,tag:.025}];
+const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25},{think:6,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5},{think:2,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8}];
 const BOT_KEYS=['right','left','up','down','beam','heavy','punch','shot','charge','dash'];
-const BOT_MEM=[0,1].map(()=>({t:0,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
+const BOT_MEM=[0,1].map(()=>({t:0,ud:false,wantUltra:false,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
 function updateBot(f,target,input,index) {
   const lv=BOT_LVL[settings.bot]||BOT_LVL[0],mem=BOT_MEM[index];
+  // Bei voller Ki einmal entscheiden: ULTRA-SCHLAG versuchen (je nach Stärke) statt Super/Kamehameha
+  if(f.ki<100)mem.ud=false;else if(!mem.ud){mem.ud=true;mem.wantUltra=Math.random()<lv.ultra;}
   if(--mem.t<=0) {
     mem.t=lv.think;
     const dx=target.x-f.x,dy=target.y-f.y,d=Math.abs(dx);
@@ -1170,11 +1210,12 @@ function updateBot(f,target,input,index) {
       mem.down=true;
       mem.left=dx>0;mem.right=dx<0;
     }
-    mem.beam=d<360&&f.beamCooldown<=0&&f.ki>=(lv.beamFull?100:BEAM_COST);
+    mem.beam=d<360&&f.beamCooldown<=0&&f.ki>=(lv.beamFull?100:BEAM_COST)&&!(mem.wantUltra&&f.ki>=100);
     const attackPulse=Math.sin(clock*7.5);
     mem.heavy=false;mem.punch=false;mem.shot=false;
     if(d<125&&Math.abs(dy)<100&&f.punchCooldown<=0) {
-      if(f.ki>=12&&attackPulse>lv.heavy)mem.heavy=true;
+      if(mem.wantUltra&&f.ki>=100)mem.heavy=true;
+      else if(f.ki>=12&&attackPulse>lv.heavy)mem.heavy=true;
       else mem.punch=attackPulse>lv.punch;
     } else if(d<590&&f.fire<=0&&f.ki>=7)mem.shot=Math.random()<lv.shot;
     mem.charge=f.ki<35&&d>220;
@@ -1193,7 +1234,9 @@ function startPunch(f,step,type=0) {
   // Typen: 0 Combo · 1 Uppercut · 2 Slam · 3 Stark mittig · 4 Rush · 5 Stark hoch · 6 Stark tief
   const heavy=type===3||type===5||type===6;
   f.heavyPowered=(heavy&&f.ki>=12)||(type===4&&f.ki>=10);
-  if(heavy&&f.heavyPowered)f.ki-=12;
+  f.ultra=heavy&&f.ki>=100;
+  if(f.ultra){f.ki=0;f.heavyPowered=true;}
+  else if(heavy&&f.heavyPowered)f.ki-=12;
   else if(type===4&&f.heavyPowered)f.ki-=10;
   f.attackDuration=heavy?.5:type===4?.4:type===1||type===2?.42:step===3?.46:.34;
   f.punch=f.attackDuration;
@@ -1226,7 +1269,7 @@ function updateFighter(f,index,dt) {
   let input=readInput(f,index);
   if(f.bot&&enemy.active) {
     updateBot(f,enemy,input,index);
-    input.super=f.ki>=100&&f.superTime<=0;
+    input.super=f.ki>=100&&f.superTime<=0&&!BOT_MEM[index].wantUltra;
   }
   f.charging=input.charge&&!f.beamHeld;
   if(input.super&&!f.superHeld&&f.ki>=100&&f.superTime<=0) {
@@ -1428,7 +1471,9 @@ function updateFighter(f,index,dt) {
           hitStop=Math.max(hitStop,Math.min(.2,(finisher?.11:.06)*kb));
           playSfx('hit',finisher);
           rumble(1-index,finisher?.85:.45,finisher?.6:.35,finisher?150:70);rumble(index,.15,.3,45);
+          if(f.ultra){f.ultra=false;startUltra(index);}
         }
+        f.ultra=false;  // geblockt: Ki ist trotzdem weg
       }
     }
     if(attackProgress>.76)f.punchHit=true;
@@ -1493,8 +1538,9 @@ function updateEffects(dt) {
   screenShake=Math.max(0,screenShake-26*dt);
 }
 function update(dt) {
-  if(state==='over'){updateEffects(dt);return;}
+  if(state==='over'){if(slowT>0){slowT-=dt;if(slowT<=0)gameSpeed=1;}updateEffects(dt);return;}
   if(state!=='playing')return;
+  if(ultra.on){updateUltra(dt);return;}
   if(hitStop>0) {
     hitStop=Math.max(0,hitStop-dt);
     // Während Hit-Pause Interpolation einfrieren, sonst zittert die Darstellung
@@ -1834,6 +1880,9 @@ function drawFighter(f,alpha) {
     ctx.strokeStyle=backColor;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-2,hipY+2);ctx.quadraticCurveTo(-18,hipY+14+tw,ex,ey);ctx.stroke();
     if(L.tail==='sting'){ctx.fillStyle=lineColor;ctx.strokeStyle='#060a14';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(ex+2,ey+2);ctx.lineTo(ex-6,ey-5);ctx.lineTo(ex-1,ey+4);ctx.closePath();ctx.fill();ctx.stroke();}
   }
+  // ULTRA-SCHLAG-Opfer (nur mit Blut-Einstellung Normal/Brutal): Körper durchsichtig, Skelett kommt nach dem Kopf
+  const xr=f.xray>0&&settings.gore>0;
+  if(xr)ctx.globalAlpha=.3;
   // Umriss (eine Linie für alles)
   ctx.strokeStyle='#060a14';ctx.lineWidth=7;ctx.beginPath();
   limb3(0,hipY,bkX,bkY,bfX,bfY);limb3(0,hipY,fkX,fkY,ffX,ffY);
@@ -1944,6 +1993,27 @@ function drawFighter(f,alpha) {
     if(fierce){ctx.moveTo(ex-3.2,ey-3.4);ctx.lineTo(ex+2.6,ey-1.6);}else{ctx.moveTo(ex-3,ey-2.9);ctx.lineTo(ex+2.6,ey-2.7);}
     ctx.stroke();
     if(kind&&atkT>.15&&atkT<.6){ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(hx+4.3,hy+4.7,1.3,1.1,0,0,Math.PI*2);ctx.fill();}
+  }
+  if(xr) {
+    // Skelett aus den Gelenkpunkten der Pose: Knochen (dunkler Rand + hell), Rippen, Becken, Schädel; BRUTAL: Risse je Treffer
+    ctx.globalAlpha=1;const bone='#eef6ff',shade='#0a1630';
+    ctx.beginPath();
+    limb3(0,hipY,bkX,bkY,bfX,bfY);limb3(0,hipY,fkX,fkY,ffX,ffY);limb3(sx,sy,beX,beY,bhX,bhY);limb3(sx,sy,feX,feY,fhX,fhY);
+    ctx.moveTo(0,hipY);ctx.lineTo(neckX,neckY);
+    ctx.strokeStyle=shade;ctx.lineWidth=4.4;ctx.stroke();ctx.strokeStyle=bone;ctx.lineWidth=2;ctx.stroke();
+    ctx.lineWidth=1.6;ctx.beginPath();
+    for(let i=0;i<4;i++){const t=.45+i*.13,rx=neckX*t,ry=hipY+(neckY-hipY)*t;ctx.moveTo(rx-4,ry+1.5);ctx.quadraticCurveTo(rx+1,ry-1.5,rx+5,ry+1);}
+    ctx.moveTo(4,hipY);ctx.ellipse(0,hipY,4,2.4,0,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle=bone;ctx.beginPath();ctx.arc(hx,hy,6.6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=shade;ctx.beginPath();ctx.arc(hx+3.4,hy-.6,1.8,0,Math.PI*2);ctx.fill();ctx.fillRect(hx+2,hy+3.6,4.2,.9);
+    if(settings.gore===2&&f.xrayHits) {
+      ctx.strokeStyle='#ff3a4a';ctx.lineWidth=1.3;ctx.beginPath();
+      for(let n=0;n<f.xrayHits;n++) {
+        const cx=n===0?neckX*.6:n===1?hx-1:hx+1,cy=n===0?hipY+(neckY-hipY)*.6:n===1?hy-4:hy+2.5;
+        ctx.moveTo(cx-3,cy-2);ctx.lineTo(cx-.5,cy+.5);ctx.lineTo(cx-1.5,cy+1.8);ctx.lineTo(cx+2.5,cy+3);
+      }
+      ctx.stroke();
+    }
   }
   if(gore) drawWounds(f,true,hipY,neckX,neckY,hx,hy,woundMax,gore);
   if(f.charging){ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(hx+4.3,hy+3.8,1.6,1.5+Math.abs(Math.sin(clock*9))*1.3,0,0,Math.PI*2);ctx.fill();}
@@ -2089,8 +2159,16 @@ function render(alpha) {
   }
   ctx.globalAlpha=1;
   for(let i=0;i<MAX_PROJECTILES;i++)if(projectiles[i].active)drawProjectile(projectiles[i],alpha);
+  // ULTRA-SCHLAG: Welt abdunkeln (riesiges Rechteck in Weltkoordinaten), Kämpfer bleiben hell
+  if(ultra.on){ctx.globalAlpha=.6*Math.min(1,ultra.t/.05);ctx.fillStyle='#02040a';ctx.fillRect(-1e6,-1e6,2e6,2e6);ctx.globalAlpha=1;}
   drawFighter(fighters[0],alpha);drawFighter(fighters[1],alpha);
   ctx.restore();
+  if(ultra.on) {
+    const a=Math.min(1,ultra.t/.04)*(ultra.t>ULTRA_T-.04?(ULTRA_T-ultra.t)/.04:1);
+    ctx.globalAlpha=clamp(a,0,1);ctx.textAlign='center';ctx.font='900 34px system-ui';ctx.lineJoin='round';
+    ctx.strokeStyle='#050914';ctx.lineWidth=6;ctx.strokeText(TXT.ultra,W/2,H*.24);
+    ctx.fillStyle=fighters[ultra.att].superTime>0?'#ffe66d':'#ffffff';ctx.fillText(TXT.ultra,W/2,H*.24);ctx.globalAlpha=1;
+  }
   if(screenFlash>0){ctx.globalAlpha=Math.min(.6,screenFlash);ctx.fillStyle=flashColor;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
   if(state==='playing'||state==='over')drawHud();
   if(state==='over'&&winner>=0) {
@@ -2113,7 +2191,7 @@ function frame(now) {
   if(!lastTime)lastTime=now;
   const rawDt=(now-lastTime)/1000;
   // Pause = Standbild: Zeit nicht weiterzählen, sonst wechselt die Interpolation und die Figuren zittern
-  if(state!=='paused')accumulator+=Math.min(.05,rawDt);lastTime=now;
+  if(state!=='paused')accumulator+=Math.min(.05,rawDt)*(state==='playing'||state==='over'?gameSpeed:1);lastTime=now;
   autoGfx(rawDt);
   pollPads();
   updateCornerUI();
