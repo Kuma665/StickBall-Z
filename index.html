@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24t</p>
+        <p class="version">v2026-11-24u</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -370,17 +370,17 @@ function stopMusic(rewind) {
 function startAudio() {
   ensureAudio();
   if(!audioContext||!audioEnabled)return;
-  audioContext.resume().then(()=>{if(state==='playing')startMusic();}).catch(()=>{
+  audioContext.resume().then(()=>{startMusic();}).catch(()=>{
     stopMusic();audioEnabled=false;status.textContent=TXT.stAudioFail;
   });
-  if(state==='playing')startMusic();
+  startMusic();
 }
 function applyVolumes() {
   if(audioMaster)audioMaster.gain.setTargetAtTime(settings.mute?0:MASTER_VOL,audioContext.currentTime,.04);
   if(musicBus)musicBus.gain.setTargetAtTime(settings.music*MUSIC_GAIN,audioContext.currentTime,.04);
   if(sfxBus)sfxBus.gain.setTargetAtTime(settings.sfx,audioContext.currentTime,.04);
   if(musicEl&&!musicNode){musicEl.muted=settings.mute;musicEl.volume=clamp(settings.music*MUSIC_GAIN*MASTER_VOL*4,0,1);}  // ohne Web-Audio-Anbindung direkt regeln
-  if(settings.music<=0)stopMusic();else if(state==='playing')startMusic();
+  if(settings.music<=0)stopMusic();else if(audioContext)startMusic();  // Musik läuft überall (Menü, Pause, Ergebnis), sobald Ton erlaubt ist
 }
 // Stumm-Knopf (Menü und Pause): schaltet alles aus, Reglerwerte bleiben; Taste M, Controller △/Y
 const MASTER_VOL=.18;
@@ -786,7 +786,7 @@ function changeSetting(key,dir,wrap) {
     let v=Math.round(settings[key]*10)+dir;
     v=wrap?(v>10?0:v<0?10:v):clamp(v,0,10);
     settings[key]=v/10;
-    ensureAudio();if(audioContext)audioContext.resume().catch(()=>{});
+    ensureAudio();if(audioContext){audioContext.resume().catch(()=>{});startMusic();}  // Regler bewegt: Ton erlaubt -> Musik an
     applyVolumes();
     if(key==='sfx')playSfx('shot');
   } else if(key==='vibration'){settings.vibration=!settings.vibration;if(settings.vibration)rumble(0,.5,.5,120);}
@@ -955,11 +955,11 @@ function rumble(index,strong,weak,ms) {
   if(!a||!a.playEffect)return;
   try{const r=a.playEffect('dual-rumble',{duration:ms,strongMagnitude:strong,weakMagnitude:weak});if(r&&r.catch)r.catch(()=>{});}catch(e){}
 }
-function pauseGame(){state='paused';setPauseFocus(0);stopMusic();pauseLayer.hidden=false;updateTouch();}
+function pauseGame(){state='paused';setPauseFocus(0);pauseLayer.hidden=false;updateTouch();}
 function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);state='playing';pauseLayer.hidden=true;updateTouch();if(audioEnabled)startMusic();}
-function backToMenu(){state='menu';stopMusic(true);pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;}
+function backToMenu(){state='menu';pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;}
 function endMatch(w) {
-  state='over';winner=w;stopMusic(true);updateTouch();
+  state='over';winner=w;updateTouch();
   ultra.on=false;gameSpeed=KO_SPEED;slowT=KO_SLOW_T;  // letzter K.o.: kurz Zeitlupe
   screenShake=Math.max(screenShake,14);
   // K.O.: Druckwelle, Blitz, bei Blut großer Spritzer (Partikel laufen im Endbildschirm weiter)
@@ -2308,7 +2308,8 @@ function requestWakeLock() {
 function armHistory(){if(historyArmed)return;historyArmed=true;try{history.pushState({sbz:1},'');}catch(e){}}
 function resumeAudioContext(){if(audioEnabled&&audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});}
 // Erst nach echter Eingabe: History-Eintrag, Vollbild, Wake Lock (Browser verlangen eine Nutzergeste)
-function onUserInput(){armHistory();if(!settings.fsOff)enterFullscreen();requestWakeLock();resumeAudioContext();}
+// Erste Eingabe (Tippen/Taste) erlaubt Ton: Audio fortsetzen und Musik starten (läuft dann auch im Menü)
+function onUserInput(){armHistory();if(!settings.fsOff)enterFullscreen();requestWakeLock();ensureAudio();resumeAudioContext();if(audioContext&&!document.hidden)startMusic();}
 window.addEventListener('pointerdown',onUserInput,true);
 window.addEventListener('keydown',onUserInput,true);
 // Zurück: Spiel -> Pause, Pause bleibt, Ergebnis -> Menü, Hauptmenü -> nichts
@@ -2332,7 +2333,7 @@ function leaveGame() {
   stopMusic();
   if(audioContext&&audioContext.state==='running')audioContext.suspend().catch(()=>{});
 }
-function returnToGame(){if(document.hidden)return;resumeAudioContext();requestWakeLock();}
+function returnToGame(){if(document.hidden)return;resumeAudioContext();if(audioContext)startMusic();requestWakeLock();}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)leaveGame();else returnToGame();});
 window.addEventListener('pagehide',leaveGame);
 window.addEventListener('blur',leaveGame);
