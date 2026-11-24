@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24n</p>
+        <p class="version">v2026-11-24o</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -1676,6 +1676,31 @@ function drawAura(level,color,core,seed) {
   }
   ctx.globalAlpha=1;
 }
+// Ki-Laden (t = Ki 0–1): Bodenschein, schmale hohe Flamme fast nur als Umriss (außen Figurfarbe, innen hell), Energiestreifen steigen am Körper hoch
+function drawChargeAura(t,color,core,seed) {
+  ctx.globalAlpha=.25+.15*t;ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,26+t*10,5+t*2,0,0,Math.PI*2);ctx.fill();
+  const N=20,cy=-36;
+  for(let layer=0;layer<2;layer++) {
+    const rx=(layer?13:19)+t*5,ry=(layer?34:42)+t*8;
+    ctx.beginPath();
+    for(let i=0;i<=N;i++) {
+      const a=i/N*Math.PI*2,ca=Math.cos(a),sa=Math.sin(a),up=Math.max(0,-sa);
+      const flick=.5+.5*Math.sin(clock*(16+layer*6)+i*1.9+seed);
+      const tongue=up*up*up*(14+t*26)*flick*(i%2?1:.2);
+      const px=ca*rx*(1-up*.45),py=cy+sa*ry-tongue;
+      if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    }
+    ctx.closePath();
+    if(!layer){ctx.globalAlpha=.1+.08*t;ctx.fillStyle=color;ctx.fill();}
+    ctx.globalAlpha=layer?.55:.8;ctx.strokeStyle=layer?core:color;ctx.lineWidth=layer?1.2:2.2;ctx.stroke();
+  }
+  ctx.lineWidth=2;
+  for(let i=0;i<8;i++) {
+    const ph=(clock*(1.6+t)+i*.125+seed*.1)%1,x=(i%2?1:-1)*(6+(i*7%5)*3),y=-2-ph*78,len=10+t*14;
+    ctx.globalAlpha=Math.sin(ph*Math.PI)*.8;ctx.strokeStyle=i%3?color:core;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-len);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
 function limb3(ax,ay,bx,by,cx,cy){ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx,cy);}
 // Oberkörper (lokal, Blick nach rechts): Rücken, runde Schultern, Brust nach vorn gewölbt; folgt Hüfte und Hals
 function torsoPath(hipY,nx,ny){
@@ -1746,7 +1771,7 @@ function drawFighter(f,alpha) {
     const smashLvl=f.smashHolding?Math.min(1,f.smashCharge):0,beamLvl=f.beamHeld?clamp(f.beamCharge/.8,0,1):0;
     const lvl=f.charging?1:Math.max(smashLvl,cannonC,beamLvl);
     if(lvl>0) {
-      drawAura(f.charging?1:.2+lvl*.5,auraColor,auraCore,seed);
+      if(f.charging)drawChargeAura(clamp(f.ki/100,0,1),auraColor,auraCore,seed);else drawAura(.2+lvl*.5,auraColor,auraCore,seed);
       if(f.charging){
         // Aufsteigende Funken beim Ki-Laden (feste Anzahl)
         ctx.fillStyle=auraCore;
@@ -1805,7 +1830,7 @@ function drawFighter(f,alpha) {
   const kind=atkT<0?0:smashing?(f.bufferedHeavyType===6?8:f.bufferedHeavyType===5?9:5):f.attackType===6?8:f.attackType===5?9:f.attackType===4?6:f.attackType===3?5:f.attackType===2?4:f.attackType===1?3:f.attackStep===3?2:f.attackStep===2?1:7;
   let hipY=-24,neckX=2,neckY=-50+breathe*.4;
   let bkX,bkY,bfX,bfY,fkX,fkY,ffX,ffY,beX=0,beY=0,bhX,bhY,feX=0,feY=0,fhX,fhY;
-  if(f.charging){hipY=-18;neckX=0;neckY=-45+Math.sin(clock*24)*.6;bkX=-13;bkY=-10;bfX=-18;bfY=0;fkX=13;fkY=-10;ffX=18;ffY=0;}
+  if(f.charging){const ct=clamp(f.ki/100,0,1),pump=Math.sin(clock*9)*.8*(1+ct);hipY=-15+pump*.5;neckX=-1;neckY=-44+pump+Math.sin(clock*31)*(.4+ct*.8);bkX=-14;bkY=-9;bfX=-21;bfY=0;fkX=14;fkY=-9;ffX=21;ffY=0;}
   else if(airborne) {
     const sway=Math.sin(f.t*7)*2,st=flyFast?1:0;
     bkX=-5-st*3;bkY=-12+st*2;bfX=-12-st*9;bfY=-3-st*6+sway;
@@ -1846,7 +1871,7 @@ function drawFighter(f,alpha) {
     bendJoint(sx,sy,fhX,fhY,13.5);feX=jointX;feY=jointY;
   }
   else if(f.guarding){beX=4;beY=-36;bhX=13;bhY=-55;feX=11;feY=-36;fhX=5;fhY=-56;}
-  else if(f.charging){const sh=Math.sin(clock*40)*.9;beX=sx-16+sh;beY=sy+6;bhX=sx-11;bhY=sy+16;feX=sx+16-sh;feY=sy+6;fhX=sx+11;fhY=sy+16;}
+  else if(f.charging){const ct=clamp(f.ki/100,0,1),sh=Math.sin(clock*40)*(.6+ct*1.2);beX=sx-12+sh;beY=sy+8;bhX=sx-21;bhY=sy+15-sh;feX=sx+12-sh;feY=sy+8;fhX=sx+21;fhY=sy+15+sh;}
   else if(shot>0||ready) {
     feX=7;feY=-42;fhX=punchX;fhY=punchY;
     if(ready){beX=8;beY=-40;bhX=16;bhY=-38;}else{beX=-4;beY=-40;bhX=5;bhY=-45;}
