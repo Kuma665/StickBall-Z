@@ -111,7 +111,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24u</p>
+        <p class="version">v2026-11-24v</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -316,8 +316,9 @@ function autoGfx(dt) {
   else autoTimer=Math.max(0,autoTimer-dt);
 }
 // Zwei Kanäle: Musik und Soundeffekte (je 0–100 %, 0 = aus); audioEnabled = Audio verfügbar
-let audioContext=null,audioMaster=null,musicBus=null,sfxBus=null,audioEnabled=true,musicEl=null,musicNode=null;
-const MUSIC_SRC='music.mp3?v=2',MUSIC_GAIN=.55;  // MUSIC_GAIN: Datei ist lauter als die Code-Töne
+let audioContext=null,audioMaster=null,musicBus=null,sfxBus=null,sfxComp=null,audioEnabled=true,musicEl=null,musicNode=null;
+const MUSIC_SRC='music.mp3?v=2',MUSIC_GAIN=.55;
+const SFX_GAIN=1.8;  // MUSIC_GAIN: Datei ist lauter als die Code-Töne · SFX_GAIN: Effekte lauter, Kompressor sfxComp fängt Spitzen ab
 function ensureAudio() {
   if(audioContext)return;
   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
@@ -327,7 +328,9 @@ function ensureAudio() {
   audioContext=new AudioContextClass();
   audioMaster=audioContext.createGain();audioMaster.gain.value=settings.mute?0:MASTER_VOL;audioMaster.connect(audioContext.destination);
   musicBus=audioContext.createGain();musicBus.gain.value=settings.music*MUSIC_GAIN;musicBus.connect(audioMaster);
-  sfxBus=audioContext.createGain();sfxBus.gain.value=settings.sfx;sfxBus.connect(audioMaster);
+  // Effekte lauter (SFX_GAIN) mit Kompressor dahinter, damit laute Treffer nicht übersteuern
+  sfxComp=audioContext.createDynamicsCompressor();sfxComp.threshold.value=-16;sfxComp.knee.value=10;sfxComp.ratio.value=5;sfxComp.attack.value=.002;sfxComp.release.value=.18;sfxComp.connect(audioMaster);
+  sfxBus=audioContext.createGain();sfxBus.gain.value=settings.sfx*SFX_GAIN;sfxBus.connect(sfxComp);
 }
 function playTone(frequency,duration,wave,volume,when,bus) {
   if(!audioEnabled||!audioContext||!bus)return;
@@ -338,16 +341,43 @@ function playTone(frequency,duration,wave,volume,when,bus) {
   gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
   oscillator.connect(gain);gain.connect(bus);oscillator.start(start);oscillator.stop(start+duration+.02);
 }
+// Effekt-Bausteine: Rauschen (einmal erzeugter 1-s-Puffer, gefiltert) und Ton mit Tonhöhen-Sweep (für wuchtige "Thumps")
+let noiseBuf=null;
+function getNoise() {
+  if(!noiseBuf){const n=audioContext.sampleRate|0;noiseBuf=audioContext.createBuffer(1,n,audioContext.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;}
+  return noiseBuf;
+}
+function playNoise(dur,vol,type,freq,freqEnd,when,bus) {
+  const src=audioContext.createBufferSource(),fl=audioContext.createBiquadFilter(),g=audioContext.createGain();
+  src.buffer=getNoise();fl.type=type;fl.frequency.setValueAtTime(freq,when);if(freqEnd)fl.frequency.exponentialRampToValueAtTime(freqEnd,when+dur);
+  fl.Q.value=type==='bandpass'?1.4:.7;
+  g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+.006);g.gain.exponentialRampToValueAtTime(.0001,when+dur);
+  src.connect(fl);fl.connect(g);g.connect(bus);src.start(when,Math.random()*.4);src.stop(when+dur+.03);
+}
+function playSweep(f0,f1,dur,wave,vol,when,bus) {
+  const o=audioContext.createOscillator(),g=audioContext.createGain();
+  o.type=wave;o.frequency.setValueAtTime(f0,when);o.frequency.exponentialRampToValueAtTime(f1,when+dur);
+  g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+.008);g.gain.exponentialRampToValueAtTime(.0001,when+dur);
+  o.connect(g);g.connect(bus);o.start(when);o.stop(when+dur+.03);
+}
 function playSfx(kind,heavy=false) {
   if(!audioEnabled||!audioContext||settings.sfx<=0)return;
-  const now=audioContext.currentTime,b=sfxBus;
-  if(kind==='shot')playTone(heavy?190:330,.16,'triangle',.38,now,b);
-  else if(kind==='beam'){playTone(110,.42,'sawtooth',.32,now,b);playTone(220,.34,'triangle',.2,now,b);}
-  else if(kind==='block')playTone(760,.09,'square',.2,now,b);
-  else if(kind==='crater')playTone(72,.32,'sawtooth',.42,now,b);
-  else if(kind==='kiai'){playTone(95,.3,'sawtooth',.4,now,b);playTone(480,.14,'square',.16,now,b);playTone(240,.22,'triangle',.3,now+.03,b);}
-  else if(kind==='dash'){playTone(620,.07,'sine',.22,now,b);playTone(310,.12,'triangle',.2,now+.02,b);}
-  else playTone(heavy?92:145,heavy?.24:.12,'triangle',heavy?.5:.34,now,b);
+  const t=audioContext.currentTime,b=sfxBus;
+  if(kind==='hit') {
+    if(heavy) {  // schwerer Treffer: tiefer Wumms + Knall + Nachhall-Rauschen
+      playSweep(140,38,.32,'sine',.95,t,b);playSweep(260,70,.12,'triangle',.5,t,b);
+      playNoise(.09,.8,'bandpass',2600,900,t,b);playNoise(.38,.55,'lowpass',1400,180,t+.01,b);
+    } else {     // leichter Treffer: kurzer Klatsch + Thump
+      playSweep(210,70,.11,'sine',.75,t,b);playNoise(.06,.65,'bandpass',1800+Math.random()*600,700,t,b);
+    }
+  }
+  else if(kind==='block'){playTone(980,.08,'square',.22,t,b);playTone(1470,.06,'square',.14,t,b);playNoise(.07,.45,'highpass',3000,0,t,b);playSweep(300,150,.08,'triangle',.35,t,b);}
+  else if(kind==='shot'){playNoise(.16,.5,'bandpass',2400,600,t,b);playSweep(heavy?260:520,heavy?110:220,.16,'triangle',.45,t,b);if(heavy)playSweep(90,45,.25,'sine',.6,t,b);}
+  else if(kind==='beam'){playSweep(90,180,.6,'sawtooth',.35,t,b);playSweep(180,420,.5,'triangle',.25,t,b);playNoise(.7,.5,'lowpass',900,300,t,b);playNoise(.5,.35,'bandpass',3000,1200,t+.05,b);}
+  else if(kind==='crater'){playSweep(110,28,.55,'sine',1,t,b);playNoise(.6,.85,'lowpass',900,120,t,b);playNoise(.15,.5,'bandpass',1800,500,t,b);}
+  else if(kind==='kiai'){playSweep(95,70,.32,'sawtooth',.45,t,b);playSweep(480,240,.18,'square',.16,t,b);playNoise(.3,.5,'bandpass',1200,400,t,b);playSweep(160,40,.35,'sine',.7,t+.02,b);}
+  else if(kind==='dash'){playNoise(.16,.45,'bandpass',3200,900,t,b);playSweep(680,300,.1,'sine',.25,t,b);}
+  else playSweep(heavy?140:200,heavy?50:80,heavy?.24:.12,'sine',heavy?.8:.6,t,b);
 }
 function startMusic() {
   if(!audioEnabled||settings.music<=0)return;
@@ -378,7 +408,7 @@ function startAudio() {
 function applyVolumes() {
   if(audioMaster)audioMaster.gain.setTargetAtTime(settings.mute?0:MASTER_VOL,audioContext.currentTime,.04);
   if(musicBus)musicBus.gain.setTargetAtTime(settings.music*MUSIC_GAIN,audioContext.currentTime,.04);
-  if(sfxBus)sfxBus.gain.setTargetAtTime(settings.sfx,audioContext.currentTime,.04);
+  if(sfxBus)sfxBus.gain.setTargetAtTime(settings.sfx*SFX_GAIN,audioContext.currentTime,.04);
   if(musicEl&&!musicNode){musicEl.muted=settings.mute;musicEl.volume=clamp(settings.music*MUSIC_GAIN*MASTER_VOL*4,0,1);}  // ohne Web-Audio-Anbindung direkt regeln
   if(settings.music<=0)stopMusic();else if(audioContext)startMusic();  // Musik läuft überall (Menü, Pause, Ergebnis), sobald Ton erlaubt ist
 }
