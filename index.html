@@ -78,6 +78,8 @@ html.touch-ui .touch:not([hidden]){display:block}
 .tpad .t-heavy{right:90px;bottom:14px}.tpad .t-shot{right:22px;bottom:90px}.tpad .t-dash{right:82px;bottom:82px;width:46px;height:46px;font-size:11px}
 .tpad .t-beam{right:150px;bottom:14px}.tpad .t-charge{right:140px;bottom:66px}.tpad .t-super{right:14px;bottom:150px}.tpad .touch-tag{right:66px;bottom:136px}
 .tpad button.fire{border-color:#ff956b88;background:#d7492466}
+.tpad .t-spec{right:132px;bottom:124px;width:42px;height:42px;font-size:10px;border-color:#ffe66d66;color:#ffe66d99}.tpad .t-spec.rdy{border-color:#ffe66dee;color:#ffe66d;background:#6b551466}
+.touch .t-spec{display:none}.touch.spec .t-spec{display:block}
 .touch .touch-pause{position:absolute;top:9%;left:50%;width:28px;height:28px;margin-left:-14px;font-size:9px;pointer-events:auto}
 .pause-card button.pad-focus{outline:2px solid var(--cyan);outline-offset:3px}
 /* Ein Layout fuer alle Bildschirme: entworfen fuer ca. 680x400, per JS (fitShell) proportional skaliert */
@@ -120,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25e</p>
+        <p class="version">v2026-11-25f</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -158,6 +160,7 @@ html.touch-ui .touch:not([hidden]){display:block}
         <button class="t-shot fire" data-key="KeyG" data-ta="ariaShot" data-t="tShot"></button><button class="t-dash" data-key="TouchDash" data-ta="ariaDash" data-t="tDash"></button>
         <button class="sm t-beam" data-key="KeyT" data-ta="ariaBeam" data-t="tBeam"></button><button class="sm t-charge" data-key="KeyH" data-ta="ariaCharge" data-t="tCharge"></button>
         <button class="sm t-super" data-key="KeyR" data-ta="ariaSuper" data-t="tSuper"></button><button class="sm touch-tag" data-key="KeyQ" data-ta="ariaTag">⇄</button>
+        <button class="t-spec" id="tSpecBtn" data-key="KeyE" data-ta="ariaSpec" data-t="tSpec"></button>
       </div>
     </div>
   </section>
@@ -186,7 +189,7 @@ const TXT={
   // Eckhinweis (nur mit Controller) und Stumm-Knopf
   ok:'OK',change:'Ändern',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',fsOn:'Vollbild an',fsOff:'Vollbild aus',
   // Touch-Buttons und Bildschirmleser-Namen
-  tCharge:'KI',tSuper:'SSJ',tHeavy:'H',tBeam:'KAME',tShot:'KI!',tDash:'DASH',ariaDash:'Ausweichen / Turbo',ariaStick:'Fliegen',
+  tCharge:'KI',tSuper:'SSJ',tHeavy:'H',tBeam:'KAME',tShot:'KI!',tDash:'DASH',tSpec:'SPEZ',ariaSpec:'Spezialangriff',ariaDash:'Ausweichen / Turbo',ariaStick:'Fliegen',
   ariaFrame:'StickBall Z Spiel',ariaCanvas:'2D-Flugkampf',ariaPause:'Pause',ariaLeft:'Links',ariaUp:'Hoch',ariaDown:'Runter',ariaRight:'Rechts',
   ariaCharge:'Ki laden',ariaSuper:'Super-Saiyajin',ariaPunch:'Combo-Schlag',ariaHeavy:'Schwerer Angriff',ariaBeam:'Kamehameha aufladen',ariaShot:'Ki schießen',ariaTag:'Kämpfer wechseln',
   // Statuszeile (Kopfzeile, derzeit ausgeblendet)
@@ -204,16 +207,16 @@ const TXT={
     ['Heavy · kostet 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>V</kbd>'],['Hoch + Schlag: Uppercut · Runter + Schlag: Slam','<kbd>W/S</kbd> + <kbd>F</kbd>'],
     ['Im Flug vorwärts + Schlag: Rush','<kbd>A/D</kbd> + <kbd>F</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>S</kbd> + <kbd>A/D</kbd>'],
     ['Ausweichen · Richtung doppelt antippen, halten: Turbo','<kbd>A/D · ←/→</kbd>'],['Ki-Schuss · auch im Flug lenkbar','<kbd>G</kbd> + <kbd>WASD</kbd>'],
-    ['Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt','<kbd>T</kbd> + <kbd>W/S</kbd>'],['Hoch + Druckwelle: Spezialangriff (je Figur, 40–50 Ki)','<kbd>W</kbd> + <kbd>T</kbd>'],['Ki laden','<kbd>H</kbd>'],
-    ['Super-Saiyajin · bei 100 Ki','<kbd>R</kbd>'],['Kämpfer wechseln (Team)','<kbd>Q</kbd>'],['Spieler 2 · Combo / Heavy / Schuss / Wechseln','<span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd> <kbd>P</kbd></span>']],
+    ['Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt','<kbd>T</kbd> + <kbd>W/S</kbd>'],['Spezialangriff (je Figur, 40–50 Ki)','<kbd>E</kbd>'],['Ki laden','<kbd>H</kbd>'],
+    ['Super-Saiyajin · bei 100 Ki','<kbd>R</kbd>'],['Kämpfer wechseln (Team)','<kbd>Q</kbd>'],['Spieler 2 · Combo / Heavy / Schuss / Spezial / Wechseln','<span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd> <kbd>N</kbd> <kbd>P</kbd></span>']],
   ruleKey:'<kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.',
-  guidePad:[['Fliegen / lenken','<kbd>Stick</kbd>'],['Hoch fliegen','a'],['Leichte Combo · bis zu 3 Treffer','x'],['Stark · halten lädt auf, ↑/↓ lenkt · 100 Ki: ULTRA-SCHLAG','y'],
-    ['Ausweichen · halten: Turbo','b'],['Blocken','l1'],['Ki-Schuss · halten: Kanone','r1'],['Antippen: Ki-Druckwelle · halten: Kamehameha','r2'],['Stick hoch + antippen: Spezialangriff (40–50 Ki)','r2'],
+  guidePad:[['Fliegen / lenken','<kbd>Stick</kbd>'],['Blocken','a'],['Leichte Combo · bis zu 3 Treffer','x'],['Stark · halten lädt auf, ↑/↓ lenkt · 100 Ki: ULTRA-SCHLAG','y'],
+    ['Ausweichen · halten: Turbo','b'],['Spezialangriff (je Figur, 40–50 Ki)','l1'],['Ki-Schuss · halten: Kanone','r1'],['Antippen: Ki-Druckwelle · halten: Kamehameha','r2'],
     ['Ki laden','l2'],['Super-Saiyajin · bei 100 Ki','l3'],['Kämpfer wechseln (Team)','r3']],
   rulePad:'Stick runter + {r1} zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. {start} pausiert.',
   guideTouch:[['Fliegen / zielen · links irgendwo ziehen','<kbd>Stick</kbd>'],['Antippen: Ausweichen · halten + Richtung: Turbo','<kbd>DASH</kbd>'],
     ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>H</kbd>'],['Blocken · Stick runter + vom Gegner weg','<kbd>Stick</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
-    ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Stick hoch + antippen: Spezialangriff','<kbd>KI!</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
+    ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Spezialangriff (je Figur, 40–50 Ki)','<kbd>SPEZ</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
   ruleTouch:'Stick runter + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.',
   // alte Hinweiszeile #hint (per CSS ausgeblendet)
   hintKey:'F/J Combo · V/U Heavy · 2× Richtung: Ausweichen, halten: Turbo · Ki-Schuss mit WASD lenken · Beam mit W/S lenken',
@@ -479,7 +482,16 @@ let cornerKey='';
 function renderMute(){muteBtn.textContent=settings.mute?'🔇':'🔊';muteBtn.setAttribute('aria-label',settings.mute?TXT.muteOff:TXT.muteOn);}
 function toggleMute(){settings.mute=!settings.mute;saveSettings();renderMute();applyVolumes();}
 // Stumm-Knopf nur in Menü/Pause; Knopf-Hinweis nur mit Controller, nicht auf der scrollenden Steuerungsseite. DOM nur bei Änderung anfassen.
+// Touch-Knopf SPEZ: nur sichtbar, wenn der Kämpfer von Spieler 1 einen Spezialangriff hat; leuchtet, wenn Ki und Abklingzeit reichen
+const tSpecBtn=document.getElementById('tSpecBtn');let specBtnKey='';
+function updateSpecBtn() {
+  const f=fighters[0].ctrl===0&&!fighters[0].bot?fighters[0]:fighters[1].ctrl===0&&!fighters[1].bot?fighters[1]:null,sp=f&&f.active&&SPECIALS[f.style];
+  const key=!sp?'':f.ki>=sp.cost&&f.specCd<=0&&!f.spec?'r':'n';
+  if(key===specBtnKey)return;
+  specBtnKey=key;touchControls.classList.toggle('spec',!!key);tSpecBtn.classList.toggle('rdy',key==='r');
+}
 function updateCornerUI() {
+  updateSpecBtn();
   const inMenu=state==='menu'||state==='paused';
   let txt='';
   if(padKind&&inMenu&&!helpOpen) {
@@ -507,8 +519,8 @@ fsBtn.addEventListener('click',e=>{e.stopPropagation();toggleFullscreen();fsBtn.
 renderFs();
 renderMute();
 const keyMaps = [
-  { left:'KeyA', right:'KeyD', up:'KeyW', down:'KeyS', shot:'KeyG', beam:'KeyT', charge:'KeyH', punch:'KeyF', heavy:'KeyV', super:'KeyR', tag:'KeyQ' },
-  { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', shot:'KeyK', beam:'KeyI', charge:'KeyL', punch:'KeyJ', heavy:'KeyU', super:'KeyO', tag:'KeyP' }
+  { left:'KeyA', right:'KeyD', up:'KeyW', down:'KeyS', shot:'KeyG', beam:'KeyT', charge:'KeyH', punch:'KeyF', heavy:'KeyV', super:'KeyR', tag:'KeyQ', spec:'KeyE' },
+  { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', shot:'KeyK', beam:'KeyI', charge:'KeyL', punch:'KeyJ', heavy:'KeyU', super:'KeyO', tag:'KeyP', spec:'KeyN' }
 ];
 const NO_KEYS={};  // Spieler 3/4 und KI: keine Tastatur
 const MAX_HP = 250;
@@ -736,7 +748,7 @@ function begin(nextMode) {
 function readInput(f,index) {
   const c=f.ctrl,map=c===0||c===1?keyMaps[c]:NO_KEYS,out=inputs[index];
   out.left=!!keys[map.left];out.right=!!keys[map.right];out.up=!!keys[map.up];out.down=!!keys[map.down];
-  out.shot=!!keys[map.shot];out.beam=!!keys[map.beam];out.charge=!!keys[map.charge];out.punch=!!keys[map.punch];out.heavy=!!keys[map.heavy];out.super=!!keys[map.super];
+  out.shot=!!keys[map.shot];out.beam=!!keys[map.beam];out.charge=!!keys[map.charge];out.punch=!!keys[map.punch];out.heavy=!!keys[map.heavy];out.super=!!keys[map.super];out.spec=!!keys[map.spec];
   out.guard=false;out.dash=false;out.stick=false;
   if(c===0) {  // Touch: Joystick + DASH-Knopf (tippen: Ausweichen, halten + Richtung: Turbo)
     out.dash=!!keys.TouchDash;
@@ -745,14 +757,14 @@ function readInput(f,index) {
   if(f.bot||c<0)return out;
   const st=padStates[c];
   if(st.connected) {
-    // Belegung: Stick/D-Pad bewegen · ✕ hoch · ○ Dash · □ leicht · △ stark (Stick hoch/neutral/runter) · L1 Block · R1 Ki-Schuss · R2 Kamehameha · L2 Laden · L3 Super · R3 Wechseln (pollPads)
+    // Belegung: Stick/D-Pad bewegen · ✕ Block · ○ Dash · □ leicht · △ stark (Stick hoch/neutral/runter) · L1 Spezialangriff · R1 Ki-Schuss · R2 Kamehameha · L2 Laden · L3 Super · R3 Wechseln (pollPads)
     // Kurze Drücke (z. B. während Hit-Stop) gehen nicht verloren: gemerkte Drücke zählen bis zum nächsten Physikschritt
     const b=st.eff;
     for(let k=0;k<PAD_BUTTONS;k++){b[k]=st.btn[k]|st.latch[k];st.latch[k]=0;}
     out.left=out.left||st.ax<-.35||b[14]===1;out.right=out.right||st.ax>.35||b[15]===1;
-    out.up=out.up||st.ay<-.4||b[12]===1||b[0]===1;out.down=out.down||st.ay>.4||b[13]===1;
+    out.up=out.up||st.ay<-.4||b[12]===1;out.down=out.down||st.ay>.4||b[13]===1;
     out.dash=b[1]===1;out.punch=out.punch||b[2]===1;out.heavy=out.heavy||b[3]===1;
-    out.guard=b[4]===1;out.shot=out.shot||b[5]===1;out.charge=out.charge||b[6]===1;
+    out.guard=b[0]===1;out.spec=out.spec||b[4]===1;out.shot=out.shot||b[5]===1;out.charge=out.charge||b[6]===1;
     out.beam=out.beam||b[7]===1;out.super=out.super||b[10]===1;
   }
   // Zielrichtung für Ki-Schüsse: Analogstick (genau) > D-Pad/Tasten; ✕ zählt nicht
@@ -1268,8 +1280,6 @@ function startSpecial(f,index,enemy) {
   s.start(f,index,enemy);
   return true;
 }
-// Touch: Joystick hoch + KI! antippen = Spezialangriff (statt kleinem Schuss; ohne Ki/Angriff bleibt es der Schuss, halten = Kanone)
-function touchSpecial(f,index,enemy,input){return input.stick&&input.up&&startSpecial(f,index,enemy);}
 function updateSpecial(f,index,enemy,dt){f.specT+=dt;SPECIALS[f.style].update(f,index,enemy,dt);}
 function endSpecial(f){f.spec=false;f.specPh=0;}
 function specPose(f){spK=0;spA=-1;spId="";const s=f.spec&&f.stun<=0?SPECIALS[f.style]:null;if(s){spId=s.id;s.pose(f);}}
@@ -1382,9 +1392,12 @@ const SPECIALS=[
 ];
 function updateKamehameha(f,index,enemy,input,dt) {
   f.kiaiCooldown=Math.max(0,f.kiaiCooldown-dt);
+  // Eigener Knopf für den Spezialangriff: Controller L1, Tastatur E/N, Touch SPEZ (nur beim Drücken, Halten löst nicht erneut aus)
+  if(input.spec&&!f.specBtn)startSpecial(f,index,enemy);
+  f.specBtn=!!input.spec;
   // Kurzer Druck (< 0,24 s, darunter startet kein Kamehameha) = Druckwelle
   if(input.beam){if(!f.r2Held)f.r2Time=0;f.r2Time+=dt;}
-  else if(f.r2Held&&f.r2Time<.24){if(!(input.up&&!input.stick&&f.stun<=0&&startSpecial(f,index,enemy)))kiai(f,index,enemy);}  // hoch + antippen: Spezialangriff (sonst/betäubt Druckwelle; Touch: über KI!, siehe Schuss)
+  else if(f.r2Held&&f.r2Time<.24)kiai(f,index,enemy);
   f.r2Held=input.beam;
   f.beamCooldown=Math.max(0,f.beamCooldown-dt);
   f.beamHitCooldown=Math.max(0,f.beamHitCooldown-dt);
@@ -1543,7 +1556,7 @@ function updateFighter(f,index,dt) {
   let input=readInput(f,index);
   if(f.bot&&enemy.active) {
     updateBot(f,enemy,input,index);
-    input.super=f.ki>=100&&f.superTime<=0&&!BOT_MEM[index].wantUltra;
+    input.super=f.ki>=100&&f.superTime<=0&&!BOT_MEM[index].wantUltra;input.spec=false;  // KI startet Spezialangriffe selbst (updateBot)
   }
   f.charging=input.charge&&!f.beamHeld&&!f.spec;
   if(input.super&&!f.superHeld&&f.ki>=100&&f.superTime<=0) {
@@ -1635,14 +1648,14 @@ function updateFighter(f,index,dt) {
     if(input.shot&&!f.shotHeld)f.shotQueued=true;
     if(f.fire<=0&&!f.cannonHolding&&(f.shotQueued||input.shot)) {
       f.shotQueued=false;
-      if(input.shot){f.cannonHolding=true;f.cannonCharge=0;}else if(!touchSpecial(f,index,enemy,input))spawnShot(f,index,false,input);
+      if(input.shot){f.cannonHolding=true;f.cannonCharge=0;}else spawnShot(f,index,false,input);
     }
     if(f.cannonHolding) {
       f.cannonCharge+=dt;
       if(!input.shot) {
         f.cannonHolding=false;
         const c=clamp((f.cannonCharge-.2)/.8,0,1);
-        if(!(f.cannonCharge<.2&&touchSpecial(f,index,enemy,input)))spawnShot(f,index,f.cannonCharge>=.2,input,c);
+        spawnShot(f,index,f.cannonCharge>=.2,input,c);
       }
     }
     f.shotHeld=input.shot;
