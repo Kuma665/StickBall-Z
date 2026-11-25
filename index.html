@@ -120,7 +120,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25c</p>
+        <p class="version">v2026-11-25d</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -213,7 +213,7 @@ const TXT={
   rulePad:'Stick runter + {r1} zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. {start} pausiert.',
   guideTouch:[['Fliegen / zielen · links irgendwo ziehen','<kbd>Stick</kbd>'],['Antippen: Ausweichen · halten + Richtung: Turbo','<kbd>DASH</kbd>'],
     ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>H</kbd>'],['Blocken · Stick runter + vom Gegner weg','<kbd>Stick</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
-    ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Stick hoch + antippen: Spezialangriff','<kbd>KAME</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
+    ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Stick hoch + antippen: Spezialangriff','<kbd>KI!</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
   ruleTouch:'Stick runter + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.',
   // alte Hinweiszeile #hint (per CSS ausgeblendet)
   hintKey:'F/J Combo · V/U Heavy · 2× Richtung: Ausweichen, halten: Turbo · Ki-Schuss mit WASD lenken · Beam mit W/S lenken',
@@ -1268,6 +1268,8 @@ function startSpecial(f,index,enemy) {
   s.start(f,index,enemy);
   return true;
 }
+// Touch: Joystick hoch + KI! antippen = Spezialangriff (statt kleinem Schuss; ohne Ki/Angriff bleibt es der Schuss, halten = Kanone)
+function touchSpecial(f,index,enemy,input){return input.stick&&input.up&&startSpecial(f,index,enemy);}
 function updateSpecial(f,index,enemy,dt){f.specT+=dt;SPECIALS[f.style].update(f,index,enemy,dt);}
 function endSpecial(f){f.spec=false;f.specPh=0;}
 function specPose(f){spK=0;spA=-1;spId="";const s=f.spec&&f.stun<=0?SPECIALS[f.style]:null;if(s){spId=s.id;s.pose(f);}}
@@ -1382,7 +1384,7 @@ function updateKamehameha(f,index,enemy,input,dt) {
   f.kiaiCooldown=Math.max(0,f.kiaiCooldown-dt);
   // Kurzer Druck (< 0,24 s, darunter startet kein Kamehameha) = Druckwelle
   if(input.beam){if(!f.r2Held)f.r2Time=0;f.r2Time+=dt;}
-  else if(f.r2Held&&f.r2Time<.24){if(!(input.up&&f.stun<=0&&startSpecial(f,index,enemy)))kiai(f,index,enemy);}  // hoch + antippen: Spezialangriff (sonst/betäubt Druckwelle)
+  else if(f.r2Held&&f.r2Time<.24){if(!(input.up&&!input.stick&&f.stun<=0&&startSpecial(f,index,enemy)))kiai(f,index,enemy);}  // hoch + antippen: Spezialangriff (sonst/betäubt Druckwelle; Touch: über KI!, siehe Schuss)
   f.r2Held=input.beam;
   f.beamCooldown=Math.max(0,f.beamCooldown-dt);
   f.beamHitCooldown=Math.max(0,f.beamHitCooldown-dt);
@@ -1633,14 +1635,14 @@ function updateFighter(f,index,dt) {
     if(input.shot&&!f.shotHeld)f.shotQueued=true;
     if(f.fire<=0&&!f.cannonHolding&&(f.shotQueued||input.shot)) {
       f.shotQueued=false;
-      if(input.shot){f.cannonHolding=true;f.cannonCharge=0;}else spawnShot(f,index,false,input);
+      if(input.shot){f.cannonHolding=true;f.cannonCharge=0;}else if(!touchSpecial(f,index,enemy,input))spawnShot(f,index,false,input);
     }
     if(f.cannonHolding) {
       f.cannonCharge+=dt;
       if(!input.shot) {
         f.cannonHolding=false;
         const c=clamp((f.cannonCharge-.2)/.8,0,1);
-        spawnShot(f,index,f.cannonCharge>=.2,input,c);
+        if(!(f.cannonCharge<.2&&touchSpecial(f,index,enemy,input)))spawnShot(f,index,f.cannonCharge>=.2,input,c);
       }
     }
     f.shotHeld=input.shot;
