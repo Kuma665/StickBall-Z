@@ -120,7 +120,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25d</p>
+        <p class="version">v2026-11-25e</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -2369,11 +2369,12 @@ function drawFighter(f,alpha) {
     ctx.globalAlpha=.8;ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(punchX+3,punchY,orb+4,clock*5,clock*5+Math.PI*1.35);ctx.stroke();ctx.globalAlpha=1;
   }
   if(f.comboDisplay>0&&f.comboHits>1) {
-    ctx.globalAlpha=clamp(f.comboDisplay/.25,0,1);ctx.textAlign='center';ctx.font='900 11px system-ui';
-    ctx.fillStyle='#fff';ctx.fillText(TXT.combo+f.comboHits,0,-103);ctx.globalAlpha=1;
+    // Spiegelung aufheben (sonst bei Blick nach links spiegelverkehrt)
+    ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=clamp(f.comboDisplay/.25,0,1);ctx.textAlign='center';ctx.font='900 11px system-ui';
+    ctx.fillStyle='#fff';ctx.fillText(TXT.combo+f.comboHits,0,-103);ctx.restore();ctx.globalAlpha=1;
   }
   if(f.guarding) {
-    ctx.globalAlpha=.9;ctx.textAlign='center';ctx.font='800 9px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText(TXT.block,0,-101);ctx.globalAlpha=1;
+    ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=.9;ctx.textAlign='center';ctx.font='800 9px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText(TXT.block,0,-101);ctx.restore();ctx.globalAlpha=1;
   }
   if(f.tagShow>0) {
     // Name nach dem Einwechseln kurz über dem Kopf (Spiegelung aufheben)
