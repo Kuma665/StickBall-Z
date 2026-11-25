@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25h</p>
+        <p class="version">v2026-11-25i</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -198,7 +198,7 @@ const TXT={
   // HUD und Ergebnis
   world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
-  specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','','','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
+  specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
   botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
@@ -702,7 +702,7 @@ function makeCrater(x,big) {
 }
 function resetFighter(f,index) {
   f.ultra=false;f.xray=0;f.xrayHits=0;
-  f.spec=false;f.specT=0;f.specPh=0;f.specX=1;f.specY=0;f.specHit=false;f.specCd=0;f.specShow=0;f.specN=0;
+  f.spec=false;f.specT=0;f.specPh=0;f.specX=1;f.specY=0;f.specHit=false;f.specCd=0;f.specShow=0;f.specN=0;f.specS=0;
   clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;f.kiaiCooldown=0;f.r2Held=false;f.r2Time=0;f.comboCount=0;
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
@@ -1711,6 +1711,118 @@ function shotNear(f,index,r) {
   for(let i=0;i<MAX_PROJECTILES;i++){const p=projectiles[i];if(p.active&&p.owner!==index&&Math.abs(p.x-f.x)<r&&Math.abs(p.y-(f.y-42))<r)return true;}
   return false;
 }
+// KRYX · Panzer-Kuppel: lädt kurz geduckt (Phase 0, Panzerplatten leuchten), dann explodiert eine Energiekuppel rundum (1):
+// wirft nahe Gegner weg und löscht gegnerische Schüsse im Radius DOME_R. Gut, wenn er bedrängt wird.
+const DOME_WIND=.3,DOME_REC=.34,DOME_R=170,DOME_POW=18,DOME_COLOR='#c2ea5a';
+function startDome(f){f.vx*=.2;f.vy*=.2;spawnRing(f.x,f.y-40,40,DOME_COLOR,3,.25);playSfx('dash');}
+function updDome(f,index,enemy,dt) {
+  f.vx*=Math.pow(.7,dt*60);f.vy*=Math.pow(.7,dt*60);
+  if(f.specPh===0) {
+    if(Math.random()<.8){const a=Math.random()*Math.PI*2,r=70+Math.random()*40;addParticle(f.x+Math.cos(a)*r,f.y-40+Math.sin(a)*r,-Math.cos(a)*r*3.2,-Math.sin(a)*r*3.2,Math.random()<.5?'#fff':DOME_COLOR,2,.28);}
+    if(f.specT<DOME_WIND)return;
+    const cx=f.x,cy=f.y-40;
+    for(let i=0;i<MAX_PROJECTILES;i++){const p=projectiles[i];if(p.active&&p.owner!==index&&Math.hypot(p.x-cx,p.y-cy)<DOME_R+p.r){p.active=false;burst(p.x,p.y,p.color,8,140);}}
+    if(enemy.active&&enemy.dashInvuln<=0) {
+      const dx=enemy.x-cx,dy=enemy.y-42-cy,d=Math.hypot(dx,dy);
+      if(d<DOME_R&&!parry(enemy,index)){const nx=d>1?dx/d:f.face,ny=d>1?dy/d:0,dir=nx>=0?1:-1;specHit(f,index,enemy,DOME_POW,dir,nx*820,ny*560-260,.5,DOME_COLOR);}
+    }
+    spawnRing(cx,cy,DOME_R,'#ffffff',7,.32);spawnRing(cx,cy,DOME_R*1.35,DOME_COLOR,4,.45);
+    burst(cx,cy,DOME_COLOR,22,300);burst(cx,cy,'rgb(255,255,255)',14,240);
+    flash(.18,'#eaffc0');screenShake=Math.max(screenShake,10);hitStop=Math.max(hitStop,.05);
+    playSfx('crater');rumble(index,.8,.7,160);
+    f.specPh=1;f.specT=0;return;
+  }
+  if(f.specT>=DOME_REC)endSpecial(f);
+}
+function poseDome(f){if(f.specPh===0){spK=3;spA=.15*Math.min(1,f.specT/DOME_WIND);}else{spK=9;spA=Math.min(1,.45+.55*f.specT/DOME_REC);}}
+// Sechseck (Panzerplatte) mit Mittelpunkt x,y und Radius r
+function hexPath(x,y,r){for(let i=0;i<6;i++){const a=i*Math.PI/3+Math.PI/6,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();}
+function drawDome(f,alpha) {
+  const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha-40;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineJoin='round';
+  if(f.specPh===0) {
+    // Panzerplatten ziehen sich um KRYX zusammen und leuchten auf
+    const t=Math.min(1,f.specT/DOME_WIND),r=56-t*18;
+    ctx.globalAlpha=.15+.25*t;ctx.fillStyle=DOME_COLOR;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=.5+.4*t;ctx.strokeStyle=DOME_COLOR;ctx.lineWidth=2;ctx.beginPath();
+    for(let i=0;i<6;i++){const a=i*Math.PI/3+f.specT*4;hexPath(x+Math.cos(a)*r*.75,y+Math.sin(a)*r*.75,r*.28);}
+    ctx.stroke();ctx.restore();return;
+  }
+  // Kuppel: wächst schnell auf, Sechseck-Raster, verblasst
+  const t=f.specT/DOME_REC,e=.35+.65*(1-(1-Math.min(1,f.specT/.14))**3),  // sofort sichtbar (Trefferpause hÃ¤lt specT kurz bei 0)
+        r=DOME_R*e,fade=clamp(1-t,0,1);
+  ctx.globalAlpha=.22*fade;ctx.fillStyle=DOME_COLOR;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.75*fade;ctx.strokeStyle=DOME_COLOR;ctx.lineWidth=2;ctx.beginPath();
+  for(let i=0;i<6;i++){const a=i*Math.PI/3;hexPath(x+Math.cos(a)*r*.45,y+Math.sin(a)*r*.45,r*.16);}
+  for(let i=0;i<12;i++){const a=i*Math.PI/6+Math.PI/12;hexPath(x+Math.cos(a)*r*.8,y+Math.sin(a)*r*.8,r*.15);}
+  hexPath(x,y,r*.16);ctx.stroke();
+  ctx.globalAlpha=.95*fade;ctx.strokeStyle='#ffffff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+}
+// BLOBB · Gummibauch: rollt sich zur Kugel (Phase 0), springt schräg auf den Gegner zu und prallt von Boden und Gegner ab
+// (1, specN = Abpraller bis BALL_BOUNCES, specX = Drehwinkel, specY = letzte Fallgeschwindigkeit, specS = Quetschen), danach wackelt er lustig (2, verwundbar).
+const BALL_WIND=.18,BALL_SPEED=640,BALL_GRAV=1700,BALL_BOUNCES=3,BALL_POW=11,BALL_WOBBLE=.55,BALL_MAX=2.4,BALL_R=24;
+function startBall(f){f.vx*=.2;f.vy*=.2;f.specS=0;playSfx('dash');}
+function ballAim(f,enemy,s){const dx=enemy.active?enemy.x-f.x:f.face*200,dir=Math.abs(dx)>10?Math.sign(dx):f.face;f.face=dir;f.vx=dir*clamp(Math.abs(dx)*1.5*s,220,BALL_SPEED*1.2);}  // etwa beim Gegner landen (Flugzeit ~0,66 s)
+function updBall(f,index,enemy,dt) {
+  f.specS=Math.max(0,f.specS-dt);
+  if(f.specPh===0) {
+    f.vx*=Math.pow(.7,dt*60);f.vy*=Math.pow(.7,dt*60);
+    if(f.specT<BALL_WIND)return;
+    ballAim(f,enemy,1);f.vy=-560;
+    if(enemy.active&&enemy.y<f.y-60)f.vy-=Math.min(380,(f.y-enemy.y)*1.1);  // Gegner höher → steiler
+    f.specPh=1;f.specT=0;f.specX=0;f.specY=0;f.ghostTimer=0;
+    spawnRing(f.x,f.y-20,50,'#ff7fc8',3,.2);playSfx('dash');return;
+  }
+  if(f.specPh===1) {
+    f.vy+=BALL_GRAV*dt;f.specX+=f.vx*dt/BALL_R;f.ghostTimer-=dt;
+    const floor=terrainY(f.x);
+    if(f.vy>0&&f.y<floor-2)f.specY=f.vy;  // Fallgeschwindigkeit vor dem Aufprall merken (die Boden-Begrenzung setzt vy danach auf 0)
+    if(f.specT>.06&&f.y>=floor-2&&f.vy>=0) {
+      f.specN++;f.specS=.15;f.y=floor;f.vy=-Math.max(420,f.specY*.72);ballAim(f,enemy,.9);
+      for(let i=0;i<6;i++)addParticle(f.x+(Math.random()-.5)*30,floor-2,(Math.random()-.5)*180,-80-Math.random()*120,'#8c96a8',2.5,.4);
+      screenShake=Math.max(screenShake,3);playSfx('dash');rumble(index,.3,.4,50);
+    }
+    if(f.ghostTimer<=0&&enemy.active&&enemy.dashInvuln<=0&&Math.hypot(enemy.x-f.x,enemy.y-42-(f.y-24))<BALL_R+30&&!parry(enemy,index)) {
+      const dir=enemy.x>f.x?1:enemy.x<f.x?-1:f.face;
+      specHit(f,index,enemy,BALL_POW,dir,dir*460,-340,.45,'#ff7fc8');
+      f.vx=-dir*320;f.vy=-560;f.specN++;f.specS=.15;f.ghostTimer=.25;
+    }
+    if(f.specN>=BALL_BOUNCES||f.specT>=BALL_MAX){f.specPh=2;f.specT=0;burst(f.x,f.y-24,'#ff7fc8',10,150);}
+    return;
+  }
+  f.vx*=Math.pow(.85,dt*60);
+  if(f.y<terrainY(f.x)-2)f.vy+=1200*dt;else f.vy=0;
+  if(f.specT>=BALL_WOBBLE)endSpecial(f);
+}
+function poseBall(f){spK=3;spA=f.specPh===0?.15*Math.min(1,f.specT/BALL_WIND):-1;if(f.specPh===2)spK=0;}
+function hideBall(f){return f.specPh===1;}
+function drawBall(f,alpha) {
+  const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha;
+  if(f.specPh===2) {
+    // Sternchen kreisen über dem Kopf (über specT, steht in der Pause)
+    const hy=y-86*((f.look&&f.look.size)||1),fade=clamp(1-f.specT/BALL_WOBBLE,0,1)*2;
+    ctx.save();ctx.globalAlpha=clamp(fade,0,1);ctx.fillStyle='#ffe66d';
+    for(let i=0;i<3;i++){const a=f.specT*9+i*2.09,sx=x+Math.cos(a)*16,sy=hy+Math.sin(a)*5;ctx.beginPath();
+      for(let k=0;k<10;k++){const b=k*Math.PI/5-Math.PI/2,r=k&1?2.2:5.5;k?ctx.lineTo(sx+Math.cos(b)*r,sy+Math.sin(b)*r):ctx.moveTo(sx+Math.cos(b)*r,sy+Math.sin(b)*r);}
+      ctx.closePath();ctx.fill();}
+    ctx.restore();return;
+  }
+  if(f.specPh!==1)return;
+  const s=f.specS/.15*.3,cy=y-BALL_R*(1-s),a=f.specX,L=f.look,col=f.superTime>0?'#ffe66d':f.color;
+  ctx.save();ctx.translate(x,cy);ctx.scale(1+s,1-s);
+  ctx.globalAlpha=.3;ctx.strokeStyle=col;ctx.lineWidth=5;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(0,0,BALL_R+7,a-Math.sign(f.vx||1)*1.6,a,f.vx<0);ctx.stroke();  // Drehspur
+  ctx.globalAlpha=1;ctx.rotate(a);
+  ctx.fillStyle=col;ctx.strokeStyle='#060a14';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,BALL_R,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle=L.dark;ctx.beginPath();ctx.arc(0,0,BALL_R,.3,Math.PI-.3);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ffd0ea';ctx.beginPath();ctx.ellipse(0,BALL_R*.3,BALL_R*.55,BALL_R*.38,0,0,Math.PI*2);ctx.fill();   // Bauch
+  ctx.fillStyle=L.belt;ctx.fillRect(-BALL_R*.95,-2,BALL_R*1.9,4);
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(BALL_R*.38,-BALL_R*.42,4.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#060a14';ctx.beginPath();ctx.arc(BALL_R*.46,-BALL_R*.42,2.2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#060a14';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-BALL_R);ctx.quadraticCurveTo(-4,-BALL_R-10,4,-BALL_R-14);ctx.stroke();   // Antenne
+  ctx.fillStyle=col;ctx.beginPath();ctx.arc(4,-BALL_R-14,3.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.restore();
+}
 const SPECIALS=[
   {id:"comet",cost:40,cd:2.6,ai:{min:70,max:430,dy:260,low:false},start:startComet,update:updComet,pose:poseComet,draw:drawCometTrail},   // BLAZE
   {id:"salvo",cost:45,cd:3.4,ai:{min:140,max:560,dy:200,low:false},start:startSalvo,update:updSalvo,pose:poseSalvo,draw:drawSalvo},   // VOLT
@@ -1718,7 +1830,8 @@ const SPECIALS=[
   {id:"blade",cost:40,cd:3.2,ai:{min:170,max:640,dy:60,low:false},start:startBlade,update:updBlade,pose:poseBlade},   // JIN
   {id:"counter",cost:30,cd:3.5,ai:{min:0,max:170,dy:120,low:false,counter:true},start:startCounter,update:updCounter,pose:poseCounter,draw:drawCounter},   // SAGE
   {id:"sickle",cost:40,cd:3.4,ai:{min:120,max:620,dy:240,low:false},start:startSickle,update:updSickle,pose:poseSickle,draw:drawSickleCharge},   // VEXA
-  null,null,
+  {id:"dome",cost:40,cd:4.0,ai:{min:0,max:150,dy:140,low:false,shots:true},start:startDome,update:updDome,pose:poseDome,draw:drawDome},   // KRYX
+  {id:"ball",cost:40,cd:3.6,ai:{min:80,max:480,dy:200,low:false},start:startBall,update:updBall,pose:poseBall,draw:drawBall,hide:hideBall},   // BLOBB
   {id:"quake",cost:50,cd:3.6,ai:{min:0,max:460,dy:90,low:true},start:startQuake,update:updQuake,pose:poseQuake},      // TORAK
   {id:"fusion",cost:60,cd:4.5,ai:{min:60,max:420,dy:180,low:false},start:startFusion,update:updFusion,pose:poseFusion,draw:drawFusion}   // NOVA
 ];
@@ -1836,7 +1949,7 @@ function updateBot(f,target,input,index) {
     // Spezialangriff nur bei passendem Abstand/Lage (Hinweis in SPECIALS[c].ai)
     if(sp&&mem.wantSpec&&mem.sd&&!(mem.wantUltra&&f.ki>=100)&&f.stun<=0&&!f.beamHeld&&f.beam<=0&&f.punch<=0&&target.active) {
       const a=sp.ai,low=target.y>terrainY(target.x)-70;
-      const fit=a.counter?(d<a.max&&Math.abs(dy)<a.dy&&(target.punch>0||target.smashHolding||target.spec))||target.beam>0||shotNear(f,index,150):a.low?low&&((d<=a.max&&Math.abs(dy)<a.dy)||(d<70&&dy>60)):d>=a.min&&d<=a.max&&Math.abs(dy)<a.dy;
+      const fit=a.counter?(d<a.max&&Math.abs(dy)<a.dy&&(target.punch>0||target.smashHolding||target.spec))||target.beam>0||shotNear(f,index,150):a.low?low&&((d<=a.max&&Math.abs(dy)<a.dy)||(d<70&&dy>60)):d>=a.min&&d<=a.max&&Math.abs(dy)<a.dy||(!!a.shots&&shotNear(f,index,150));  // KRYX: auch gegen nahe Schüsse
       if(fit&&startSpecial(f,index,target))mem.wantSpec=false;
     }
   }
@@ -2399,6 +2512,7 @@ function drawFighter(f,alpha) {
   ctx.save();ctx.translate(x+attack*(f.attackType===4?10:4),y+bob);ctx.scale(f.face*sz,sz);ctx.scale(1,f.guarding?.84:.9);ctx.rotate(clamp(f.vx*f.face/2200,-.16,.16)+attack*(f.attackType===1?-.12:f.attackType===2?.2:f.attackType===4?.3:.1)-(f.stun>0?.24:0));
   ctx.lineCap='round';ctx.lineJoin='round';
   specPose(f);
+  if(spId==='ball'&&f.specPh===2){const w=Math.sin(f.specT*32)*.2*(1-f.specT/BALL_WOBBLE);ctx.scale(1+w,1-w);}  // Gummibauch: wackelt nach dem Rollen
   // Kometenfaust: im Sturz in Flugrichtung neigen (keine Aura: wirkte als bräunliches Oval, Feuer kommt von Schweif + Partikeln)
   if(spId==='comet'&&f.specPh===1)ctx.rotate(clamp(f.specY,-.9,.9)*.55);
   if(f.guarding) {
