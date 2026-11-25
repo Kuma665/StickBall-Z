@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25f</p>
+        <p class="version">v2026-11-25g</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -198,7 +198,7 @@ const TXT={
   // HUD und Ergebnis
   world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
-  specNames:['KOMETENFAUST','','','KLINGENWELLE','','','','','ERDBEBEN-STAMPFER',''],
+  specNames:['KOMETENFAUST','BLITZ-SALVE','','KLINGENWELLE','','SICHELSCHEIBE','','','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
   botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
@@ -539,7 +539,7 @@ function applyMember(f,m){
   f.ctrl=m.ctrl;f.bot=m.ctrl<0;f.hp=m.hp;f.ki=m.ki;
 }
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
-const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false,kind:0,hit:false,acc:0}));  // kind: 0 Ki-Schuss · 1 Klingenwelle · 2 Bodenwelle (Spezialangriffe)
+const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false,kind:0,hit:false,acc:0,ph:0,t:0}));  // kind: 0 Ki-Schuss · 1 Klingenwelle · 2 Bodenwelle · 3 Blitzkugel · 4 Sichelscheibe (Spezialangriffe; ph Phase, t Alter)
 const particles = Array.from({length:MAX_PARTICLES}, () => ({active:false,x:0,y:0,vx:0,vy:0,life:0,max:1,size:1,color:'',blood:false}));
 const craters = Array.from({length:MAX_CRATERS}, () => ({active:false,x:0,w:0,depth:0}));
 // Blut am Boden, Druckwellen-Ringe, Wunden je Figur (feste Pools)
@@ -702,7 +702,7 @@ function makeCrater(x,big) {
 }
 function resetFighter(f,index) {
   f.ultra=false;f.xray=0;f.xrayHits=0;
-  f.spec=false;f.specT=0;f.specPh=0;f.specX=1;f.specY=0;f.specHit=false;f.specCd=0;f.specShow=0;
+  f.spec=false;f.specT=0;f.specPh=0;f.specX=1;f.specY=0;f.specHit=false;f.specCd=0;f.specShow=0;f.specN=0;
   clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;f.kiaiCooldown=0;f.r2Held=false;f.r2Time=0;f.comboCount=0;
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
@@ -1273,7 +1273,7 @@ let spK=0,spA=-1,spId="";  // Pose des Spezialangriffs für drawFighter (spK wie
 function startSpecial(f,index,enemy) {
   const s=SPECIALS[f.style];
   if(!s||f.spec||f.stun>0||f.ki<s.cost||f.specCd>0||f.beam>0)return false;
-  f.ki-=s.cost;f.specCd=s.cd;f.spec=true;f.specT=0;f.specPh=0;f.specHit=false;f.specShow=1.1;f.ghostTimer=0;
+  f.ki-=s.cost;f.specCd=s.cd;f.spec=true;f.specT=0;f.specPh=0;f.specHit=false;f.specN=0;f.specShow=1.1;f.ghostTimer=0;
   f.punch=0;f.attackDuration=0;f.attackStep=0;f.attackType=0;f.comboQueued=false;f.comboWindow=0;f.punchBuffer=0;f.heavyBuffer=0;f.ultra=false;
   f.smashHolding=false;f.cannonHolding=false;f.beamHeld=false;f.beamCharge=0;f.charging=false;f.guarding=false;f.boosting=false;f.boostKey=0;f.dashTime=0;
   if(enemy.active&&Math.abs(enemy.x-f.x)>4)f.face=enemy.x>f.x?1:-1;
@@ -1382,13 +1382,239 @@ function quakeStomp(f,index,landed) {
   p.x=gx+f.face*30;p.y=terrainY(p.x);p.px=p.x;p.py=p.y;p.vx=f.face*p.speed;p.vy=0;p.life=1.15;p.power=22;p.color='#ffd34d';
 }
 function poseQuake(f){if(f.specPh===0){spK=2;spA=.17*Math.min(1,f.specT/QUAKE_WIND);}else{spK=8;spA=f.specPh===2?.5:Math.min(1,.5+.5*f.specT/QUAKE_REC);}}
+// Leichter Dauertreffer (Fusionsstrahl), aufgebaut wie ein Kamehameha-Treffer: Block ×0,2, Combo, kleiner Schub
+function specTick(a,ai,v,dmg,dir,color) {
+  const blocked=v.guarding&&v.face===-dir;
+  const scale=blocked?1:registerCombo(a,v),d=dmg*(a.superTime>0?1.35:1);
+  v.hp=Math.max(0,v.hp-d*(blocked?.2:scale));
+  if(blocked){v.hitFlash=.08;v.vx+=dir*45;burst(v.x,v.y-45,'rgb(145,220,255)',9,90);screenShake=Math.max(screenShake,1.5);hitStop=Math.max(hitStop,.02);playSfx('block');return false;}
+  v.stun=comboStun(v,.24);v.hitFlash=.18;v.vx+=dir*90;v.vy-=55;
+  v.smashHolding=false;v.punch=0;v.attackDuration=0;v.attackStep=0;v.attackType=0;v.beamHeld=false;v.beamCharge=0;v.cannonHolding=false;if(v.spec)endSpecial(v);
+  impactBurst(v.x,v.y-45,color,false);hurt(v,dir,d*scale,false);
+  screenShake=Math.max(screenShake,3.5);hitStop=Math.max(hitStop,.035);playSfx('hit');rumble(1-ai,.4,.3,60);
+  return true;
+}
+// VOLT · Blitz-Salve: bleibt stehen/schweben, feuert abwechselnd aus beiden Händen kleine Blitzkugeln (Projektil kind 3), zum Schluss eine große.
+// Phase 0 Ausholen, 1 Salve (specN = abgefeuerte Kugeln), 2 große Kugel laden, 3 Nachwirkung
+const SALVO_WIND=.14,SALVO_GAP=.075,SALVO_N=8,SALVO_BIG=.18,SALVO_REC=.22,SALVO_POW=3.5,SALVO_BIGPOW=15;
+function startSalvo(f){f.vx*=.2;f.vy*=.2;spawnRing(f.x,f.y-40,50,'#bfe8ff',3,.2);playSfx('dash');}
+function salvoShot(f,index,enemy,big) {
+  let ax=f.face,ay=0;
+  if(enemy.active){ax=enemy.x-f.x;ay=enemy.y-f.y;if(Math.abs(ax)>8)f.face=ax>0?1:-1;}  // dreht sich mit, wenn der Gegner vorbeifliegt
+  let a=Math.atan2(ay,ax*f.face);a=clamp(a,-.75,.75)+(big?0:(Math.random()-.5)*.16);
+  const back=!big&&(f.specN&1),p=takeProjectile(),c=f.superTime>0?'#ffe66d':big?'#e8f6ff':'#7fd4ff';
+  p.active=true;p.kind=3;p.hit=false;p.owner=index;p.big=big;p.r=big?19:6;p.speed=big?520:660;p.acc=0;p.ph=0;p.t=0;
+  p.x=f.x+f.face*(big?34:back?18:26);p.y=f.y-(back?38:44);p.px=p.x;p.py=p.y;
+  p.vx=Math.cos(a)*f.face*p.speed;p.vy=Math.sin(a)*p.speed;p.life=big?2.2:1.5;p.power=big?SALVO_BIGPOW:SALVO_POW;p.color=c;
+  f.vx-=f.face*(big?90:14);
+  burst(p.x,p.y,c,big?16:4,big?180:90);
+  if(big){spawnRing(p.x,p.y,60,'#ffffff',4,.22);screenShake=Math.max(screenShake,5);rumble(index,.5,.5,100);playSfx('beam');}
+  else{screenShake=Math.max(screenShake,1.2);rumble(index,.15,.3,30);playSfx('shot');}
+}
+function updSalvo(f,index,enemy,dt) {
+  f.vx*=Math.pow(.78,dt*60);f.vy*=Math.pow(.78,dt*60);
+  if(f.specPh===0){if(f.specT>=SALVO_WIND){f.specPh=1;f.specT=SALVO_GAP;}return;}
+  if(f.specPh===1) {
+    if(f.specT>=SALVO_GAP){f.specT-=SALVO_GAP;salvoShot(f,index,enemy,false);f.specN++;}
+    if(f.specN>=SALVO_N){f.specPh=2;f.specT=0;}
+    return;
+  }
+  if(f.specPh===2) {
+    if(Math.random()<.6)addParticle(f.x+f.face*34+(Math.random()-.5)*40,f.y-42+(Math.random()-.5)*40,(Math.random()-.5)*40,(Math.random()-.5)*40,'#bfe8ff',2,.18);
+    if(f.specT>=SALVO_BIG){salvoShot(f,index,enemy,true);f.specPh=3;f.specT=0;}
+    return;
+  }
+  if(f.specT>=SALVO_REC)endSpecial(f);
+}
+function poseSalvo(f) {
+  if(f.specPh===0){spK=7;spA=.15*Math.min(1,f.specT/SALVO_WIND);return;}
+  if(f.specPh===1){spK=f.specN&1?7:1;spA=.3+.25*Math.min(1,f.specT/SALVO_GAP);return;}  // abwechselnd vordere/hintere Hand
+  spK=5;spA=f.specPh===2?.15:Math.min(1,.45+.5*f.specT/SALVO_REC);
+}
+// Große Kugel beim Laden: wächst vor beiden Händen, kleine Blitze (Bewegung über specT, steht in der Pause)
+function drawSalvo(f,alpha) {
+  if(f.specPh!==2)return;
+  const t=Math.min(1,f.specT/SALVO_BIG),x=f.px+(f.x-f.px)*alpha+f.face*34,y=f.py+(f.y-f.py)*alpha-42,r=6+t*13;
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  ctx.globalAlpha=.35;ctx.fillStyle='#36a9ff';ctx.beginPath();ctx.arc(x,y,r*2,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.9;ctx.fillStyle='#bfe8ff';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,r*.5,0,Math.PI*2);ctx.fill();
+  drawZap(x,y,r*2.2,f.specT*40,'#e8f6ff');
+  ctx.restore();
+}
+// Zickzack-Blitze rund um eine Kugel (s = Startwert, ändert sich nur mit der Spielzeit)
+function drawZap(x,y,r,s,color) {
+  ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.globalAlpha=.85;ctx.beginPath();
+  for(let k=0;k<3;k++) {
+    const a0=s*.7+k*2.1;let px=x+Math.cos(a0)*r*.4,py=y+Math.sin(a0)*r*.4;ctx.moveTo(px,py);
+    for(let j=1;j<=3;j++){const a=a0+Math.sin(s*1.3+j*k+j)*.6,rr=r*(.4+j*.2);px=x+Math.cos(a)*rr+Math.sin(s*3+j*5+k)*3;py=y+Math.sin(a)*rr+Math.cos(s*2.3+j*7+k)*3;ctx.lineTo(px,py);}
+  }
+  ctx.stroke();
+}
+// VEXA · Sichelscheibe: Scheibe über dem erhobenen Arm aufbauen (Phase 0), werfen (1). Die Scheibe (Projektil kind 4) fliegt im Bogen
+// zum Gegner, kehrt nach SICKLE_OUT s um und fliegt zu VEXA zurück; trifft hin und zurück je einmal (Bogen über die begrenzte Drehrate)
+const SICKLE_WIND=.32,SICKLE_REC=.24,SICKLE_OUT=.75,SICKLE_SPEED=600,SICKLE_POW=14,SICKLE_R=24;
+function startSickle(f){f.vx*=.3;f.vy*=.3;playSfx('dash');}
+function updSickle(f,index,enemy,dt) {
+  f.vx*=Math.pow(.8,dt*60);f.vy*=Math.pow(.8,dt*60);
+  if(f.specPh===0) {
+    if(Math.random()<.5)addParticle(f.x+f.face*10+(Math.random()-.5)*44,f.y-84+(Math.random()-.5)*14,(Math.random()-.5)*30,-20,Math.random()<.5?'#fff':'#c04bff',1.6,.2);
+    if(f.specT<SICKLE_WIND)return;
+    let ax=f.face,ay=0;
+    if(enemy.active){ax=enemy.x-f.x;ay=enemy.y-f.y;if(Math.abs(ax)>8)f.face=ax>0?1:-1;}
+    const aim=clamp(Math.atan2(ay,ax*f.face),-.8,.8)-.55;  // nach oben versetzt → Bogen
+    const p=takeProjectile();
+    p.active=true;p.kind=4;p.hit=false;p.owner=index;p.big=false;p.r=SICKLE_R;p.speed=SICKLE_SPEED;p.acc=0;p.ph=0;p.t=0;
+    p.x=f.x+f.face*14;p.y=f.y-84;p.px=p.x;p.py=p.y;p.vx=Math.cos(aim)*f.face*SICKLE_SPEED;p.vy=Math.sin(aim)*SICKLE_SPEED;
+    p.life=2.8;p.power=SICKLE_POW;p.color=f.superTime>0?'#ffe66d':'#c04bff';
+    spawnRing(p.x,p.y,50,'#ffffff',3,.2);burst(p.x,p.y,p.color,12,180);
+    screenShake=Math.max(screenShake,3);playSfx('beam');rumble(index,.35,.5,80);
+    f.specPh=1;f.specT=0;return;
+  }
+  if(f.specT>=SICKLE_REC)endSpecial(f);
+}
+function poseSickle(f){if(f.specPh===0){spK=9;spA=.2+.25*Math.min(1,f.specT/SICKLE_WIND);}else{spK=7;spA=Math.min(1,.4+.6*f.specT/SICKLE_REC);}}
+// Scheibe über der Hand beim Aufbauen
+function drawSickleCharge(f,alpha) {
+  if(f.specPh!==0)return;
+  const t=Math.min(1,f.specT/SICKLE_WIND),x=f.px+(f.x-f.px)*alpha+f.face*10,y=f.py+(f.y-f.py)*alpha-84;
+  drawDisc(x,y,SICKLE_R*(.3+.7*t),f.specT*26,f.superTime>0?'#ffe66d':'#c04bff',.6+.4*t);
+}
+// Scheibe: flache Ellipse mit Glühen, gezacktem Rand und drehenden Speichen (a = Drehwinkel)
+function drawDisc(x,y,r,a,color,fade) {
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.translate(x,y);
+  ctx.globalAlpha=.28*fade;ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,r*1.7,r*.75,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.9*fade;ctx.beginPath();
+  for(let i=0;i<12;i++){const b=a+i*Math.PI/6,rr=i&1?r*.82:r*1.08;ctx.lineTo(Math.cos(b)*rr,Math.sin(b)*rr*.36);}
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ffffff';ctx.beginPath();ctx.ellipse(0,0,r*.55,r*.18,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=1.6;ctx.beginPath();
+  for(let i=0;i<3;i++){const b=a*1.3+i*2.09;ctx.moveTo(0,0);ctx.lineTo(Math.cos(b)*r*.95,Math.sin(b)*r*.34);}
+  ctx.stroke();ctx.restore();
+}
+function drawSickle(p,x,y) {
+  const fade=clamp(p.life/.25,0,1),sp=Math.hypot(p.vx,p.vy)||1;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  ctx.globalAlpha=.25*fade;ctx.strokeStyle=p.color;ctx.lineWidth=20;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-p.vx/sp*70,y-p.vy/sp*70);ctx.stroke();
+  ctx.restore();
+  drawDisc(x,y,p.r,p.t*28,p.color,fade);
+}
+// Bewegung der Sichelscheibe (in updateProjectiles): lenkt mit begrenzter Drehrate zum Ziel, Rückweg schneller und enger
+function updSickleShot(p,enemy,dt) {
+  const o=fighters[p.owner];p.t+=dt;
+  let tx=p.x+p.vx,ty=p.y+p.vy;
+  if(p.ph===0){if(enemy.active){tx=enemy.x;ty=enemy.y-42;}if(p.t>=SICKLE_OUT){p.ph=1;p.hit=false;spawnRing(p.x,p.y,30,'#fff',2,.15);}}
+  else{tx=o.x;ty=o.y-46;if(!o.active||Math.hypot(tx-p.x,ty-p.y)<34){p.active=false;spawnRing(p.x,p.y,36,p.color,3,.2);return;}}
+  const cur=Math.atan2(p.vy,p.vx);let d=Math.atan2(ty-p.y,tx-p.x)-cur;
+  while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;
+  const a=cur+clamp(d,-(p.ph?6:2.4)*dt,(p.ph?6:2.4)*dt),s=p.ph?SICKLE_SPEED*1.15:SICKLE_SPEED;
+  p.vx=Math.cos(a)*s;p.vy=Math.sin(a)*s;
+  const gy=terrainY(p.x)-20;if(p.y>gy){p.y=gy;p.vy=Math.min(0,p.vy);if(Math.random()<.6)addParticle(p.x,gy+16,(Math.random()-.5)*160,-120-Math.random()*120,'#ffd29a',2,.35);}
+  if(Math.random()<.5)addParticle(p.x+(Math.random()-.5)*30,p.y+(Math.random()-.5)*8,-p.vx*.08,-p.vy*.08,Math.random()<.4?'#fff':p.color,1.6,.22);
+  if(!p.hit&&enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<34&&Math.abs(p.y-(enemy.y-42))<52) {
+    p.hit=true;const dir=p.vx>=0?1:-1;
+    specHit(o,p.owner,enemy,p.power,dir,dir*300,-220,.4,p.color);
+  }
+}
+// NOVA · Fusionsstrahl: rote und blaue Kugel an den Händen laden (Phase 0), dann zwei Strahlen, die sich umeinander zu einem drehen (1),
+// Abschluss-Explosion am Ende, kurze Nachwirkung (2). Kürzer als das Kamehameha (FUSION_LEN), aber mehr Schaden je Sekunde.
+// specY = Winkel (in Blickrichtung, + = nach unten), specX = Länge bis Boden/Ende, ghostTimer = Treffer-Takt, specN = Krater gerissen
+const FUSION_CHARGE=.38,FUSION_T=.58,FUSION_REC=.24,FUSION_LEN=440,FUSION_TICK=.09,FUSION_DMG=13,FUSION_END=16,FUSION_W=40;
+const FUSION_RED='#ff3f55',FUSION_BLUE='#36a9ff';
+function startFusion(f,index,enemy) {
+  f.vx*=.2;f.vy*=.2;f.specY=0;
+  if(enemy.active)f.specY=clamp(Math.atan2(enemy.y-f.y,(enemy.x-f.x)*f.face),-.5,.5);
+  playSfx('kiai');
+}
+function traceFusion(f) {
+  const sx=f.x+f.face*21,sy=f.y-40,ux=Math.cos(f.specY)*f.face,uy=Math.sin(f.specY);
+  let len=FUSION_LEN;
+  for(let d=16;d<=FUSION_LEN;d+=16)if(sy+uy*d>=terrainY(sx+ux*d)){len=d;break;}
+  f.specX=len;return len<FUSION_LEN;
+}
+function fusionInBeam(f,v) {
+  const sx=f.x+f.face*21,sy=f.y-40,ux=Math.cos(f.specY)*f.face,uy=Math.sin(f.specY);
+  const t=clamp((v.x-sx)*ux+(v.y-45-sy)*uy,0,f.specX);
+  return Math.hypot(v.x-(sx+ux*t),v.y-45-(sy+uy*t))<FUSION_W;
+}
+function updFusion(f,index,enemy,dt) {
+  f.vx*=Math.pow(.75,dt*60);f.vy*=Math.pow(.75,dt*60);
+  if(f.specPh===0) {
+    if(Math.random()<.7){const a=Math.random()*Math.PI*2,r=40+Math.random()*30;addParticle(f.x+f.face*24+Math.cos(a)*r,f.y-42+Math.sin(a)*r,-Math.cos(a)*r*3,-Math.sin(a)*r*3,Math.random()<.5?FUSION_RED:FUSION_BLUE,2,.3);}
+    if(f.specT>=FUSION_CHARGE) {
+      f.specPh=1;f.specT=0;f.ghostTimer=0;traceFusion(f);
+      const sx=f.x+f.face*21,sy=f.y-40;
+      spawnRing(sx,sy,90,'#ffffff',5,.3);burst(sx,sy,FUSION_RED,14,220);burst(sx,sy,FUSION_BLUE,14,220);
+      flash(.14,'#d8c8ff');screenShake=Math.max(screenShake,7);playSfx('beam');rumble(index,.6,.6,140);
+      f.vx-=f.face*60;
+    }
+    return;
+  }
+  if(f.specPh===1) {
+    const ground=traceFusion(f),ux=Math.cos(f.specY)*f.face,uy=Math.sin(f.specY),sx=f.x+f.face*21,sy=f.y-40;
+    if(ground&&!f.specN){f.specN=1;makeCrater(sx+ux*f.specX,false);}
+    for(let i=0;i<2;i++){const d=Math.random()*f.specX;addParticle(sx+ux*d+(Math.random()-.5)*30,sy+uy*d+(Math.random()-.5)*30,(Math.random()-.5)*160,(Math.random()-.5)*160-40,i?FUSION_RED:FUSION_BLUE,2+Math.random()*1.5,.3);}
+    screenShake=Math.max(screenShake,2.5);
+    if((f.ghostTimer-=dt)<=0) {
+      f.ghostTimer=FUSION_TICK;
+      if(enemy.active&&enemy.dashInvuln<=0&&fusionInBeam(f,enemy))specTick(f,index,enemy,FUSION_DMG,f.face,'#d8c8ff');
+    }
+    if(f.specT>=FUSION_T) {
+      const ex=sx+ux*f.specX,ey=sy+uy*f.specX;
+      spawnRing(ex,ey,80,'#ffffff',5,.3);burst(ex,ey,FUSION_RED,12,240);burst(ex,ey,FUSION_BLUE,12,240);
+      if(enemy.active&&enemy.dashInvuln<=0&&fusionInBeam(f,enemy))specHit(f,index,enemy,FUSION_END,f.face,f.face*620,-300,.5,'#d8c8ff');
+      f.specPh=2;f.specT=0;
+    }
+    return;
+  }
+  if(f.specT>=FUSION_REC)endSpecial(f);
+}
+function poseFusion(f){spK=0;spA=-1;}  // Pose = Kamehameha-Haltung (beide Hände vorn), über spId 'fusion' in drawFighter
+function drawFusion(f,alpha) {
+  const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha,sx=x+f.face*21,sy=y-40;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';
+  if(f.specPh===0) {
+    // zwei Kugeln kreisen umeinander und wachsen
+    const t=Math.min(1,f.specT/FUSION_CHARGE),r=4+t*9,o=10-t*4,a=f.specT*22;
+    for(let k=0;k<2;k++){const c=k?FUSION_BLUE:FUSION_RED,bx=sx+f.face*4+Math.cos(a+k*Math.PI)*o,by=sy+Math.sin(a+k*Math.PI)*o;
+      ctx.globalAlpha=.35;ctx.fillStyle=c;ctx.beginPath();ctx.arc(bx,by,r*2,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=.95;ctx.beginPath();ctx.arc(bx,by,r,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(bx,by,r*.45,0,Math.PI*2);ctx.fill();}
+    ctx.restore();return;
+  }
+  if(f.specPh!==1){ctx.restore();return;}
+  const len=f.specX*Math.min(1,f.specT/.08),ux=Math.cos(f.specY)*f.face,uy=Math.sin(f.specY),nx=-uy,ny=ux;
+  const fade=f.specT>FUSION_T-.08?(FUSION_T-f.specT)/.08:1,merge=Math.min(len,140),pulse=.85+.15*Math.sin(f.specT*60),ph=f.specT*38;
+  // vereinter Strahl ab dem Treffpunkt: lila Glühen, weißer Kern
+  if(len>merge) {
+    const mx=sx+ux*merge,my=sy+uy*merge,ex=sx+ux*len,ey=sy+uy*len;
+    ctx.globalAlpha=.25*fade;ctx.strokeStyle='#b070ff';ctx.lineWidth=64*pulse;ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(ex,ey);ctx.stroke();
+    ctx.globalAlpha=.8*fade;ctx.strokeStyle='#d8c8ff';ctx.lineWidth=34*pulse;ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(ex,ey);ctx.stroke();
+    ctx.globalAlpha=.95*fade;ctx.strokeStyle='#fff';ctx.lineWidth=14*pulse;ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(ex,ey);ctx.stroke();
+    ctx.globalAlpha=.9*fade;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ex,ey,22*pulse,0,Math.PI*2);ctx.fill();
+  }
+  // zwei Strahlen drehen sich umeinander (vorn weit auseinander, am Treffpunkt vereint, danach eng weiter um den Kern)
+  for(let k=0;k<2;k++) {
+    const c=k?FUSION_BLUE:FUSION_RED,sg=k?-1:1;
+    for(let pass=0;pass<2;pass++) {
+      ctx.globalAlpha=(pass?.95:.35)*fade;ctx.strokeStyle=pass?c:c;ctx.lineWidth=pass?7:18;ctx.beginPath();
+      for(let d=0;d<=len;d+=10){const amp=d<merge?13+14*(1-d/merge):13,off=Math.sin(d*.06-ph)*amp*sg;const px=sx+ux*d+nx*off,py=sy+uy*d+ny*off;d?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha=fade;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(sx,sy,10*pulse,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
 const SPECIALS=[
   {id:"comet",cost:40,cd:2.6,ai:{min:70,max:430,dy:260,low:false},start:startComet,update:updComet,pose:poseComet,draw:drawCometTrail},   // BLAZE
-  null,null,
+  {id:"salvo",cost:45,cd:3.4,ai:{min:140,max:560,dy:200,low:false},start:startSalvo,update:updSalvo,pose:poseSalvo,draw:drawSalvo},   // VOLT
+  null,
   {id:"blade",cost:40,cd:3.2,ai:{min:170,max:640,dy:60,low:false},start:startBlade,update:updBlade,pose:poseBlade},   // JIN
-  null,null,null,null,
+  null,
+  {id:"sickle",cost:40,cd:3.4,ai:{min:120,max:620,dy:240,low:false},start:startSickle,update:updSickle,pose:poseSickle,draw:drawSickleCharge},   // VEXA
+  null,null,
   {id:"quake",cost:50,cd:3.6,ai:{min:0,max:460,dy:90,low:true},start:startQuake,update:updQuake,pose:poseQuake},      // TORAK
-  null
+  {id:"fusion",cost:60,cd:4.5,ai:{min:60,max:420,dy:180,low:false},start:startFusion,update:updFusion,pose:poseFusion,draw:drawFusion}   // NOVA
 ];
 function updateKamehameha(f,index,enemy,input,dt) {
   f.kiaiCooldown=Math.max(0,f.kiaiCooldown-dt);
@@ -1798,7 +2024,7 @@ function updateProjectiles(dt) {
       // Klingenwelle: zerschneidet gegnerische Ki-Schüsse, ignoriert den Boden, verschwindet beim Treffer
       for(let k=0;k<MAX_PROJECTILES;k++) {
         const q=projectiles[k];
-        if(q.active&&q.kind===0&&q.owner!==p.owner&&Math.abs(q.x-p.x)<26+q.r&&Math.abs(q.y-p.y)<60+q.r){q.active=false;burst(q.x,q.y,q.color,10,150);spawnRing(q.x,q.y,30,'#fff',2,.18);}
+        if(q.active&&(q.kind===0||q.kind===3)&&q.owner!==p.owner&&Math.abs(q.x-p.x)<26+q.r&&Math.abs(q.y-p.y)<60+q.r){q.active=false;burst(q.x,q.y,q.color,10,150);spawnRing(q.x,q.y,30,'#fff',2,.18);}
       }
       if(Math.random()<.5)addParticle(p.x-Math.sign(p.vx)*20,p.y+(Math.random()-.5)*70,-p.vx*.1,(Math.random()-.5)*30,Math.random()<.4?'#fff':p.color,1.5+Math.random()*1.5,.25);
       if(enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<32&&Math.abs(p.y-(enemy.y-42))<66) {
@@ -1807,6 +2033,7 @@ function updateProjectiles(dt) {
       }
       continue;
     }
+    if(p.kind===4){updSickleShot(p,enemy,dt);continue;}
     if(p.kind===2) {
       // Bodenwelle: folgt dem Boden, reißt alle 230 px einen Krater, schleudert bodennahe Gegner hoch (einmal)
       p.y=terrainY(p.x);p.acc+=Math.abs(p.vx)*dt;
@@ -1823,7 +2050,7 @@ function updateProjectiles(dt) {
       damage(enemy,fighters[p.owner],p);p.active=false;continue;
     }
     if(p.y+p.r>=terrainY(p.x)) {
-      makeCrater(p.x,p.big);p.active=false;continue;
+      if(p.kind===3&&!p.big)burst(p.x,p.y,p.color,6,90);else makeCrater(p.x,p.big);p.active=false;continue;
     }
     if(Math.random()<.14)addParticle(p.x,p.y,(Math.random()-.5)*18,(Math.random()-.5)*18,p.color,2,.22);
   }
@@ -2127,7 +2354,7 @@ function drawFighter(f,alpha) {
     ctx.lineTo(11,-55);ctx.lineTo(17,-44+Math.sin(clock*14)*3);ctx.lineTo(12,-31);ctx.lineTo(17,-18);ctx.lineTo(12,-4);ctx.stroke();
     ctx.globalAlpha=1;
   }
-  const ready=charge>0||f.beam>0;
+  const ready=charge>0||f.beam>0||spId==='fusion';
   const punchX=shot>0?16+shot*8:ready?21:15,punchY=shot>0?-43:ready?-40:-43;
   if(f.attackType===4&&f.punch>0&&attack>.22) {
     ctx.globalAlpha=.22*(1-attack);ctx.strokeStyle=f.color;ctx.lineWidth=7;
@@ -2447,6 +2674,7 @@ function drawProjectile(p,alpha) {
   const x=p.px+(p.x-p.px)*alpha,y=p.py+(p.y-p.py)*alpha;
   if(p.kind===1){drawBladeWave(p,x,y);return;}
   if(p.kind===2){drawQuakeWave(p,x,y);return;}
+  if(p.kind===4){drawSickle(p,x,y);return;}
   const speed=Math.hypot(p.vx,p.vy)||1,ux=p.vx/speed,uy=p.vy/speed;
   const tk=p.r/8;
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
@@ -2457,6 +2685,7 @@ function drawProjectile(p,alpha) {
   ctx.globalAlpha=.25;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,p.r*2,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,p.r,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+ux*p.r*.15,y+uy*p.r*.15,p.r*.43,0,Math.PI*2);ctx.fill();
+  if(p.kind===3)drawZap(x,y,p.r*2.4,p.life*30,'#e8f6ff');  // Blitzkugel: Zickzack-Blitze (Spielzeit, steht in der Pause)
   ctx.restore();
 }
 function drawHud() {
