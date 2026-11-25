@@ -120,7 +120,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25b</p>
+        <p class="version">v2026-11-25c</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -194,6 +194,8 @@ const TXT={
   stAudioNo:'AUDIO NICHT UNTERSTÜTZT',stAudioFail:'AUDIO KANN NICHT STARTEN',lblLocal:'2 SPIELER  ·  ',lblBot:'KI-KAMPF  ·  ',
   // HUD und Ergebnis
   world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
+  // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
+  specNames:['KOMETENFAUST','','','KLINGENWELLE','','','','','ERDBEBEN-STAMPFER',''],
   botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
@@ -202,16 +204,16 @@ const TXT={
     ['Heavy · kostet 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>V</kbd>'],['Hoch + Schlag: Uppercut · Runter + Schlag: Slam','<kbd>W/S</kbd> + <kbd>F</kbd>'],
     ['Im Flug vorwärts + Schlag: Rush','<kbd>A/D</kbd> + <kbd>F</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>S</kbd> + <kbd>A/D</kbd>'],
     ['Ausweichen · Richtung doppelt antippen, halten: Turbo','<kbd>A/D · ←/→</kbd>'],['Ki-Schuss · auch im Flug lenkbar','<kbd>G</kbd> + <kbd>WASD</kbd>'],
-    ['Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt','<kbd>T</kbd> + <kbd>W/S</kbd>'],['Ki laden','<kbd>H</kbd>'],
+    ['Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt','<kbd>T</kbd> + <kbd>W/S</kbd>'],['Hoch + Druckwelle: Spezialangriff (je Figur, 40–50 Ki)','<kbd>W</kbd> + <kbd>T</kbd>'],['Ki laden','<kbd>H</kbd>'],
     ['Super-Saiyajin · bei 100 Ki','<kbd>R</kbd>'],['Kämpfer wechseln (Team)','<kbd>Q</kbd>'],['Spieler 2 · Combo / Heavy / Schuss / Wechseln','<span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd> <kbd>P</kbd></span>']],
   ruleKey:'<kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.',
   guidePad:[['Fliegen / lenken','<kbd>Stick</kbd>'],['Hoch fliegen','a'],['Leichte Combo · bis zu 3 Treffer','x'],['Stark · halten lädt auf, ↑/↓ lenkt · 100 Ki: ULTRA-SCHLAG','y'],
-    ['Ausweichen · halten: Turbo','b'],['Blocken','l1'],['Ki-Schuss · halten: Kanone','r1'],['Antippen: Ki-Druckwelle · halten: Kamehameha','r2'],
+    ['Ausweichen · halten: Turbo','b'],['Blocken','l1'],['Ki-Schuss · halten: Kanone','r1'],['Antippen: Ki-Druckwelle · halten: Kamehameha','r2'],['Stick hoch + antippen: Spezialangriff (40–50 Ki)','r2'],
     ['Ki laden','l2'],['Super-Saiyajin · bei 100 Ki','l3'],['Kämpfer wechseln (Team)','r3']],
   rulePad:'Stick runter + {r1} zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. {start} pausiert.',
   guideTouch:[['Fliegen / zielen · links irgendwo ziehen','<kbd>Stick</kbd>'],['Antippen: Ausweichen · halten + Richtung: Turbo','<kbd>DASH</kbd>'],
     ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>H</kbd>'],['Blocken · Stick runter + vom Gegner weg','<kbd>Stick</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
-    ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
+    ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Stick hoch + antippen: Spezialangriff','<kbd>KAME</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
   ruleTouch:'Stick runter + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.',
   // alte Hinweiszeile #hint (per CSS ausgeblendet)
   hintKey:'F/J Combo · V/U Heavy · 2× Richtung: Ausweichen, halten: Turbo · Ki-Schuss mit WASD lenken · Beam mit W/S lenken',
@@ -525,7 +527,7 @@ function applyMember(f,m){
   f.ctrl=m.ctrl;f.bot=m.ctrl<0;f.hp=m.hp;f.ki=m.ki;
 }
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
-const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false}));
+const projectiles = Array.from({length:MAX_PROJECTILES}, () => ({active:false,x:0,y:0,px:0,py:0,vx:0,vy:0,speed:560,r:0,life:0,owner:0,power:0,color:'',big:false,kind:0,hit:false,acc:0}));  // kind: 0 Ki-Schuss · 1 Klingenwelle · 2 Bodenwelle (Spezialangriffe)
 const particles = Array.from({length:MAX_PARTICLES}, () => ({active:false,x:0,y:0,vx:0,vy:0,life:0,max:1,size:1,color:'',blood:false}));
 const craters = Array.from({length:MAX_CRATERS}, () => ({active:false,x:0,w:0,depth:0}));
 // Blut am Boden, Druckwellen-Ringe, Wunden je Figur (feste Pools)
@@ -650,9 +652,10 @@ const MAX_GHOSTS = 16;
 const ghosts = Array.from({length:MAX_GHOSTS}, () => ({active:false,x:0,y:0,life:0,max:1,color:'#fff',lean:0}));
 let ghostCursor = 0;
 function addGhost(f) {
-  if(fxLevel===0&&f.dashTime<=0)return;
+  if(fxLevel===0&&f.dashTime<=0&&!f.spec)return null;
   const g=ghosts[ghostCursor];ghostCursor=(ghostCursor+1)%MAX_GHOSTS;
   g.active=true;g.x=f.x;g.y=f.y;g.life=g.max=f.dashTime>0?.28:.2;g.color=f.superTime>0?'#ffe66d':f.color;g.lean=clamp(f.vx/2400,-.35,.35);
+  return g;
 }
 function burst(x,y,color,count,power) {
   for(let i=0;i<count;i++) {
@@ -687,6 +690,7 @@ function makeCrater(x,big) {
 }
 function resetFighter(f,index) {
   f.ultra=false;f.xray=0;f.xrayHits=0;
+  f.spec=false;f.specT=0;f.specPh=0;f.specX=1;f.specY=0;f.specHit=false;f.specCd=0;f.specShow=0;
   clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;f.kiaiCooldown=0;f.r2Held=false;f.r2Time=0;f.comboCount=0;
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
@@ -1161,7 +1165,7 @@ function processTags(dt) {
     if(!tagReq[s])continue;tagReq[s]=0;
     for(let t=0;t<2;t++) {
       const f=fighters[t],tm=teams[t];
-      if(!f.active||tm.size<2||tm.cd>0||f.stun>0)continue;
+      if(!f.active||tm.size<2||tm.cd>0||f.stun>0||f.spec)continue;
       let k=-1;
       if(f.ctrl===s)k=nextMember(tm);
       else for(let i=0;i<tm.size;i++)if(i!==tm.cur&&!tm.m[i].out&&tm.m[i].ctrl===s){k=i;break;}
@@ -1172,7 +1176,7 @@ function processTags(dt) {
   const lv=BOT_LVL[settings.bot]||BOT_LVL[0];
   for(let t=0;t<2;t++) {
     const f=fighters[t],tm=teams[t];
-    if(!f.active||!f.bot||tm.size<2||tm.cd>0||f.stun>0||f.beam>0||f.hp>=MAX_HP*.3||Math.random()>=lv.tag)continue;
+    if(!f.active||!f.bot||tm.size<2||tm.cd>0||f.stun>0||f.spec||f.beam>0||f.hp>=MAX_HP*.3||Math.random()>=lv.tag)continue;
     let k=-1;for(let i=0;i<tm.size;i++)if(i!==tm.cur&&!tm.m[i].out&&tm.m[i].hp>f.hp+60&&(k<0||tm.m[i].hp>tm.m[k].hp))k=i;
     if(k>=0)tagIn(t,k,false);
   }
@@ -1189,7 +1193,7 @@ function spawnShot(f,index,big,input,c=0) {
   p.r=big?15+c*11:8;p.speed=big?430:560;
   p.active=true;p.owner=index;p.x=f.x+aimX/aimLength*(22+p.r);p.y=f.y-42+aimY/aimLength*12;p.px=p.x;p.py=p.y;
   p.vx=aimX/aimLength*p.speed;p.vy=aimY/aimLength*p.speed;
-  p.life=big?3:2.1;p.power=(big?22+c*18:8)*(f.superTime>0?1.4:1);p.color=f.color;p.big=big;
+  p.life=big?3:2.1;p.power=(big?22+c*18:8)*(f.superTime>0?1.4:1);p.color=f.color;p.big=big;p.kind=0;p.hit=false;
   if(big){burst(p.x,p.y,f.color,18,180);screenShake=Math.max(screenShake,3+c*3);if(fighters[1-index].active)f.vx-=aimX/aimLength*120;rumble(index,.3+c*.4,.4,90);}
   playSfx(big?'beam':'shot');
 }
@@ -1247,11 +1251,138 @@ function kiai(f,index,enemy) {
   f.comboCount=0;
   rumble(1-index,.5,.4,100);
 }
+// ---- Spezialangriffe je Figur: hoch + Druckwelle antippen (betäubt bleibt es immer die normale Druckwelle) ----
+// SPECIALS[c] (Index wie CHARS, null = keiner → normale Druckwelle): cost Ki, cd Abklingzeit ab Start (s),
+// ai = KI-Hinweis (Abstand min/max, Höhenunterschied dy, low = Ziel muss bodennah sein), start/update/pose je Figur.
+// Nur bestehende Pools: Projektile (kind 1 Klingenwelle, 2 Bodenwelle), Partikel, Ringe, Nachbilder, Krater. Läuft nur im Physikschritt (Pause = Standbild).
+const COMET_WIND=.16,COMET_DIVE=.42,COMET_SPEED=1250,BLADE_WIND=.16,BLADE_DUR=.42,QUAKE_WIND=.2,QUAKE_REC=.26,QUAKE_DIVE=1300;
+const FIRE_COLORS=['#fff3a0','#ffb23e','#ff6a1a','#e8331a'];
+let spK=0,spA=-1,spId="";  // Pose des Spezialangriffs für drawFighter (spK wie kind, spA wie atkT), gesetzt von specPose()
+function startSpecial(f,index,enemy) {
+  const s=SPECIALS[f.style];
+  if(!s||f.spec||f.stun>0||f.ki<s.cost||f.specCd>0||f.beam>0)return false;
+  f.ki-=s.cost;f.specCd=s.cd;f.spec=true;f.specT=0;f.specPh=0;f.specHit=false;f.specShow=1.1;f.ghostTimer=0;
+  f.punch=0;f.attackDuration=0;f.attackStep=0;f.attackType=0;f.comboQueued=false;f.comboWindow=0;f.punchBuffer=0;f.heavyBuffer=0;f.ultra=false;
+  f.smashHolding=false;f.cannonHolding=false;f.beamHeld=false;f.beamCharge=0;f.charging=false;f.guarding=false;f.boosting=false;f.boostKey=0;f.dashTime=0;
+  if(enemy.active&&Math.abs(enemy.x-f.x)>4)f.face=enemy.x>f.x?1:-1;
+  s.start(f,index,enemy);
+  return true;
+}
+function updateSpecial(f,index,enemy,dt){f.specT+=dt;SPECIALS[f.style].update(f,index,enemy,dt);}
+function endSpecial(f){f.spec=false;f.specPh=0;}
+function specPose(f){spK=0;spA=-1;spId="";const s=f.spec&&f.stun<=0?SPECIALS[f.style]:null;if(s){spId=s.id;s.pose(f);}}
+function takeProjectile(){const p=projectiles[projectileCursor];projectileCursor=(projectileCursor+1)%MAX_PROJECTILES;return p;}
+// Treffer eines Spezialangriffs (dir = Stoßrichtung ±1 für den Block): Block, Combo, Rückstoß, Blut
+function specHit(a,ai,v,dmg,dir,kx,ky,stun,color) {
+  const blocked=v.guarding&&v.face===-dir;
+  const scale=blocked?1:registerCombo(a,v),d=dmg*(a.superTime>0?1.35:1);
+  v.hp=Math.max(0,v.hp-d*(blocked?.2:scale));
+  if(blocked) {
+    v.hitFlash=.1;v.vx+=dir*140;
+    burst(v.x,v.y-42,'rgb(145,220,255)',14,130);
+    screenShake=Math.max(screenShake,3);hitStop=Math.max(hitStop,.04);
+    playSfx('block');rumble(1-ai,.3,.5,80);
+    return false;
+  }
+  v.stun=comboStun(v,stun);v.hitFlash=.22;v.vx=kx;v.vy=ky;
+  v.smashHolding=false;v.punch=0;v.attackDuration=0;v.attackStep=0;v.attackType=0;v.comboWindow=0;v.comboQueued=false;v.comboDisplay=0;
+  v.beamHeld=false;v.beamCharge=0;v.cannonHolding=false;if(v.spec)endSpecial(v);
+  impactBurst(v.x,v.y-44,color,true);
+  hurt(v,dir,d*scale,true);
+  screenShake=Math.max(screenShake,12);hitStop=Math.max(hitStop,.1);
+  playSfx('hit',true);rumble(1-ai,.9,.7,170);rumble(ai,.3,.4,60);
+  return true;
+}
+// BLAZE · Kometenfaust: kurzer Sprung, dann brennender Sturzflug schräg durch den Gegner (Phase 0 Ausholen, 1 Sturz)
+function startComet(f){f.vx*=.3;f.vy=-380;spawnRing(f.x,f.y-40,60,'#ffb23e',4,.25);playSfx('kiai');}
+function updComet(f,index,enemy,dt) {
+  if(f.specPh===0) {
+    f.vx*=Math.pow(.7,dt*60);f.vy*=Math.pow(.86,dt*60);
+    if(Math.random()<.8)addParticle(f.x+(Math.random()-.5)*30,f.y-20-Math.random()*40,(Math.random()-.5)*60,-60-Math.random()*90,FIRE_COLORS[(Math.random()*4)|0],2+Math.random()*2.5,.35);
+    if(f.specT<COMET_WIND)return;
+    let dx=f.face*.8,dy=.6;
+    if(enemy.active){dx=enemy.x-f.x;dy=enemy.y-f.y;}
+    if(Math.abs(dx)<12)dx=f.face*12;
+    const l=Math.hypot(dx,dy)||1;f.specX=dx/l;f.specY=dy/l;f.face=dx>0?1:-1;
+    f.specPh=1;f.specT=0;
+    spawnRing(f.x,f.y-40,90,'#ffe66d',5,.3);burst(f.x,f.y-40,'#ffb23e',16,220);flash(.12,'#ffb23e');
+    screenShake=Math.max(screenShake,4);playSfx('beam');rumble(index,.5,.6,120);
+    return;
+  }
+  f.vx=f.specX*COMET_SPEED;f.vy=f.specY*COMET_SPEED;
+  for(let i=0;i<2;i++)addParticle(f.x-f.specX*(10+Math.random()*30)+(Math.random()-.5)*16,f.y-40-f.specY*20+(Math.random()-.5)*20,-f.vx*.12+(Math.random()-.5)*80,-f.vy*.12-60-Math.random()*80,FIRE_COLORS[(Math.random()*4)|0],2+Math.random()*3,.3+Math.random()*.25);
+  if((f.ghostTimer-=dt)<=0){f.ghostTimer=.035;const g=addGhost(f);if(g){g.color='#ff8a2a';g.life=g.max=.3;}}
+  if(!f.specHit&&enemy.active&&enemy.dashInvuln<=0&&Math.hypot(enemy.x-f.x,enemy.y-f.y)<56) {
+    f.specHit=true;
+    const dir=f.specX>=0?1:-1;
+    if(specHit(f,index,enemy,26,dir,dir*760,Math.min(-260,f.specY*300-420),.55,'#ffb23e'))burst(enemy.x,enemy.y-44,'#ff6a1a',18,260);
+  }
+  const ground=f.specY>0&&f.y>=terrainY(f.x)-3;
+  if(ground||f.specT>=COMET_DIVE) {
+    if(ground)makeCrater(f.x,false);
+    endSpecial(f);f.vx=f.specX*260;f.vy=f.specY*160;
+  }
+}
+function poseComet(f){spK=6;spA=f.specPh===0?.15*Math.min(1,f.specT/COMET_WIND):.5;}
+// JIN · Klingenwelle: Schwerthieb, Sichel-Welle fliegt waagerecht übers Bild, zerschneidet Ki-Schüsse (eher langsam)
+function startBlade(f){f.vx*=.3;f.vy*=.3;playSfx('dash');}
+function updBlade(f,index,enemy,dt) {
+  f.vx*=Math.pow(.8,dt*60);f.vy*=Math.pow(.8,dt*60);
+  if(f.specPh===0&&f.specT>=BLADE_WIND) {
+    f.specPh=1;
+    const p=takeProjectile();
+    p.active=true;p.kind=1;p.hit=false;p.owner=index;p.big=false;p.r=34;p.speed=480;p.acc=0;
+    p.x=f.x+f.face*36;p.y=f.y-44;p.px=p.x;p.py=p.y;p.vx=f.face*p.speed;p.vy=0;p.life=2.4;p.power=20;p.color=f.superTime>0?'#ffe66d':f.color;
+    f.vx-=f.face*80;
+    spawnRing(p.x,p.y,70,'#ffffff',4,.25);burst(p.x,p.y,p.color,14,200);
+    screenShake=Math.max(screenShake,4);playSfx('beam');rumble(index,.4,.5,90);
+  }
+  if(f.specT>=BLADE_DUR)endSpecial(f);
+}
+function poseBlade(f){spK=4;spA=f.specPh===0?.4*f.specT/BLADE_WIND:Math.min(1,.4+.6*(f.specT-BLADE_WIND)/(BLADE_DUR-BLADE_WIND));}
+// TORAK · Erdbeben-Stampfer: am Boden Stampfen → Bodenwelle in Blickrichtung (schleudert bodennahe Gegner hoch, reißt Krater);
+// in der Luft erst Sturzflug nach unten (trifft, was darunter ist), bei der Landung Stampfen. Phase 0 Ausholen, 2 Sturz, 1 Nachwirkung
+function startQuake(f){f.vx*=.2;f.specPh=f.y<terrainY(f.x)-12?2:0;if(f.specPh===2)f.vy=-120;playSfx('dash');}
+function updQuake(f,index,enemy,dt) {
+  if(f.specPh===0){f.vx*=Math.pow(.7,dt*60);f.vy=0;if(f.specT>=QUAKE_WIND)quakeStomp(f,index,false);return;}
+  if(f.specPh===2) {
+    f.vx*=Math.pow(.8,dt*60);f.vy=Math.min(QUAKE_DIVE,f.vy+5200*dt);
+    if((f.ghostTimer-=dt)<=0){f.ghostTimer=.04;const g=addGhost(f);if(g)g.color='#ffd34d';}
+    if(Math.random()<.7)addParticle(f.x+(Math.random()-.5)*20,f.y-50-Math.random()*20,(Math.random()-.5)*50,-f.vy*.15,'#ffd34d',2+Math.random()*2,.25);
+    if(!f.specHit&&enemy.active&&enemy.dashInvuln<=0&&Math.abs(enemy.x-f.x)<50&&enemy.y-f.y>-20&&enemy.y-f.y<75) {
+      f.specHit=true;specHit(f,index,enemy,18,enemy.x>=f.x?1:-1,f.face*120,700,.6,'#ffd34d');
+    }
+    if(f.y>=terrainY(f.x)-3||f.specT>1.4)quakeStomp(f,index,true);
+    return;
+  }
+  f.vx*=Math.pow(.6,dt*60);f.vy=Math.max(0,f.vy);
+  if(f.specT>=QUAKE_REC)endSpecial(f);
+}
+function quakeStomp(f,index,landed) {
+  f.specPh=1;f.specT=0;f.vy=0;
+  const gx=f.x,gy=terrainY(gx);
+  if(landed)makeCrater(gx,false);
+  spawnRing(gx,gy-6,130,'#ffd29a',6,.4);burst(gx,gy-4,'rgb(255,188,112)',18,220);
+  for(let i=0;i<10;i++)addParticle(gx+(Math.random()-.5)*50,gy-4,(Math.random()-.5)*260,-220-Math.random()*260,i&1?'#8c96a8':'#5c6178',2.5+Math.random()*2.5,.8);
+  screenShake=Math.max(screenShake,10);flash(.12,'#ffe2b8');playSfx('crater');rumble(index,.8,.6,160);
+  const p=takeProjectile();
+  p.active=true;p.kind=2;p.hit=false;p.owner=index;p.big=false;p.r=30;p.speed=640;p.acc=110;
+  p.x=gx+f.face*30;p.y=terrainY(p.x);p.px=p.x;p.py=p.y;p.vx=f.face*p.speed;p.vy=0;p.life=1.15;p.power=22;p.color='#ffd34d';
+}
+function poseQuake(f){if(f.specPh===0){spK=2;spA=.17*Math.min(1,f.specT/QUAKE_WIND);}else{spK=8;spA=f.specPh===2?.5:Math.min(1,.5+.5*f.specT/QUAKE_REC);}}
+const SPECIALS=[
+  {id:"comet",cost:40,cd:2.6,ai:{min:70,max:430,dy:260,low:false},start:startComet,update:updComet,pose:poseComet,draw:drawCometTrail},   // BLAZE
+  null,null,
+  {id:"blade",cost:40,cd:3.2,ai:{min:170,max:640,dy:60,low:false},start:startBlade,update:updBlade,pose:poseBlade},   // JIN
+  null,null,null,null,
+  {id:"quake",cost:50,cd:3.6,ai:{min:0,max:460,dy:90,low:true},start:startQuake,update:updQuake,pose:poseQuake},      // TORAK
+  null
+];
 function updateKamehameha(f,index,enemy,input,dt) {
   f.kiaiCooldown=Math.max(0,f.kiaiCooldown-dt);
   // Kurzer Druck (< 0,24 s, darunter startet kein Kamehameha) = Druckwelle
   if(input.beam){if(!f.r2Held)f.r2Time=0;f.r2Time+=dt;}
-  else if(f.r2Held&&f.r2Time<.24)kiai(f,index,enemy);
+  else if(f.r2Held&&f.r2Time<.24){if(!(input.up&&f.stun<=0&&startSpecial(f,index,enemy)))kiai(f,index,enemy);}  // hoch + antippen: Spezialangriff (sonst/betäubt Druckwelle)
   f.r2Held=input.beam;
   f.beamCooldown=Math.max(0,f.beamCooldown-dt);
   f.beamHitCooldown=Math.max(0,f.beamHitCooldown-dt);
@@ -1321,14 +1452,18 @@ function damage(f,from,p) {
 // KI-Stärke (settings.bot): ändert nur die Entscheidungen der KI, nie Physik, Schaden oder Reichweiten.
 // think = Schritte bis zur nächsten Entscheidung (dazwischen bleibt die letzte), punch/heavy = Schwelle für den Angriffstakt,
 // block/shot = Wahrscheinlichkeit je Entscheidung, beamFull = Kamehameha nur bei vollem Ki, kiai = Chance je Schritt, sich aus Combos zu befreien
-// tag = Chance je Schritt, bei wenig Leben den Kämpfer zu wechseln
-const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25},{think:6,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5},{think:2,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8}];
+// tag = Chance je Schritt, bei wenig Leben den Kämpfer zu wechseln · spec = Chance, den Spezialangriff zu nutzen (einmal je Bereitschaft entschieden)
+const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25,spec:.2},{think:6,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5,spec:.45},{think:2,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8,spec:.7}];
 const BOT_KEYS=['right','left','up','down','beam','heavy','punch','shot','charge','dash'];
-const BOT_MEM=[0,1].map(()=>({t:0,ud:false,wantUltra:false,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
+const BOT_MEM=[0,1].map(()=>({t:0,ud:false,wantUltra:false,sd:false,sdT:0,wantSpec:false,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
 function updateBot(f,target,input,index) {
   const lv=BOT_LVL[settings.bot]||BOT_LVL[0],mem=BOT_MEM[index];
   // Bei voller Ki einmal entscheiden: ULTRA-SCHLAG versuchen (je nach Stärke) statt Super/Kamehameha
   if(f.ki<100)mem.ud=false;else if(!mem.ud){mem.ud=true;mem.wantUltra=Math.random()<lv.ultra;}
+  // Spezialangriff: bei Bereitschaft (genug Ki, keine Abklingzeit) per Chance entscheiden, alle 3 s neu; nie, solange der ULTRA-SCHLAG gewünscht ist
+  const sp=SPECIALS[f.style];
+  if(!sp||f.specCd>0)mem.sd=false;else if(!mem.sd||(mem.sdT-=DT)<=0){mem.sd=true;mem.sdT=3;mem.wantSpec=Math.random()<lv.spec;}  // alle 3 s neu würfeln
+  const save=!!sp&&mem.sd&&mem.wantSpec&&f.ki<sp.cost;  // Wunsch gewürfelt, aber zu wenig Ki: sparen (keine Ki-Ausgaben, auf Abstand laden)
   if(--mem.t<=0) {
     mem.t=lv.think;
     const dx=target.x-f.x,dy=target.y-f.y,d=Math.abs(dx);
@@ -1341,23 +1476,29 @@ function updateBot(f,target,input,index) {
       mem.down=true;
       mem.left=dx>0;mem.right=dx<0;
     }
-    mem.beam=d<360&&f.beamCooldown<=0&&f.ki>=(lv.beamFull?100:BEAM_COST)&&!(mem.wantUltra&&f.ki>=100);
+    mem.beam=!save&&d<360&&f.beamCooldown<=0&&f.ki>=(lv.beamFull?100:BEAM_COST)&&!(mem.wantUltra&&f.ki>=100);
     const attackPulse=Math.sin(clock*7.5);
     mem.heavy=false;mem.punch=false;mem.shot=false;
     if(d<125&&Math.abs(dy)<100&&f.punchCooldown<=0) {
       if(mem.wantUltra&&f.ki>=100)mem.heavy=true;
-      else if(f.ki>=12&&attackPulse>lv.heavy)mem.heavy=true;
+      else if(!save&&f.ki>=12&&attackPulse>lv.heavy)mem.heavy=true;
       else mem.punch=attackPulse>lv.punch;
-    } else if(d<590&&f.fire<=0&&f.ki>=7)mem.shot=Math.random()<lv.shot;
-    mem.charge=f.ki<35&&d>220;
+    } else if(!save&&d<590&&f.fire<=0&&f.ki>=7)mem.shot=Math.random()<lv.shot;
+    mem.charge=(f.ki<35||save)&&d>220;
     mem.dash=d>520&&!mem.charge;
+    // Spezialangriff nur bei passendem Abstand/Lage (Hinweis in SPECIALS[c].ai)
+    if(sp&&mem.wantSpec&&mem.sd&&!(mem.wantUltra&&f.ki>=100)&&f.stun<=0&&!f.beamHeld&&f.beam<=0&&f.punch<=0&&target.active) {
+      const a=sp.ai,low=target.y>terrainY(target.x)-70;
+      const fit=a.low?low&&((d<=a.max&&Math.abs(dy)<a.dy)||(d<70&&dy>60)):d>=a.min&&d<=a.max&&Math.abs(dy)<a.dy;
+      if(fit&&startSpecial(f,index,target))mem.wantSpec=false;
+    }
   }
   input.aimX=mem.aimX;input.aimY=mem.aimY;
   for(const k of BOT_KEYS)input[k]=mem[k];
   // Kamehameha halten/loslassen jeden Schritt (sonst würde die Verzögerung die Ladung verändern)
   if(f.beamHeld)input.beam=f.beamCharge<.52;
   // KI befreit sich manchmal aus langen Combos mit der Druckwelle
-  if(f.stun>0&&f.comboCount>=3&&!f.beamHeld&&Math.random()<lv.kiai)kiai(f,1,target);
+  if(f.stun>0&&f.comboCount>=3&&!f.beamHeld&&Math.random()<lv.kiai)kiai(f,index,target);
 }
 function startPunch(f,step,type=0) {
   f.attackStep=step;
@@ -1395,41 +1536,42 @@ function updateFighter(f,index,dt) {
   f.comboWindow=Math.max(0,f.comboWindow-dt);f.comboDisplay=Math.max(0,f.comboDisplay-dt);
   if(f.punch<=0&&f.comboQueued)startPunch(f,f.queuedAttack,f.queuedAttackType);
   if(f.comboWindow<=0&&f.punch<=0&&!f.comboQueued){f.attackStep=0;f.attackType=0;f.heavyPowered=false;}
-  f.superTime=Math.max(0,f.superTime-dt);
+  f.superTime=Math.max(0,f.superTime-dt);f.specCd=Math.max(0,f.specCd-dt);
   const enemy=fighters[1-index];
   let input=readInput(f,index);
   if(f.bot&&enemy.active) {
     updateBot(f,enemy,input,index);
     input.super=f.ki>=100&&f.superTime<=0&&!BOT_MEM[index].wantUltra;
   }
-  f.charging=input.charge&&!f.beamHeld;
+  f.charging=input.charge&&!f.beamHeld&&!f.spec;
   if(input.super&&!f.superHeld&&f.ki>=100&&f.superTime<=0) {
     f.ki=0;f.superTime=12;
     burst(f.x,f.y-52,'rgb(255,224,91)',32,210);
     screenShake=Math.max(screenShake,7);
   }
   f.superHeld=input.super;
-  if(enemy.active&&Math.abs(enemy.x-f.x)>4)f.face=enemy.x>f.x?1:-1;
+  if(enemy.active&&Math.abs(enemy.x-f.x)>4&&!f.spec)f.face=enemy.x>f.x?1:-1;
   if(f.stun>0)f.stun-=dt;
   const stunned=f.stun>0;
+  if(stunned&&f.spec)endSpecial(f);
   if(stunned){f.smashHolding=false;f.cannonHolding=false;}
   const backingAway=f.face>0?input.left:input.right;
-  f.guarding=enemy.active&&(input.guard||(input.down&&backingAway))&&!f.charging&&!stunned&&!input.punch&&!input.heavy;
+  f.guarding=enemy.active&&(input.guard||(input.down&&backingAway))&&!f.charging&&!stunned&&!input.punch&&!input.heavy&&!f.spec;
   // Verfolgungs-Dash: kurz nach einem Finisher ○ -> zum weggeschleuderten Gegner teleportieren
-  if(input.dash&&!f.dashBtnHeld&&!stunned&&f.chaseWindow>0&&enemy.active&&f.ki>=8) {
+  if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.spec&&f.chaseWindow>0&&enemy.active&&f.ki>=8) {
     f.ki-=8;f.chaseWindow=0;f.dashCooldown=.3;f.smashHolding=false;
     burst(f.x,f.y-40,f.color,14,160);
     f.x=clamp(enemy.x-f.face*55,-worldRadius,worldRadius);f.y=Math.min(enemy.y,terrainY(f.x));
     f.vx=enemy.vx*.8;f.vy=enemy.vy*.8;f.px=f.x;f.py=f.y;
     enemy.stun=Math.max(enemy.stun,.28);
     burst(f.x,f.y-40,'rgb(255,255,255)',12,140);playSfx('shot');rumble(index,.2,.4,60);
-  } else if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.charging&&f.dashCooldown<=0) {
+  } else if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.spec&&!f.charging&&f.dashCooldown<=0) {
     // ○ antippen: Ausweichen in alle 8 Richtungen (ohne Richtung: vom Gegner weg)
     const dashAx=(input.right?1:0)-(input.left?1:0),dashAy=(input.down?1:0)-(input.up?1:0);
     startDash(f,dashAx||dashAy?dashAx:(enemy.active?-f.face:f.face),dashAx||dashAy?dashAy:0);
   }
   f.dashBtnHeld=input.dash;
-  if(!stunned&&!f.charging&&f.dashCooldown<=0&&!input.stick) {  // Doppeltipp nicht mit dem Joystick (sonst versehentliches Ausweichen)
+  if(!stunned&&!f.spec&&!f.charging&&f.dashCooldown<=0&&!input.stick) {  // Doppeltipp nicht mit dem Joystick (sonst versehentliches Ausweichen)
     if(input.left&&!f.dashLeftHeld) {
       if(f.dashTapLeft>0){startDash(f,-1,0);f.dashTapLeft=0;f.boostKey=-1;}
       else f.dashTapLeft=.27;
@@ -1444,9 +1586,10 @@ function updateFighter(f,index,dt) {
   if(f.boostKey&&!(f.boostKey<0?input.left:input.right))f.boostKey=0;
   const bAx=(input.right?1:0)-(input.left?1:0),bAy=(input.down?1:0)-(input.up?1:0);
   const wasBoosting=f.boosting;
-  f.boosting=(input.dash||f.boostKey!==0)&&(bAx!==0||bAy!==0)&&!stunned&&!f.charging&&!f.guarding&&!f.smashHolding;
+  f.boosting=(input.dash||f.boostKey!==0)&&(bAx!==0||bAy!==0)&&!stunned&&!f.charging&&!f.guarding&&!f.smashHolding&&!f.spec;
   if(f.boosting&&!wasBoosting&&f.dashTime<=0){spawnRing(f.x,f.y-40,70,f.superTime>0?'#ffe66d':f.color,3,.25);playSfx('dash');}
-  if(!stunned) {
+  if(f.spec)updateSpecial(f,index,enemy,dt);  // Spezialangriff steuert die Bewegung selbst
+  else if(!stunned) {
     if(f.charging) {
       f.vx=0;f.vy=0;
     } else if(f.smashHolding) {
@@ -1612,7 +1755,7 @@ function updateFighter(f,index,dt) {
   } else {f.vx*=.985;f.vy+=260*dt;updateKamehameha(f,index,enemy,input,dt);}
   if(!input.punch)f.punchHeld=false;
   if(!input.heavy)f.heavyHeld=false;
-  if(!enemy.active&&Math.abs(f.vx)>6)f.face=f.vx>0?1:-1;
+  if(!enemy.active&&Math.abs(f.vx)>6&&!f.spec)f.face=f.vx>0?1:-1;
   f.x+=f.vx*dt;f.y+=f.vy*dt;
   const floor=terrainY(f.x);
   if(f.y>floor){f.y=floor;f.vy=Math.min(0,f.vy)*-.15;f.vx*=.97;}
@@ -1636,6 +1779,31 @@ function updateProjectiles(dt) {
     p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
     if(p.life<=0){p.active=false;continue;}
     const enemy=fighters[1-p.owner];
+    if(p.kind===1) {
+      // Klingenwelle: zerschneidet gegnerische Ki-Schüsse, ignoriert den Boden, verschwindet beim Treffer
+      for(let k=0;k<MAX_PROJECTILES;k++) {
+        const q=projectiles[k];
+        if(q.active&&q.kind===0&&q.owner!==p.owner&&Math.abs(q.x-p.x)<26+q.r&&Math.abs(q.y-p.y)<60+q.r){q.active=false;burst(q.x,q.y,q.color,10,150);spawnRing(q.x,q.y,30,'#fff',2,.18);}
+      }
+      if(Math.random()<.5)addParticle(p.x-Math.sign(p.vx)*20,p.y+(Math.random()-.5)*70,-p.vx*.1,(Math.random()-.5)*30,Math.random()<.4?'#fff':p.color,1.5+Math.random()*1.5,.25);
+      if(enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<32&&Math.abs(p.y-(enemy.y-42))<66) {
+        const dir=p.vx>=0?1:-1;
+        specHit(fighters[p.owner],p.owner,enemy,p.power,dir,dir*380,-170,.45,p.color);p.active=false;
+      }
+      continue;
+    }
+    if(p.kind===2) {
+      // Bodenwelle: folgt dem Boden, reißt alle 230 px einen Krater, schleudert bodennahe Gegner hoch (einmal)
+      p.y=terrainY(p.x);p.acc+=Math.abs(p.vx)*dt;
+      if(p.acc>=230){p.acc-=230;makeCrater(p.x,false);p.y=terrainY(p.x);p.py=p.y;}
+      if(Math.random()<.7)addParticle(p.x+(Math.random()-.5)*30,p.y-4,(Math.random()-.5)*120,-160-Math.random()*200,Math.random()<.5?'#8c96a8':'#ffd29a',2+Math.random()*2.5,.55);
+      if(!p.hit&&enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<44&&enemy.y>terrainY(enemy.x)-85) {
+        p.hit=true;const dir=p.vx>=0?1:-1;
+        specHit(fighters[p.owner],p.owner,enemy,p.power,dir,dir*160,-760,.7,'#ffd34d');
+      }
+      if(Math.abs(p.x)>=worldRadius)p.active=false;
+      continue;
+    }
     if(enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<p.r+20&&Math.abs(p.y-(enemy.y-42))<p.r+35) {
       damage(enemy,fighters[p.owner],p);p.active=false;continue;
     }
@@ -1682,6 +1850,7 @@ function update(dt) {
   }
   processTags(dt);
   for(let t=0;t<2;t++)if(fighters[t].tagShow>0)fighters[t].tagShow-=dt;
+  for(let t=0;t<2;t++)if(fighters[t].specShow>0)fighters[t].specShow-=dt;
   clock+=dt;updateFighter(fighters[0],0,dt);
   if(fighters[1].active) {
     updateFighter(fighters[1],1,dt);
@@ -1878,6 +2047,9 @@ function drawFighter(f,alpha) {
   ctx.globalAlpha=clamp(1-speed/900,.18,.55);ctx.fillStyle='#050a12';ctx.beginPath();ctx.ellipse(x,floor+5,(12+speed*.012)*sz,3,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   ctx.save();ctx.translate(x+attack*(f.attackType===4?10:4),y+bob);ctx.scale(f.face*sz,sz);ctx.scale(1,f.guarding?.84:.9);ctx.rotate(clamp(f.vx*f.face/2200,-.16,.16)+attack*(f.attackType===1?-.12:f.attackType===2?.2:f.attackType===4?.3:.1)-(f.stun>0?.24:0));
   ctx.lineCap='round';ctx.lineJoin='round';
+  specPose(f);
+  // Kometenfaust: im Sturz in Flugrichtung neigen (keine Aura: wirkte als bräunliches Oval, Feuer kommt von Schweif + Partikeln)
+  if(spId==='comet'&&f.specPh===1)ctx.rotate(clamp(f.specY,-.9,.9)*.55);
   if(f.guarding) {
     ctx.globalAlpha=.16;ctx.fillStyle='#78eaff';ctx.beginPath();
     ctx.moveTo(5,-62);ctx.quadraticCurveTo(39,-38,7,-13);ctx.closePath();ctx.fill();
@@ -1954,11 +2126,11 @@ function drawFighter(f,alpha) {
   const smashing=f.smashHolding&&!stunned,smashC=smashing?Math.min(1,f.smashCharge):0;
   if(smashing)ctx.translate(Math.sin(clock*70)*smashC*1.3,0);
   // Beim Aufladen in der Aushol-Pose verharren (atkT .15 = volles Ausholen, noch keine Wischspur)
-  const atkT=smashing?.15:!stunned&&f.punch>0&&f.attackDuration>0?1-f.punch/f.attackDuration:-1;
+  const atkT=spK?spA:smashing?.15:!stunned&&f.punch>0&&f.attackDuration>0?1-f.punch/f.attackDuration:-1;
   const ext=atkT<0?0:atkT<.18?-.4*ease(atkT/.18):atkT<.4?-.4+1.4*ease((atkT-.18)/.22):atkT<.68?1:1-(atkT-.68)/.32;
   const k=clamp(ext,0,1),u=clamp((ext+.4)/1.4,0,1);
   // 1 Gerade hinten · 2 Kick · 3 Uppercut · 4 Hammer · 5 Heavy · 6 Rush · 7 Jab · 8 Stark tief · 9 Stark hoch
-  const kind=atkT<0?0:smashing?(f.bufferedHeavyType===6?8:f.bufferedHeavyType===5?9:5):f.attackType===6?8:f.attackType===5?9:f.attackType===4?6:f.attackType===3?5:f.attackType===2?4:f.attackType===1?3:f.attackStep===3?2:f.attackStep===2?1:7;
+  const kind=spK?spK:atkT<0?0:smashing?(f.bufferedHeavyType===6?8:f.bufferedHeavyType===5?9:5):f.attackType===6?8:f.attackType===5?9:f.attackType===4?6:f.attackType===3?5:f.attackType===2?4:f.attackType===1?3:f.attackStep===3?2:f.attackStep===2?1:7;
   let hipY=-24,neckX=2,neckY=-50+breathe*.4;
   let bkX,bkY,bfX,bfY,fkX,fkY,ffX,ffY,beX=0,beY=0,bhX,bhY,feX=0,feY=0,fhX,fhY;
   if(f.charging){const ct=clamp(f.ki/100,0,1),pump=Math.sin(clock*9)*.8*(1+ct);const sw=Math.sin(f.t*2.2)*.8;hipY=-22.5+pump*.3;neckX=1;neckY=-49+pump+Math.sin(clock*31)*(.4+ct*.8);bkX=-2+sw;bkY=-11.5;bfX=-5+sw*.5;bfY=0;fkX=4-sw;fkY=-11.5;ffX=6-sw*.5;ffY=0;}
@@ -2024,7 +2196,7 @@ function drawFighter(f,alpha) {
     ctx.globalAlpha=1;
   }
   // Hinter dem Körper: Schwert auf dem Rücken, Schwanz
-  if(L.sword) {
+  if(L.sword&&spId!=='blade') {
     ctx.strokeStyle='#060a14';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-5,hipY+4);ctx.lineTo(-9,neckY-5);ctx.lineTo(-11,neckY-14);ctx.stroke();
     ctx.strokeStyle=ssj?'#fff2b0':'#d9e4f2';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(-5,hipY+4);ctx.lineTo(-9,neckY-5);ctx.stroke();
     ctx.strokeStyle='#c9a640';ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(-13,neckY-4);ctx.lineTo(-5,neckY-6);ctx.stroke();
@@ -2091,6 +2263,14 @@ function drawFighter(f,alpha) {
   ctx.moveTo(-3,hipY+1);ctx.quadraticCurveTo(-7-wind*5,hipY+3+wave*.6,-10-wind*9,hipY+7+lift*.4-wave);ctx.stroke();
   const gore=f.wounds?settings.gore:0,woundMax=gore===2?5:3;
   if(gore) drawWounds(f,false,hipY,neckX,neckY,0,0,woundMax,gore);
+  if(spId==='blade'&&L.sword) {
+    // Klingenwelle: Schwert in der vorderen Hand (verlängert den Unterarm), heller Bogen beim Hieb
+    const dx=fhX-feX,dy=fhY-feY,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,tx=fhX+ux*30,ty=fhY+uy*30;
+    if(spA>.18&&spA<.62){ctx.globalAlpha=(1-(spA-.18)/.44)*.7;ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(sx,sy,Math.hypot(tx-sx,ty-sy),-1.9,Math.atan2(ty-sy,tx-sx));ctx.stroke();ctx.globalAlpha=1;}
+    ctx.strokeStyle='#060a14';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(fhX-ux*5,fhY-uy*5);ctx.lineTo(tx,ty);ctx.stroke();
+    ctx.strokeStyle=ssj?'#fff2b0':'#d9e4f2';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(fhX+ux*4,fhY+uy*4);ctx.lineTo(tx,ty);ctx.stroke();
+    ctx.strokeStyle='#c9a640';ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(fhX+ux*3-uy*4,fhY+uy*3+ux*4);ctx.lineTo(fhX+ux*3+uy*4,fhY+uy*3-ux*4);ctx.stroke();
+  }
   ctx.fillStyle=f.guarding?'#9cefff':lineColor;ctx.strokeStyle='#060a14';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(fhX,fhY,f.guarding?4.6:kind===5||kind>=8?4+k*2.2:4,0,Math.PI*2);ctx.fill();ctx.stroke();
   // Ladekugel beim Aufladen: wächst, bei voller Ladung weißes Blitzen
   if(smashing) {
@@ -2214,8 +2394,43 @@ function drawKamehameha(f) {
   ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
   ctx.restore();
 }
+// Klingenwelle (kind 1): Sichel aus drei Bögen, Öffnung nach hinten, dazu Nachzieh-Streifen
+function drawBladeWave(p,x,y) {
+  const d=p.vx>=0?1:-1,fade=clamp(p.life/.3,0,1),cx=x-d*40,a0=d>0?-1.05:Math.PI-1.05,a1=a0+2.1;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  for(let k=0;k<3;k++){ctx.globalAlpha=fade*(k===0?.28:k===1?.8:.95);ctx.strokeStyle=k===2?'#fff':p.color;ctx.lineWidth=k===0?20:k===1?9:3;ctx.beginPath();ctx.arc(cx,y,48-k*2,a0,a1);ctx.stroke();}
+  ctx.globalAlpha=fade*.35;ctx.strokeStyle=p.color;ctx.lineWidth=2;ctx.beginPath();
+  for(let i=-2;i<=2;i++){const yy=y+i*14,s=Math.abs(i);ctx.moveTo(x-d*(14+s*6),yy);ctx.lineTo(x-d*(70+(2-s)*24),yy);}
+  ctx.stroke();ctx.restore();
+}
+// Bodenwelle (kind 2): leuchtende Kuppel am Boden, dahinter aufbrechende Felsbrocken
+function drawQuakeWave(p,x,y) {
+  const d=p.vx>=0?1:-1,fade=clamp(p.life/.25,0,1),ph=p.life*40;
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  ctx.globalAlpha=.3*fade;ctx.fillStyle='#ff9a3a';ctx.beginPath();ctx.ellipse(x,y,64,44,0,Math.PI,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.45*fade;ctx.fillStyle='#ffd29a';ctx.beginPath();ctx.ellipse(x,y,40,30,0,Math.PI,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.9*fade;ctx.strokeStyle='#fff3d0';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(x,y,52,36,0,Math.PI,Math.PI*2);ctx.stroke();
+  ctx.restore();
+  ctx.globalAlpha=fade;ctx.fillStyle='#4a4f60';ctx.strokeStyle='#060a14';ctx.lineWidth=1.5;ctx.lineJoin='round';
+  for(let i=0;i<5;i++) {
+    const bx=x-d*(i*16-8),h=(34-i*5)*(.7+.3*Math.sin(ph+i*1.7));
+    ctx.beginPath();ctx.moveTo(bx-7,y+3);ctx.lineTo(bx+d*2,y-h);ctx.lineTo(bx+7,y+3);ctx.closePath();ctx.fill();ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+// Kometenfaust: Flammenschweif entgegen der Flugrichtung (Weltkoordinaten, vor den Figuren)
+function drawCometTrail(f,alpha) {
+  if(f.specPh!==1)return;
+  const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha-40,nx=-f.specX,ny=-f.specY,fl=Math.sin(f.specT*90)*.12;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  for(let k=0;k<4;k++){const len=(170-k*36)*(1+fl);ctx.globalAlpha=k===3?.9:.3+k*.16;ctx.strokeStyle=FIRE_COLORS[3-k];ctx.lineWidth=40-k*10;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+nx*len,y+ny*len);ctx.stroke();}
+  ctx.globalAlpha=.5;ctx.fillStyle='#ffb23e';ctx.beginPath();ctx.arc(x+f.specX*6,y+f.specY*6,24,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
 function drawProjectile(p,alpha) {
   const x=p.px+(p.x-p.px)*alpha,y=p.py+(p.y-p.py)*alpha;
+  if(p.kind===1){drawBladeWave(p,x,y);return;}
+  if(p.kind===2){drawQuakeWave(p,x,y);return;}
   const speed=Math.hypot(p.vx,p.vy)||1,ux=p.vx/speed,uy=p.vy/speed;
   const tk=p.r/8;
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
@@ -2314,10 +2529,19 @@ function render(alpha) {
     }
   }
   ctx.globalAlpha=1;
+  for(let i=0;i<2;i++){const f=fighters[i],s=f.active&&f.spec&&f.stun<=0?SPECIALS[f.style]:null;if(s&&s.draw)s.draw(f,alpha);}
   for(let i=0;i<MAX_PROJECTILES;i++)if(projectiles[i].active)drawProjectile(projectiles[i],alpha);
   // ULTRA-SCHLAG: Welt abdunkeln (riesiges Rechteck in Weltkoordinaten), Kämpfer bleiben hell
   if(ultra.on){ctx.globalAlpha=.6*Math.min(1,ultra.t/.05);ctx.fillStyle='#02040a';ctx.fillRect(-1e6,-1e6,2e6,2e6);ctx.globalAlpha=1;}
   drawFighter(fighters[0],alpha);drawFighter(fighters[1],alpha);
+  // Name des Spezialangriffs kurz über dem Kopf (in Weltkoordinaten, damit er beim Neigen gerade bleibt)
+  ctx.textAlign='center';ctx.font='900 12px system-ui';
+  for(let i=0;i<2;i++) {
+    const f=fighters[i],nm=TXT.specNames[f.style];if(!f.active||!(f.specShow>0)||!nm)continue;
+    const x=f.px+(f.x-f.px)*alpha,y=Math.max(renderCameraY-H/(2*renderZoom)+80/renderZoom,f.py+(f.y-f.py)*alpha-(f.tagShow>0?128:112)*((f.look&&f.look.size)||1));  // nie über/in der HUD-Zone
+    ctx.globalAlpha=clamp(f.specShow/.3,0,1);ctx.fillStyle='#050914';ctx.fillText(nm,x+1,y+1);ctx.fillStyle='#ffe66d';ctx.fillText(nm,x,y);
+  }
+  ctx.globalAlpha=1;
   ctx.restore();
   if(ultra.on) {
     const a=Math.min(1,ultra.t/.04)*(ultra.t>ULTRA_T-.04?(ULTRA_T-ultra.t)/.04:1);
