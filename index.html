@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25g</p>
+        <p class="version">v2026-11-25h</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -198,7 +198,7 @@ const TXT={
   // HUD und Ergebnis
   world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
-  specNames:['KOMETENFAUST','BLITZ-SALVE','','KLINGENWELLE','','SICHELSCHEIBE','','','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
+  specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','','','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
   botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
@@ -1255,6 +1255,7 @@ function kiai(f,index,enemy) {
   if(!enemy.active||enemy.dashInvuln>0)return;
   const dx=enemy.x-cx,dy=enemy.y-40-cy,d=Math.hypot(dx,dy);
   if(d>KIAI_RADIUS+20)return;
+  if(parry(enemy,index))return;
   const nx=d>1?dx/d:(enemy.x>=f.x?1:-1),ny=d>1?dy/d:0;
   enemy.vx=nx*560;enemy.vy=ny*420-140;
   enemy.stun=Math.max(enemy.stun,.35);enemy.hitFlash=.18;enemy.hp=Math.max(0,enemy.hp-4);
@@ -1324,7 +1325,7 @@ function updComet(f,index,enemy,dt) {
   f.vx=f.specX*COMET_SPEED;f.vy=f.specY*COMET_SPEED;
   for(let i=0;i<2;i++)addParticle(f.x-f.specX*(10+Math.random()*30)+(Math.random()-.5)*16,f.y-40-f.specY*20+(Math.random()-.5)*20,-f.vx*.12+(Math.random()-.5)*80,-f.vy*.12-60-Math.random()*80,FIRE_COLORS[(Math.random()*4)|0],2+Math.random()*3,.3+Math.random()*.25);
   if((f.ghostTimer-=dt)<=0){f.ghostTimer=.035;const g=addGhost(f);if(g){g.color='#ff8a2a';g.life=g.max=.3;}}
-  if(!f.specHit&&enemy.active&&enemy.dashInvuln<=0&&Math.hypot(enemy.x-f.x,enemy.y-f.y)<56) {
+  if(!f.specHit&&enemy.active&&enemy.dashInvuln<=0&&Math.hypot(enemy.x-f.x,enemy.y-f.y)<56&&!parry(enemy,index)) {
     f.specHit=true;
     const dir=f.specX>=0?1:-1;
     if(specHit(f,index,enemy,26,dir,dir*760,Math.min(-260,f.specY*300-420),.55,'#ffb23e'))burst(enemy.x,enemy.y-44,'#ff6a1a',18,260);
@@ -1361,7 +1362,7 @@ function updQuake(f,index,enemy,dt) {
     f.vx*=Math.pow(.8,dt*60);f.vy=Math.min(QUAKE_DIVE,f.vy+5200*dt);
     if((f.ghostTimer-=dt)<=0){f.ghostTimer=.04;const g=addGhost(f);if(g)g.color='#ffd34d';}
     if(Math.random()<.7)addParticle(f.x+(Math.random()-.5)*20,f.y-50-Math.random()*20,(Math.random()-.5)*50,-f.vy*.15,'#ffd34d',2+Math.random()*2,.25);
-    if(!f.specHit&&enemy.active&&enemy.dashInvuln<=0&&Math.abs(enemy.x-f.x)<50&&enemy.y-f.y>-20&&enemy.y-f.y<75) {
+    if(!f.specHit&&enemy.active&&enemy.dashInvuln<=0&&Math.abs(enemy.x-f.x)<50&&enemy.y-f.y>-20&&enemy.y-f.y<75&&!parry(enemy,index)) {
       f.specHit=true;specHit(f,index,enemy,18,enemy.x>=f.x?1:-1,f.face*120,700,.6,'#ffd34d');
     }
     if(f.y>=terrainY(f.x)-3||f.specT>1.4)quakeStomp(f,index,true);
@@ -1512,6 +1513,7 @@ function updSickleShot(p,enemy,dt) {
   const gy=terrainY(p.x)-20;if(p.y>gy){p.y=gy;p.vy=Math.min(0,p.vy);if(Math.random()<.6)addParticle(p.x,gy+16,(Math.random()-.5)*160,-120-Math.random()*120,'#ffd29a',2,.35);}
   if(Math.random()<.5)addParticle(p.x+(Math.random()-.5)*30,p.y+(Math.random()-.5)*8,-p.vx*.08,-p.vy*.08,Math.random()<.4?'#fff':p.color,1.6,.22);
   if(!p.hit&&enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<34&&Math.abs(p.y-(enemy.y-42))<52) {
+    if(parry(enemy,p.owner)){p.active=false;return;}
     p.hit=true;const dir=p.vx>=0?1:-1;
     specHit(o,p.owner,enemy,p.power,dir,dir*300,-220,.4,p.color);
   }
@@ -1557,12 +1559,12 @@ function updFusion(f,index,enemy,dt) {
     screenShake=Math.max(screenShake,2.5);
     if((f.ghostTimer-=dt)<=0) {
       f.ghostTimer=FUSION_TICK;
-      if(enemy.active&&enemy.dashInvuln<=0&&fusionInBeam(f,enemy))specTick(f,index,enemy,FUSION_DMG,f.face,'#d8c8ff');
+      if(enemy.active&&enemy.dashInvuln<=0&&fusionInBeam(f,enemy)&&!parry(enemy,index))specTick(f,index,enemy,FUSION_DMG,f.face,'#d8c8ff');
     }
     if(f.specT>=FUSION_T) {
       const ex=sx+ux*f.specX,ey=sy+uy*f.specX;
       spawnRing(ex,ey,80,'#ffffff',5,.3);burst(ex,ey,FUSION_RED,12,240);burst(ex,ey,FUSION_BLUE,12,240);
-      if(enemy.active&&enemy.dashInvuln<=0&&fusionInBeam(f,enemy))specHit(f,index,enemy,FUSION_END,f.face,f.face*620,-300,.5,'#d8c8ff');
+      if(enemy.active&&enemy.dashInvuln<=0&&fusionInBeam(f,enemy)&&!parry(enemy,index))specHit(f,index,enemy,FUSION_END,f.face,f.face*620,-300,.5,'#d8c8ff');
       f.specPh=2;f.specT=0;
     }
     return;
@@ -1605,12 +1607,116 @@ function drawFusion(f,alpha) {
   ctx.globalAlpha=fade;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(sx,sy,10*pulse,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
+// SORA · Blinkschlag: flackert und verschwindet (Phase 0, unverwundbar), taucht hinter dem Gegner auf (1) und schlägt ihn weg (2 Nachwirkung).
+// Fehlschlag (Gegner ausgewichen/zu weit) → Phase 3: lange Nachwirkung, verwundbar
+const BLINK_OUT=.2,BLINK_IN=.13,BLINK_REC=.22,BLINK_MISS=.5,BLINK_POW=22,BLINK_REACH=100,BLINK_BEHIND=58;
+function startBlink(f){f.vx*=.2;f.vy*=.2;f.dashInvuln=Math.max(f.dashInvuln,BLINK_OUT+.04);spawnRing(f.x,f.y-40,40,'#ffffff',2,.2);playSfx('dash');}
+function updBlink(f,index,enemy,dt) {
+  if(f.specPh===0) {
+    f.vx=0;f.vy=0;
+    if(Math.random()<.6)addParticle(f.x+(Math.random()-.5)*26,f.y-10-Math.random()*60,(Math.random()-.5)*40,-40-Math.random()*60,Math.random()<.5?'#fff':f.color,1.6,.25);
+    if(f.specT<BLINK_OUT)return;
+    const g=addGhost(f);if(g){g.color='#ffffff';g.life=g.max=.3;}
+    spawnRing(f.x,f.y-40,50,f.color,3,.2);
+    let nx=f.x+f.face*220,ny=f.y;
+    if(enemy.active){const side=enemy.x>=f.x?1:-1;nx=enemy.x+side*BLINK_BEHIND;ny=enemy.y;f.face=-side;}
+    nx=clamp(nx,-worldRadius,worldRadius);ny=Math.min(ny,terrainY(nx));
+    f.x=nx;f.y=ny;f.px=nx;f.py=ny;f.vx=0;f.vy=0;
+    spawnRing(nx,ny-40,70,'#ffffff',4,.22);burst(nx,ny-40,f.color,12,200);
+    screenShake=Math.max(screenShake,3);playSfx('shot');rumble(index,.3,.5,60);
+    f.specPh=1;f.specT=0;return;
+  }
+  f.vx*=Math.pow(.75,dt*60);f.vy*=Math.pow(.75,dt*60);
+  if(f.specPh===1) {
+    if(f.specT<BLINK_IN)return;
+    const dx=(enemy.x-f.x)*f.face,dy=enemy.y-f.y;
+    if(enemy.active&&enemy.dashInvuln<=0&&dx>-20&&dx<BLINK_REACH&&Math.abs(dy)<100&&!parry(enemy,index)) {
+      specHit(f,index,enemy,BLINK_POW,f.face,f.face*720,-330,.55,f.superTime>0?'#ffe66d':f.color);
+      f.specPh=2;
+    } else {f.specPh=3;burst(f.x+f.face*30,f.y-44,'rgb(200,210,230)',8,90);}
+    f.specT=0;f.vx=f.face*120;return;
+  }
+  if(f.specT>=(f.specPh===2?BLINK_REC:BLINK_MISS))endSpecial(f);
+}
+function poseBlink(f){if(f.specPh===0){spK=6;spA=.15;}else if(f.specPh===1){spK=5;spA=.15+.25*Math.min(1,f.specT/BLINK_IN);}else if(f.specPh===2){spK=5;spA=Math.min(1,.45+.55*f.specT/BLINK_REC);}else{spK=5;spA=Math.min(1,.55+.45*f.specT/BLINK_MISS);}}
+// Unsichtbar: flackert in den ersten 0,1 s, dann ganz weg bis zum Auftauchen
+function hideBlink(f){return f.specPh===0&&(f.specT>.1||((f.specT*50)|0)%2===0);}
+// Verschwinden: senkrechte Lichtstreifen an der Stelle (über specT, steht in der Pause)
+function drawBlink(f,alpha) {
+  if(f.specPh!==0&&!(f.specPh===1&&f.specT<.08))return;
+  const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha,t=f.specPh===0?f.specT/BLINK_OUT:1-f.specT/.08;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  for(let i=-2;i<=2;i++){ctx.globalAlpha=(.25+.5*t)*(1-Math.abs(i)*.2);ctx.strokeStyle=i?f.color:'#ffffff';ctx.lineWidth=i?3:5;
+    const h=30+60*t,xx=x+i*7*(1+t);ctx.beginPath();ctx.moveTo(xx,y-40-h);ctx.lineTo(xx,y-40+h*.6);ctx.stroke();}
+  ctx.restore();
+}
+// SAGE · Umhang-Konter: Konterhaltung (Phase 0, COUNTER_T). Trifft ihn darin ein Angriff (parry), bleibt ein Umhang-Nachbild an der alten
+// Stelle (specX/specY), SAGE taucht hinter dem Angreifer auf (1) und kontert (2). Ohne Treffer verpufft die Haltung (3, kurz verwundbar).
+const COUNTER_T=.6,COUNTER_IN=.16,COUNTER_REC=.26,COUNTER_MISS=.32,COUNTER_POW=24;
+function startCounter(f){f.vx*=.2;f.vy*=.2;spawnRing(f.x,f.y-40,46,'#f2f0e6',3,.25);playSfx('block');}
+// Wird an jeder Trefferstelle gefragt (v = Getroffener, ai = Index des Angreifers): true = Angriff abgefangen, Treffer fällt aus
+function parry(v,ai) {
+  if(!v.spec||v.stun>0||v.specPh!==0)return false;
+  const s=SPECIALS[v.style];if(!s||s.id!=='counter')return false;
+  const a=fighters[ai];
+  v.specX=v.x;v.specY=v.y;v.specPh=1;v.specT=0;v.specHit=false;
+  spawnRing(v.x,v.y-40,80,'#ffffff',5,.25);burst(v.x,v.y-40,'#f2f0e6',14,200);
+  if(a.active) {
+    const side=a.x>=v.x?1:-1,nx=clamp(a.x+side*56,-worldRadius,worldRadius);
+    v.x=nx;v.y=Math.min(a.y,terrainY(nx));v.px=v.x;v.py=v.y;v.face=-side;
+    // Angreifer erstarrt kurz vor Schreck (sicherer Konter), laufende Angriffe enden
+    a.stun=Math.max(a.stun,COUNTER_IN+.14);a.vx*=.2;a.vy*=.2;a.punchHit=true;a.beam=0;a.beamHeld=false;a.beamCharge=0;a.smashHolding=false;if(a.spec)endSpecial(a);
+  }
+  v.vx=0;v.vy=0;v.dashInvuln=Math.max(v.dashInvuln,COUNTER_IN+.1);
+  spawnRing(v.x,v.y-40,60,'#ffffff',4,.2);
+  flash(.14,'#ffffff');hitStop=Math.max(hitStop,.06);screenShake=Math.max(screenShake,4);
+  playSfx('dash');rumble(fighters.indexOf(v),.4,.6,80);
+  return true;
+}
+function updCounter(f,index,enemy,dt) {
+  f.vx*=Math.pow(.75,dt*60);f.vy*=Math.pow(.75,dt*60);
+  if(f.specPh===0) {
+    if(Math.random()<.3)addParticle(f.x+(Math.random()-.5)*40,f.y-10-Math.random()*60,0,-30,'#f2f0e6',1.5,.25);
+    if(f.specT>=COUNTER_T){f.specPh=3;f.specT=0;for(let i=0;i<8;i++)addParticle(f.x+(Math.random()-.5)*30,f.y-30-Math.random()*30,(Math.random()-.5)*60,-30-Math.random()*40,'rgb(170,180,200)',3,.5);}
+    return;
+  }
+  if(f.specPh===1) {
+    if(f.specT<COUNTER_IN)return;
+    const dx=(enemy.x-f.x)*f.face,dy=enemy.y-f.y;
+    if(enemy.active&&dx>-30&&dx<120&&Math.abs(dy)<110)specHit(f,index,enemy,COUNTER_POW,f.face,f.face*700,-380,.6,'#f2f0e6');
+    f.specPh=2;f.specT=0;return;
+  }
+  if(f.specT>=(f.specPh===2?COUNTER_REC:COUNTER_MISS))endSpecial(f);
+}
+function poseCounter(f){if(f.specPh===0){spK=5;spA=.12;}else if(f.specPh===1){spK=5;spA=.15+.25*Math.min(1,f.specT/COUNTER_IN);}else if(f.specPh===2){spK=5;spA=Math.min(1,.45+.55*f.specT/COUNTER_REC);}else{spK=0;spA=-1;}}
+// Haltung: weißer Schimmer-Ring; nach dem Konter: Umhang-Nachbild an der alten Stelle, sinkt und verblasst
+function drawCounter(f,alpha) {
+  if(f.specPh===0) {
+    const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha-40,a=f.specT*9;
+    ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineWidth=2.5;
+    for(let k=0;k<2;k++){ctx.globalAlpha=.7-k*.3;ctx.strokeStyle=k?'#1f9e5c':'#ffffff';ctx.beginPath();ctx.ellipse(x,y,26+k*6,46+k*6,0,a+k*2,a+k*2+Math.PI*1.3);ctx.stroke();}
+    ctx.restore();return;
+  }
+  if(f.specPh!==1&&f.specPh!==2)return;
+  const life=f.specPh===1?f.specT:COUNTER_IN+f.specT,fade=clamp(1-life/(COUNTER_IN+COUNTER_REC),0,1),cx=f.specX,cy=f.specY+life*40,w=Math.sin(life*20)*3;
+  ctx.save();ctx.globalAlpha=.85*fade;ctx.fillStyle='#f2f0e6';ctx.strokeStyle='#060a14';ctx.lineWidth=1.5;ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(cx-9,cy-52);ctx.lineTo(cx+9,cy-52);ctx.quadraticCurveTo(cx+16,cy-30,cx+20+w,cy-6);
+  ctx.lineTo(cx+10,cy-10);ctx.lineTo(cx+3,cy-4);ctx.lineTo(cx-5,cy-10);ctx.lineTo(cx-13,cy-4);ctx.lineTo(cx-20-w,cy-8);ctx.quadraticCurveTo(cx-16,cy-30,cx-9,cy-52);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.globalAlpha=.35*fade;ctx.strokeStyle='#1f9e5c';ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx,cy-62,8,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+}
+// KI-Hilfe: gegnerischer Schuss in der Nähe (für den Konter)
+function shotNear(f,index,r) {
+  for(let i=0;i<MAX_PROJECTILES;i++){const p=projectiles[i];if(p.active&&p.owner!==index&&Math.abs(p.x-f.x)<r&&Math.abs(p.y-(f.y-42))<r)return true;}
+  return false;
+}
 const SPECIALS=[
   {id:"comet",cost:40,cd:2.6,ai:{min:70,max:430,dy:260,low:false},start:startComet,update:updComet,pose:poseComet,draw:drawCometTrail},   // BLAZE
   {id:"salvo",cost:45,cd:3.4,ai:{min:140,max:560,dy:200,low:false},start:startSalvo,update:updSalvo,pose:poseSalvo,draw:drawSalvo},   // VOLT
-  null,
+  {id:"blink",cost:35,cd:3.0,ai:{min:60,max:520,dy:300,low:false},start:startBlink,update:updBlink,pose:poseBlink,draw:drawBlink,hide:hideBlink},   // SORA
   {id:"blade",cost:40,cd:3.2,ai:{min:170,max:640,dy:60,low:false},start:startBlade,update:updBlade,pose:poseBlade},   // JIN
-  null,
+  {id:"counter",cost:30,cd:3.5,ai:{min:0,max:170,dy:120,low:false,counter:true},start:startCounter,update:updCounter,pose:poseCounter,draw:drawCounter},   // SAGE
   {id:"sickle",cost:40,cd:3.4,ai:{min:120,max:620,dy:240,low:false},start:startSickle,update:updSickle,pose:poseSickle,draw:drawSickleCharge},   // VEXA
   null,null,
   {id:"quake",cost:50,cd:3.6,ai:{min:0,max:460,dy:90,low:true},start:startQuake,update:updQuake,pose:poseQuake},      // TORAK
@@ -1642,7 +1748,7 @@ function updateKamehameha(f,index,enemy,input,dt) {
       const lengthSq=dx*dx+dy*dy;
       const t=clamp(((enemy.x-sx)*dx+(enemy.y-45-sy)*dy)/lengthSq,0,1);
       const ex=sx+dx*t,ey=sy+dy*t;
-      if(Math.hypot(enemy.x-ex,enemy.y-45-ey)<46) {
+      if(Math.hypot(enemy.x-ex,enemy.y-45-ey)<46&&!parry(enemy,index)) {
         const blocked=enemy.guarding&&enemy.face===-f.face;
         const scale=blocked?1:registerCombo(f,enemy);
         enemy.hp=Math.max(0,enemy.hp-(f.superTime>0?23:16)*(blocked?.2:scale));
@@ -1730,7 +1836,7 @@ function updateBot(f,target,input,index) {
     // Spezialangriff nur bei passendem Abstand/Lage (Hinweis in SPECIALS[c].ai)
     if(sp&&mem.wantSpec&&mem.sd&&!(mem.wantUltra&&f.ki>=100)&&f.stun<=0&&!f.beamHeld&&f.beam<=0&&f.punch<=0&&target.active) {
       const a=sp.ai,low=target.y>terrainY(target.x)-70;
-      const fit=a.low?low&&((d<=a.max&&Math.abs(dy)<a.dy)||(d<70&&dy>60)):d>=a.min&&d<=a.max&&Math.abs(dy)<a.dy;
+      const fit=a.counter?(d<a.max&&Math.abs(dy)<a.dy&&(target.punch>0||target.smashHolding||target.spec))||target.beam>0||shotNear(f,index,150):a.low?low&&((d<=a.max&&Math.abs(dy)<a.dy)||(d<70&&dy>60)):d>=a.min&&d<=a.max&&Math.abs(dy)<a.dy;
       if(fit&&startSpecial(f,index,target))mem.wantSpec=false;
     }
   }
@@ -1951,7 +2057,7 @@ function updateFighter(f,index,dt) {
       const inVerticalRange=f.attackType===4?Math.abs(verticalDelta)<120:f.attackType===1?verticalDelta>-150&&verticalDelta<80:
         f.attackType===5?verticalDelta>-175&&verticalDelta<70:f.attackType===6?verticalDelta>-45&&verticalDelta<175:
         f.attackType===2?verticalDelta>-45&&verticalDelta<160:Math.abs(verticalDelta)<(f.attackStep===3?105:82);
-      if(enemy.active&&enemy.dashInvuln<=0&&(enemy.x-f.x)*f.face>-18&&(enemy.x-f.x)*f.face<reach&&inVerticalRange) {
+      if(enemy.active&&enemy.dashInvuln<=0&&(enemy.x-f.x)*f.face>-18&&(enemy.x-f.x)*f.face<reach&&inVerticalRange&&!parry(enemy,index)) {
         f.punchHit=true;
         const finisher=f.attackStep===3||f.attackType>=3;
         const baseDamage=f.attackType===4?(f.heavyPowered?17:11):f.attackType===5||f.attackType===6?(f.heavyPowered?18:12):f.attackType===3?(f.heavyPowered?19:13):f.attackType===1?12:f.attackType===2?14:f.attackStep===3?17:f.attackStep===2?10:7;
@@ -2028,6 +2134,7 @@ function updateProjectiles(dt) {
       }
       if(Math.random()<.5)addParticle(p.x-Math.sign(p.vx)*20,p.y+(Math.random()-.5)*70,-p.vx*.1,(Math.random()-.5)*30,Math.random()<.4?'#fff':p.color,1.5+Math.random()*1.5,.25);
       if(enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<32&&Math.abs(p.y-(enemy.y-42))<66) {
+        if(parry(enemy,p.owner)){p.active=false;continue;}
         const dir=p.vx>=0?1:-1;
         specHit(fighters[p.owner],p.owner,enemy,p.power,dir,dir*380,-170,.45,p.color);p.active=false;
       }
@@ -2040,6 +2147,7 @@ function updateProjectiles(dt) {
       if(p.acc>=230){p.acc-=230;makeCrater(p.x,false);p.y=terrainY(p.x);p.py=p.y;}
       if(Math.random()<.7)addParticle(p.x+(Math.random()-.5)*30,p.y-4,(Math.random()-.5)*120,-160-Math.random()*200,Math.random()<.5?'#8c96a8':'#ffd29a',2+Math.random()*2.5,.55);
       if(!p.hit&&enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<44&&enemy.y>terrainY(enemy.x)-85) {
+        if(parry(enemy,p.owner)){p.active=false;continue;}
         p.hit=true;const dir=p.vx>=0?1:-1;
         specHit(fighters[p.owner],p.owner,enemy,p.power,dir,dir*160,-760,.7,'#ffd34d');
       }
@@ -2047,7 +2155,7 @@ function updateProjectiles(dt) {
       continue;
     }
     if(enemy.active&&enemy.dashInvuln<=0&&Math.abs(p.x-enemy.x)<p.r+20&&Math.abs(p.y-(enemy.y-42))<p.r+35) {
-      damage(enemy,fighters[p.owner],p);p.active=false;continue;
+      if(!parry(enemy,p.owner))damage(enemy,fighters[p.owner],p);p.active=false;continue;
     }
     if(p.y+p.r>=terrainY(p.x)) {
       if(p.kind===3&&!p.big)burst(p.x,p.y,p.color,6,90);else makeCrater(p.x,p.big);p.active=false;continue;
@@ -2275,6 +2383,7 @@ function drawWounds(f,head,hipY,neckX,neckY,hx,hy,max,gore) {
 }
 function drawFighter(f,alpha) {
   if(!f.active)return;
+  {const s=f.spec&&f.stun<=0?SPECIALS[f.style]:null;if(s&&s.hide&&s.hide(f))return;}  // z. B. Blinkschlag: verschwunden
   const x=f.px+(f.x-f.px)*alpha,y=f.py+(f.y-f.py)*alpha;
   const speed=Math.hypot(f.vx,f.vy),walking=clamp(Math.abs(f.vx)/300,0,1);
   const stride=Math.sin(f.t*12)*walking,bob=Math.sin(f.t*9)*1.2;
