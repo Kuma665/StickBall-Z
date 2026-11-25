@@ -120,7 +120,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25</p>
+        <p class="version">v2026-11-25b</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -2238,7 +2238,7 @@ function drawHud() {
     ctx.fillStyle='#263048';ctx.fillRect(x+8,y+24,174,5);
       ctx.fillStyle='#c5f36b';ctx.fillRect(x+8,y+24,174*clamp(f.ki/100,0,1),5);
     ctx.font='700 11px system-ui';ctx.fillStyle=f.color;ctx.textAlign=i===0?'left':'right';
-    ctx.fillText(f.name+(f.bot?TXT.botTag:ctrlTags?TXT.ctrlTag+(f.ctrl+1):''),i===0?x+8:x+182,y+40);
+    ctx.fillText(f.name+(f.bot?TXT.botTag:ctrlTags?TXT.ctrlTag+(f.ctrl+1):''),i===0?x+8:x+182,y+41);
     // Team: kleine Lebensleiste je Kämpfer unter dem Kasten (aktiver hell umrandet, K.o. ausgegraut)
     const tm=teams[i];
     if(tm.size>1)for(let k=0;k<tm.size;k++) {
@@ -2250,13 +2250,13 @@ function drawHud() {
     }
       if(f.superTime>0) {
         ctx.textAlign=i===0?'left':'right';ctx.font='800 9px system-ui';ctx.fillStyle='#ffe66d';
-        ctx.fillText(TXT.superPre+f.superTime.toFixed(1)+TXT.superSuf,i===0?x+84:x+106,y+40);
-        ctx.fillStyle='#273044';ctx.fillRect(x+8,y+33,174,2);
-        ctx.fillStyle='#ffe66d';ctx.fillRect(x+8,y+33,174*clamp(f.superTime/12,0,1),2);
+        ctx.fillText(TXT.superPre+f.superTime.toFixed(1)+TXT.superSuf,i===0?x+84:x+106,y+41);
+        ctx.fillStyle='#273044';ctx.fillRect(x+8,y+30,174,2);
+        ctx.fillStyle='#ffe66d';ctx.fillRect(x+8,y+30,174*clamp(f.superTime/12,0,1),2);
       } else if(f.ki>=100) {
         ctx.textAlign=i===0?'left':'right';ctx.font='800 9px system-ui';ctx.fillStyle='#ffe66d';
         const ps=f.ctrl>=0?padStates[f.ctrl]:null;
-        ctx.fillText(f.bot?TXT.superReady:(ps.connected?padSym(ps.kind,'l3'):f.ctrl===0?(touchUI&&!padKind?TXT.keyTouchSuper:TXT.keySuper1):f.ctrl===1?TXT.keySuper2:'')+' '+TXT.superReady,i===0?x+84:x+106,y+40);
+        ctx.fillText(f.bot?TXT.superReady:(ps.connected?padSym(ps.kind,'l3'):f.ctrl===0?(touchUI&&!padKind?TXT.keyTouchSuper:TXT.keySuper1):f.ctrl===1?TXT.keySuper2:'')+' '+TXT.superReady,i===0?x+84:x+106,y+41);
       }
   }
   ctx.textAlign='center';ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
