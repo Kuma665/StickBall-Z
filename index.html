@@ -64,11 +64,20 @@ html.hide-cursor,html.hide-cursor *{cursor:none!important}
 .pause-card h2{margin:0 0 12px;font-size:26px;letter-spacing:.08em}
 .pause-card button{margin:0 4px;padding:9px 16px;border:0;border-radius:4px;background:var(--orange);color:#160b07;font-size:12px;font-weight:800;cursor:pointer}
 .pause-card button.secondary{border:1px solid #46536e;background:#151e30;color:var(--white)}
-.touch{display:none;position:absolute;inset:0;justify-content:space-between;align-items:end;padding:0 8px 8px;pointer-events:none}
-html.touch-ui .touch:not([hidden]){display:flex}
-.touch-group{display:flex;gap:5px;align-items:end;pointer-events:auto}
-.touch button{width:34px;height:34px;padding:0;border:1px solid #d5e5ff44;border-radius:50%;background:#101a2b80;color:#ffffffd9;font-size:11px;font-weight:800;touch-action:none}
-.touch button.fire{width:38px;height:38px;border-color:#ff956b77;background:#d7492466}
+.touch{display:none;position:absolute;inset:0;pointer-events:none}
+html.touch-ui .touch:not([hidden]){display:block}
+.tstick{position:absolute;left:0;top:22%;bottom:0;width:44%;pointer-events:auto;touch-action:none}
+.tstick-base{position:absolute;left:0;top:0;width:96px;height:96px;margin:-48px 0 0 -48px;border:2px solid #d5e5ff40;border-radius:50%;background:#101a2b40;opacity:.5;pointer-events:none}
+.tstick.on .tstick-base{opacity:1}
+.tstick-knob{position:absolute;left:26px;top:26px;width:40px;height:40px;border:1px solid #ffffff88;border-radius:50%;background:#d5e5ff50}
+.tpad{position:absolute;right:0;bottom:0;width:200px;height:200px;pointer-events:none}
+.tpad button{position:absolute;width:50px;height:50px;padding:0;border:1px solid #d5e5ff55;border-radius:50%;background:#101a2b73;color:#ffffffd9;font-size:13px;font-weight:800;touch-action:none;pointer-events:auto}
+.tpad button.sm{width:40px;height:40px;font-size:11px}
+.tpad button.on{background:#ffffff40;border-color:#ffffffbb}
+.tpad .t-punch{right:14px;bottom:16px;width:66px;height:66px;font-size:24px;border-color:#ffd27a88;background:#3a2a1073}
+.tpad .t-heavy{right:90px;bottom:14px}.tpad .t-shot{right:22px;bottom:90px}.tpad .t-dash{right:82px;bottom:82px;width:46px;height:46px;font-size:11px}
+.tpad .t-beam{right:150px;bottom:14px}.tpad .t-charge{right:140px;bottom:66px}.tpad .t-super{right:14px;bottom:150px}.tpad .touch-tag{right:66px;bottom:136px}
+.tpad button.fire{border-color:#ff956b88;background:#d7492466}
 .touch .touch-pause{position:absolute;top:9%;left:50%;width:28px;height:28px;margin-left:-14px;font-size:9px;pointer-events:auto}
 .pause-card button.pad-focus{outline:2px solid var(--cyan);outline-offset:3px}
 /* Ein Layout fuer alle Bildschirme: entworfen fuer ca. 680x400, per JS (fitShell) proportional skaliert */
@@ -111,7 +120,7 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-24za</p>
+        <p class="version">v2026-11-25</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -143,11 +152,13 @@ html.touch-ui .touch:not([hidden]){display:flex}
     <p class="pad-hint" id="padHint" hidden></p>
     <div class="touch" id="touch" hidden>
       <button class="touch-pause" id="touchPause" type="button" data-ta="ariaPause">❚❚</button>
-      <div class="touch-group">
-        <button data-key="KeyA" data-ta="ariaLeft">◀</button><button data-key="KeyW" data-ta="ariaUp">▲</button>
-        <button data-key="KeyS" data-ta="ariaDown">▼</button><button data-key="KeyD" data-ta="ariaRight">▶</button>
+      <div class="tstick" id="tstick" data-ta="ariaStick"><div class="tstick-base" id="tstickBase"><div class="tstick-knob" id="tstickKnob"></div></div></div>
+      <div class="tpad" id="tpad">
+        <button class="t-punch" data-key="KeyF" data-ta="ariaPunch">✊</button><button class="t-heavy" data-key="KeyV" data-ta="ariaHeavy" data-t="tHeavy"></button>
+        <button class="t-shot fire" data-key="KeyG" data-ta="ariaShot" data-t="tShot"></button><button class="t-dash" data-key="TouchDash" data-ta="ariaDash" data-t="tDash"></button>
+        <button class="sm t-beam" data-key="KeyT" data-ta="ariaBeam" data-t="tBeam"></button><button class="sm t-charge" data-key="KeyH" data-ta="ariaCharge" data-t="tCharge"></button>
+        <button class="sm t-super" data-key="KeyR" data-ta="ariaSuper" data-t="tSuper"></button><button class="sm touch-tag" data-key="KeyQ" data-ta="ariaTag">⇄</button>
       </div>
-      <div class="touch-group"><button class="touch-tag" data-key="KeyQ" data-ta="ariaTag">⇄</button><button data-key="KeyH" data-ta="ariaCharge" data-t="tCharge"></button><button data-key="KeyR" data-ta="ariaSuper" data-t="tSuper"></button><button data-key="KeyF" data-ta="ariaPunch">✊</button><button data-key="KeyV" data-ta="ariaHeavy" data-t="tHeavy"></button><button data-key="KeyT" data-ta="ariaBeam" data-t="tBeam"></button><button class="fire" data-key="KeyG" data-ta="ariaShot" data-t="tShot"></button></div>
     </div>
   </section>
   <p class="hint" id="hint"></p>
@@ -175,7 +186,7 @@ const TXT={
   // Eckhinweis (nur mit Controller) und Stumm-Knopf
   ok:'OK',change:'Ändern',hintBack:'Zurück',select:'Wählen',resume:'Weiterspielen',muteOn:'Ton aus',muteOff:'Ton an',fsOn:'Vollbild an',fsOff:'Vollbild aus',
   // Touch-Buttons und Bildschirmleser-Namen
-  tCharge:'KI',tSuper:'SSJ',tHeavy:'H',tBeam:'KAME',tShot:'KI!',
+  tCharge:'KI',tSuper:'SSJ',tHeavy:'H',tBeam:'KAME',tShot:'KI!',tDash:'DASH',ariaDash:'Ausweichen / Turbo',ariaStick:'Fliegen',
   ariaFrame:'StickBall Z Spiel',ariaCanvas:'2D-Flugkampf',ariaPause:'Pause',ariaLeft:'Links',ariaUp:'Hoch',ariaDown:'Runter',ariaRight:'Rechts',
   ariaCharge:'Ki laden',ariaSuper:'Super-Saiyajin',ariaPunch:'Combo-Schlag',ariaHeavy:'Schwerer Angriff',ariaBeam:'Kamehameha aufladen',ariaShot:'Ki schießen',ariaTag:'Kämpfer wechseln',
   // Statuszeile (Kopfzeile, derzeit ausgeblendet)
@@ -198,13 +209,13 @@ const TXT={
     ['Ausweichen · halten: Turbo','b'],['Blocken','l1'],['Ki-Schuss · halten: Kanone','r1'],['Antippen: Ki-Druckwelle · halten: Kamehameha','r2'],
     ['Ki laden','l2'],['Super-Saiyajin · bei 100 Ki','l3'],['Kämpfer wechseln (Team)','r3']],
   rulePad:'Stick runter + {r1} zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. {start} pausiert.',
-  guideTouch:[['Fliegen / lenken','<span><kbd>◀</kbd> <kbd>▲</kbd> <kbd>▼</kbd> <kbd>▶</kbd></span>'],['Ausweichen · Richtung doppelt tippen, halten: Turbo','<kbd>◀/▶</kbd>'],
-    ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>H</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>▼</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
+  guideTouch:[['Fliegen / zielen · links irgendwo ziehen','<kbd>Stick</kbd>'],['Antippen: Ausweichen · halten + Richtung: Turbo','<kbd>DASH</kbd>'],
+    ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · 12 Ki · bei 100 Ki: ULTRA-SCHLAG','<kbd>H</kbd>'],['Blocken · Stick runter + vom Gegner weg','<kbd>Stick</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
     ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
-  ruleTouch:'<kbd>▼</kbd> + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.',
+  ruleTouch:'Stick runter + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.',
   // alte Hinweiszeile #hint (per CSS ausgeblendet)
   hintKey:'F/J Combo · V/U Heavy · 2× Richtung: Ausweichen, halten: Turbo · Ki-Schuss mit WASD lenken · Beam mit W/S lenken',
-  hintTouch:'◀▲▼▶ fliegen · doppelt tippen: Ausweichen, halten: Turbo · ✊ Combo · H Heavy · KI! Schuss · KAME tippen: Druckwelle, halten: Kamehameha · KI laden · SSJ Super',
+  hintTouch:'Stick links fliegen · DASH tippen: Ausweichen, halten: Turbo · ✊ Combo · H Heavy · KI! Schuss · KAME tippen: Druckwelle, halten: Kamehameha · KI laden · SSJ Super',
   hintPad:'{x} Leicht · {y} Stark (halten: aufladen, +↑/↓) · {r1} Ki (halten: Kanone) · {r2} Druckwelle (halten: Kamehameha) · {a} Hoch · {b} Ausweichen (halten: Turbo, nach Finisher: verfolgen) · {l1} Block · {l2} Laden · {l3} Super · {r3} Wechseln'
 };
 // ---- Kämpfer (Namen in TXT.charNames): Farben, Frisur (HAIR-Index, -1 = keine), fixHair = bleibt im Super-Modus gleich,
@@ -722,7 +733,11 @@ function readInput(f,index) {
   const c=f.ctrl,map=c===0||c===1?keyMaps[c]:NO_KEYS,out=inputs[index];
   out.left=!!keys[map.left];out.right=!!keys[map.right];out.up=!!keys[map.up];out.down=!!keys[map.down];
   out.shot=!!keys[map.shot];out.beam=!!keys[map.beam];out.charge=!!keys[map.charge];out.punch=!!keys[map.punch];out.heavy=!!keys[map.heavy];out.super=!!keys[map.super];
-  out.guard=false;out.dash=false;
+  out.guard=false;out.dash=false;out.stick=false;
+  if(c===0) {  // Touch: Joystick + DASH-Knopf (tippen: Ausweichen, halten + Richtung: Turbo)
+    out.dash=!!keys.TouchDash;
+    if(tStick.on){out.stick=true;out.left=out.left||tStick.l;out.right=out.right||tStick.r;out.up=out.up||tStick.u;out.down=out.down||tStick.d;}
+  }
   if(f.bot||c<0)return out;
   const st=padStates[c];
   if(st.connected) {
@@ -742,6 +757,7 @@ function readInput(f,index) {
     if(st.ax*st.ax+st.ay*st.ay>.09){out.aimX=st.ax;out.aimY=st.ay;}
     else if(st.btn[12]||st.btn[13]||st.btn[14]||st.btn[15]){out.aimX=st.btn[15]-st.btn[14];out.aimY=st.btn[13]-st.btn[12];}
   }
+  if(out.stick&&tStick.m>.3){out.aimX=tStick.nx;out.aimY=tStick.ny;}  // Joystick zielt genau
   return out;
 }
 // ---- Gamepads: feste Zuordnung Controller -> Spieler (Reihenfolge der Verbindung) ----
@@ -832,7 +848,42 @@ let touchUI=!!(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)
 document.documentElement.classList.toggle('touch-ui',touchUI);
 function setTouchUI(on){if(on===touchUI)return;touchUI=on;document.documentElement.classList.toggle('touch-ui',on);refreshInputTexts();}
 window.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')setTouchUI(true);},true);
-function updateTouch(){touchControls.hidden=!(state==='playing'&&!padStates[0].connected);}
+function updateTouch(){touchControls.hidden=!(state==='playing'&&!padStates[0].connected);resetTouchInput();}
+// Touch-Steuerung (v2026-11-25): links schwebender Joystick (8 Richtungen + Zielen), rechts Aktionsknöpfe im Bogen; der Finger darf zwischen Knöpfen rutschen
+const tStick={on:false,id:-1,ox:0,oy:0,nx:0,ny:0,m:0,l:false,r:false,u:false,d:false},STICK_R=46;
+const stickEl=document.getElementById('tstick'),stickBase=document.getElementById('tstickBase'),stickKnob=document.getElementById('tstickKnob');
+function stickPos(e){const r=stickEl.getBoundingClientRect(),k=r.width>0?stickEl.offsetWidth/r.width:1;return [(e.clientX-r.left)*k,(e.clientY-r.top)*k];}
+function placeStick(x,y){stickBase.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)';}
+function stickRest(){tStick.on=false;tStick.id=-1;tStick.nx=tStick.ny=tStick.m=0;tStick.l=tStick.r=tStick.u=tStick.d=false;stickEl.classList.remove('on');stickKnob.style.transform='';placeStick(80,Math.max(80,stickEl.offsetHeight-74));}
+function stickMove(x,y){
+  let dx=x-tStick.ox,dy=y-tStick.oy,len=Math.hypot(dx,dy);
+  if(len>STICK_R){const over=len-STICK_R;tStick.ox+=dx/len*over;tStick.oy+=dy/len*over;dx=x-tStick.ox;dy=y-tStick.oy;len=STICK_R;placeStick(tStick.ox,tStick.oy);}  // Mitte zieht mit
+  const nx=dx/STICK_R,ny=dy/STICK_R,on=(v,p)=>p?v>.22:v>.42;  // Hysterese: kein Flackern an der Schwelle
+  tStick.nx=nx;tStick.ny=ny;tStick.m=len/STICK_R;
+  tStick.r=on(nx,tStick.r);tStick.l=on(-nx,tStick.l);tStick.d=on(ny,tStick.d);tStick.u=on(-ny,tStick.u);
+  stickKnob.style.transform='translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px)';
+}
+stickEl.addEventListener('pointerdown',e=>{e.preventDefault();if(tStick.on)return;tStick.on=true;tStick.id=e.pointerId;try{stickEl.setPointerCapture(e.pointerId);}catch(_){}const p=stickPos(e);tStick.ox=p[0];tStick.oy=p[1];placeStick(p[0],p[1]);stickEl.classList.add('on');stickMove(p[0],p[1]);});
+stickEl.addEventListener('pointermove',e=>{if(e.pointerId!==tStick.id)return;const p=stickPos(e);stickMove(p[0],p[1]);});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>stickEl.addEventListener(n,e=>{if(e.pointerId===tStick.id)stickRest();}));
+const tpadEl=document.getElementById('tpad'),tHold=new Map();  // Finger -> gedrückter Knopf
+function tKeyCount(code){let n=0;for(const b of tHold.values())if(b.dataset.key===code)n++;return n;}
+function tPress(id,b){
+  const old=tHold.get(id);if(old===b)return;
+  if(b)tHold.set(id,b);else tHold.delete(id);
+  if(old&&!tKeyCount(old.dataset.key)){keys[old.dataset.key]=false;old.classList.remove('on');}
+  if(b){const code=b.dataset.key;if(!keys[code]&&code===keyMaps[0].tag&&state==='playing')tagReq[0]=1;keys[code]=true;b.classList.add('on');}
+}
+function tBtnAt(e,cur){
+  const el=document.elementFromPoint(e.clientX,e.clientY),b=el&&el.closest?el.closest('#tpad [data-key]'):null;
+  if(b||!cur)return b;
+  const r=cur.getBoundingClientRect();  // knapp neben dem Knopf: bleibt gedrückt
+  return Math.hypot(e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2)<r.width*.85?cur:null;
+}
+tpadEl.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('[data-key]');if(!b)return;e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(_){}tPress(e.pointerId,b);});
+tpadEl.addEventListener('pointermove',e=>{if(tHold.has(e.pointerId))tPress(e.pointerId,tBtnAt(e,tHold.get(e.pointerId)));});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>tpadEl.addEventListener(n,e=>{if(tHold.has(e.pointerId))tPress(e.pointerId,null);}));
+function resetTouchInput(){for(const id of [...tHold.keys()])tPress(id,null);stickRest();}
 function refreshInputTexts() {
   hint.textContent=padKind?buildPadHint(padKind):touchUI?TXT.hintTouch:TXT.hintKey;
   guideEl.innerHTML=padKind?padGuideHTML(padKind):touchUI?TOUCH_GUIDE:KEY_GUIDE;
@@ -1378,7 +1429,7 @@ function updateFighter(f,index,dt) {
     startDash(f,dashAx||dashAy?dashAx:(enemy.active?-f.face:f.face),dashAx||dashAy?dashAy:0);
   }
   f.dashBtnHeld=input.dash;
-  if(!stunned&&!f.charging&&f.dashCooldown<=0) {
+  if(!stunned&&!f.charging&&f.dashCooldown<=0&&!input.stick) {  // Doppeltipp nicht mit dem Joystick (sonst versehentliches Ausweichen)
     if(input.left&&!f.dashLeftHeld) {
       if(f.dashTapLeft>0){startDash(f,-1,0);f.dashTapLeft=0;f.boostKey=-1;}
       else f.dashTapLeft=.27;
@@ -2355,12 +2406,6 @@ setInterval(()=>{document.documentElement.classList.toggle('hide-cursor',state==
 document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>openSelect(button.dataset.mode)));
 document.getElementById('resume').addEventListener('click',resumeGame);
 document.getElementById('backMenu').addEventListener('click',backToMenu);
-document.querySelectorAll('.touch [data-key]').forEach(button=>{
-  const code=button.dataset.key;
-  button.addEventListener('pointerdown',e=>{e.preventDefault();keys[code]=true;button.setPointerCapture(e.pointerId);if(code===keyMaps[0].tag&&state==='playing')tagReq[0]=1;});
-  const release=()=>{keys[code]=false;};
-  button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
-});
 // Start: gespeicherte Einstellungen anwenden, Schnellstart-Fokus auf zuletzt gespielten Modus
 applyGfx();
 setMenuFocus(Math.max(0,modeButtons.findIndex(b=>b.dataset.mode===settings.lastMode)));setPauseFocus(0);refreshInputTexts();
