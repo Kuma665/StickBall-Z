@@ -123,7 +123,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26m</p>
+        <p class="version">v2026-11-26n</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -212,7 +212,7 @@ const TXT={
   stArea:'FLUGGEBIET 01',stFree:'FREIFLUG',stBot:'KAMPF GEGEN KI',stLocal:'LOKALER KAMPF',stPads:'CONTROLLER: ',
   stAudioNo:'AUDIO NICHT UNTERSTÜTZT',stAudioFail:'AUDIO KANN NICHT STARTEN',lblLocal:'2 SPIELER  ·  ',lblBot:'KI-KAMPF  ·  ',
   // HUD und Ergebnis
-  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',chase:'JAGEN!',chaseHit:'VERFOLGUNG ×',escape:'AUSGEWICHEN!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
+  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',chase:'JAGEN!',chaseNoKi:'KI!',chaseHit:'VERFOLGUNG ×',escape:'AUSGEWICHEN!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
   specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
   beamNames:['FLAMMENWELLE','DONNERKANONE','WIRBELSTRAHL','KLINGENSTRAHL','BOHRSTRAHL','NADELLASER','KEGELSTOSS','WABBELWELLE','RIESEN-KI-KUGEL','STERNENSTRAHL'],
@@ -282,8 +282,8 @@ let gameSpeed=1,slowT=0;
 // Treffer-Wucht: kurze Zeitlupe (slowMo, Spielzeit), Kamera-Ruck (shakeKX/KY), Zoom-Ruck, Aufprall-Linien (ein Eintrag); Wackeln/Ruck/Zoom per settings.shake abschaltbar
 let slowMo=0,shakeKX=0,shakeKY=0,zoomKick=0;
 const SHAKE_MAX=16,impactFx={t:0,max:.2,x:0,y:0,color:'#fff',big:false,seed:0};
-// Verfolgung: Ki je Glied der Kette (1./2./3.), Fenster für das nächste Glied, Ausbrech-Fenster des Opfers + Kosten
-const CHASE_KI=[8,10,12],CHASE_WIN=.6,CHASE_ESC_T=.17,CHASE_ESC_KI=15;
+// Verfolgung: Ki je Glied der Kette (1./2./3.), Wartezeit nach dem Treffer + offenes Fenster danach, Ausbrech-Fenster des Opfers + Kosten
+const CHASE_KI=[4,8,12],CHASE_DELAY=.25,CHASE_OPEN=.8,CHASE_ESC_T=.17,CHASE_ESC_KI=15;
 function slowHit(t){if(ultra.on||state!=='playing')return;gameSpeed=Math.min(gameSpeed,.35);slowMo=Math.max(slowMo,t);}
 function camKick(x,y){shakeKX=clamp(shakeKX+x,-18,18);shakeKY=clamp(shakeKY+y,-14,14);}
 function impactLines(x,y,color,big){const e=impactFx;e.t=e.max=big?.26:.16;e.x=x;e.y=y;e.color=color;e.big=big;e.seed=Math.random()*100;}
@@ -946,7 +946,7 @@ function resetFighter(f,index) {
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.winPose=0;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
   f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.cannonHolding=false;f.cannonCharge=0;f.shotQueued=false;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
-  f.tagShow=0;f.breakShow=0;f.chaseN=0;f.chasePunch=false;f.chaseShow=0;f.chaseShowN=0;f.escShow=0;f.escapeT=0;f.escBot=0;f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
+  f.tagShow=0;f.breakShow=0;f.chaseN=0;f.chasePunch=false;f.chaseBuf=false;f.chaseShow=0;f.chaseShowN=0;f.escShow=0;f.escapeT=0;f.escBot=0;f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
 }
 function begin(nextMode) {
   for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);
@@ -2338,7 +2338,7 @@ function updateBot(f,target,input,index) {
   input.aimX=mem.aimX;input.aimY=mem.aimY;
   for(const k of BOT_KEYS)input[k]=mem[k];
   // Verfolgung: einmal je Fenster würfeln, nach kurzer Reaktion ○ drücken
-  if(f.chaseWindow>0){if(!mem.cr){mem.cr=true;mem.cy=Math.random()<lv.chase;}if(mem.cy&&f.chaseWindow<.7-lv.react){input.dash=true;input.heavy=false;}}
+  if(f.chaseWindow>0){if(!mem.cr){mem.cr=true;mem.cy=Math.random()<lv.chase;}if(mem.cy&&f.chaseWindow<=CHASE_OPEN-lv.react*.5){input.dash=true;input.heavy=false;}}
   else mem.cr=false;
   // Kamehameha halten/loslassen jeden Schritt (sonst würde die Verzögerung die Ladung verändern)
   if(f.beamHeld)input.beam=f.beamCharge<.52;
@@ -2414,10 +2414,15 @@ function updateFighter(f,index,dt) {
     }
   }
   f.escGuardHeld=input.guard;f.escDownHeld=input.down;
-  // Verfolgung: kurz nach einem Finisher ○ oder nochmal Stark -> vor den weggeschleuderten Gegner teleportieren und automatisch zuschlagen, bis 3× hintereinander
+  // Verfolgung: nach einem Finisher ○ oder nochmal Stark -> vor den weggeschleuderten Gegner teleportieren und automatisch zuschlagen, bis 3× hintereinander.
+  // Erst nach CHASE_DELAY frei (Gegner fliegt sichtbar weg); früher gedrückt wird gemerkt (chaseBuf) und genau bei Freigabe ausgeführt
   const chaseKi=CHASE_KI[Math.min(2,f.chaseN)];
-  if(((input.dash&&!f.dashBtnHeld)||(input.heavy&&!f.heavyHeld))&&!stunned&&!f.spec&&f.chaseWindow>0&&enemy.active&&f.ki>=chaseKi) {
-    f.ki-=chaseKi;f.chaseWindow=0;f.dashCooldown=.3;f.smashHolding=false;f.heavyBuffer=0;f.heavyHeld=true;f.chaseN++;
+  const chasePress=(input.dash&&!f.dashBtnHeld)||(input.heavy&&!f.heavyHeld),canChase=!stunned&&!f.spec&&f.chaseWindow>0&&enemy.active;
+  if(f.chaseWindow<=0)f.chaseBuf=false;
+  let chaseEarly=false;
+  if(canChase&&chasePress&&f.chaseWindow>CHASE_OPEN){f.chaseBuf=true;chaseEarly=true;if(input.heavy)f.heavyHeld=true;}
+  if(canChase&&!chaseEarly&&f.chaseWindow<=CHASE_OPEN&&(chasePress||f.chaseBuf)&&f.ki>=chaseKi) {
+    f.ki-=chaseKi;f.chaseWindow=0;f.chaseBuf=false;f.dashCooldown=.3;f.smashHolding=false;f.heavyBuffer=0;f.heavyHeld=true;f.chaseN++;
     burst(f.x,f.y-40,f.color,14,160);addGhost(f);
     // Auftauchen dort, wohin der Gegner fliegt (steil nach oben -> darüber und runterschmettern)
     const vert=Math.abs(enemy.vy)>Math.abs(enemy.vx)*1.2,dir=Math.sign(enemy.vx)||-f.face;
@@ -2430,7 +2435,7 @@ function updateFighter(f,index,dt) {
     const kiWas=f.ki;startPunch(f,4,type);f.ki=kiWas;f.ultra=false;f.heavyPowered=true;f.chasePunch=true;  // Schlag in der Kette ohne Extra-Ki, nie ULTRA
     enemy.escapeT=CHASE_ESC_T;enemy.escBot=enemy.bot&&Math.random()<(BOT_LVL[settings.bot]||BOT_LVL[0]).esc?Math.min((BOT_LVL[settings.bot]||BOT_LVL[0]).react,CHASE_ESC_T-.04):0;
     spawnRing(f.x,f.y-40,70,'#fff',3,.2);burst(f.x,f.y-40,'rgb(255,255,255)',12,140);playSfx('dash');rumble(index,.2,.4,60);
-  } else if(input.dash&&!f.dashBtnHeld&&!stunned&&!f.spec&&!f.charging&&f.dashCooldown<=0) {
+  } else if(!chaseEarly&&!(f.chaseBuf&&f.chaseWindow>0)&&input.dash&&!f.dashBtnHeld&&!stunned&&!f.spec&&!f.charging&&f.dashCooldown<=0) {
     // ○ antippen: Ausweichen in alle 8 Richtungen (ohne Richtung: vom Gegner weg)
     const dashAx=(input.right?1:0)-(input.left?1:0),dashAy=(input.down?1:0)-(input.up?1:0);
     startDash(f,dashAx||dashAy?dashAx:(enemy.active?-f.face:f.face),dashAx||dashAy?dashAy:0);
@@ -2599,8 +2604,8 @@ function updateFighter(f,index,dt) {
           enemy.vx+=kb*f.face*(f.attackType===4?460:f.attackType===3?390:f.attackType===5?170:f.attackType===6?320:finisher?340:f.attackStep===2?245:175);
           enemy.vy+=kb*(f.attackType===2?245:f.attackType===6?420:-(f.attackType===5?(f.heavyPowered?520:430):f.attackType===1?275:finisher?190:f.attackStep===2?85:35));
           if(finisher) {
-            if(!f.chasePunch){f.chaseN=0;f.chaseWindow=.7;}
-            else if(f.chaseN<3){f.chaseWindow=CHASE_WIN;f.chaseShow=1.1;f.chaseShowN=f.chaseN;}
+            if(!f.chasePunch){f.chaseN=0;f.chaseWindow=CHASE_DELAY+CHASE_OPEN;f.chaseBuf=false;}
+            else if(f.chaseN<3){f.chaseWindow=CHASE_DELAY+CHASE_OPEN;f.chaseBuf=false;f.chaseShow=1.1;f.chaseShowN=f.chaseN;}
             else {  // dritter Verfolgungs-Treffer: großes Finale
               f.chaseShow=1.4;f.chaseShowN=3;f.chaseN=0;enemy.vx*=1.35;enemy.vy*=1.35;enemy.stun=Math.max(enemy.stun,.7);
               slowHit(.45);flash(.35,'#fff');spawnRing(enemy.x,enemy.y-44,210,f.superTime>0?f.supC:f.color,6,.5);
@@ -3550,16 +3555,18 @@ function render(alpha) {
     const x=f.px+(f.x-f.px)*alpha,y=Math.max(renderCameraY-H/(2*renderZoom)+80/renderZoom,f.py+(f.y-f.py)*alpha-(f.tagShow>0?128:112)*((f.look&&f.look.size)||1));  // nie über/in der HUD-Zone
     ctx.globalAlpha=clamp(show/.3,0,1);ctx.fillStyle='#050914';ctx.fillText(nm,x+1,y+1);ctx.fillStyle='#ffe66d';ctx.fillText(nm,x,y);
   }
-  // Verfolgung bereit: pulsierender Ring um den weggeschleuderten Gegner + Taste (nur für Spieler, nur mit genug Ki)
+  // Verfolgung frei (nach CHASE_DELAY): pulsierender Ring um den weggeschleuderten Gegner + Taste (nur Spieler); zu wenig Ki: grauer Ring + „KI!“
   for(let i=0;i<2;i++) {
     const f=fighters[i],v=fighters[1-i];
-    if(!f.active||!v.active||f.bot||f.chaseWindow<=0||f.ki<CHASE_KI[Math.min(2,f.chaseN)]||state!=='playing')continue;
+    if(!f.active||!v.active||f.bot||f.chaseWindow<=0||f.chaseWindow>CHASE_OPEN||state!=='playing')continue;
+    const noKi=f.ki<CHASE_KI[Math.min(2,f.chaseN)];
     const x=v.px+(v.x-v.px)*alpha,y=v.py+(v.y-v.py)*alpha-44,p=.5+.5*Math.sin(clock*28);
-    ctx.globalAlpha=.9;ctx.strokeStyle=f.superTime>0?f.supC:f.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,32+p*7,0,Math.PI*2);ctx.stroke();
-    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,24+p*4,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=noKi?.6:.9;ctx.strokeStyle=noKi?'#7d8590':f.superTime>0?f.supC:f.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,32+p*7,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle=noKi?'#7d8590':'#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,24+p*4,0,Math.PI*2);ctx.stroke();
     const ty=y+62,pk=f.ctrl>=0&&padStates[f.ctrl]&&padStates[f.ctrl].connected?padKind:'';
     ctx.font='900 13px system-ui';
-    if(pk){ctx.fillStyle='#fff';drawPadLine(pk,[{k:'y'},' '+TXT.chase],x,ty,13);}
+    if(noKi){ctx.textAlign='center';ctx.fillStyle='#050914';ctx.fillText(TXT.chaseNoKi,x+1,ty+1);ctx.fillStyle='#9aa3b2';ctx.fillText(TXT.chaseNoKi,x,ty);}
+    else if(pk){ctx.fillStyle='#fff';drawPadLine(pk,[{k:'y'},' '+TXT.chase],x,ty,13);}
     else {
       const t=(f.ctrl===0&&touchUI?TXT.tHeavy:f.ctrl===1?'U':'V')+' · '+TXT.chase;
       ctx.textAlign='center';ctx.fillStyle='#050914';ctx.fillText(t,x+1,ty+1);ctx.fillStyle='#fff';ctx.fillText(t,x,ty);
