@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26i</p>
+        <p class="version">v2026-11-26j</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -212,6 +212,7 @@ const TXT={
   world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
   specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
+  beamNames:['FLAMMENWELLE','DONNERKANONE','WIRBELSTRAHL','KLINGENSTRAHL','BOHRSTRAHL','NADELLASER','KEGELSTOSS','WABBELWELLE','RIESEN-KI-KUGEL','STERNENSTRAHL'],
   botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',clash:'STRAHL-DUELL!',clashMash:'SCHNELL DRÜCKEN!',quote:'„{x}“',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
@@ -799,7 +800,7 @@ function drawCraterFx(left,right,step) {
   }
 }
 function resetFighter(f,index) {
-  f.ultra=false;f.xray=0;f.xrayHits=0;
+  f.ultra=false;f.xray=0;f.xrayHits=0;f.beamShow=0;f.slow=0;
   f.spec=false;f.specT=0;f.specPh=0;f.specX=1;f.specY=0;f.specHit=false;f.specCd=0;f.specShow=0;f.specN=0;f.specS=0;
   clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;f.kiaiCooldown=0;f.r2Held=false;f.r2Time=0;f.comboCount=0;
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
@@ -1399,6 +1400,7 @@ function traceBeam(f) {
   const top=cameraY-H/(2*zoom),bottom=cameraY+H/(2*zoom);
   const edgeX=f.face>0?right:left;
   let distance=Math.max(0,(edgeX-sx)*f.face);
+  const BL=beamOf(f).len;if(BL)distance=Math.min(distance,BL);  // kurzer Strahl (KRYX)
   if(slope>0)distance=Math.min(distance,Math.max(0,(bottom-sy)/slope));
   else if(slope<0)distance=Math.min(distance,Math.max(0,(top-sy)/slope));
   f.beamHitsGround=false;
@@ -1409,9 +1411,37 @@ function traceBeam(f) {
   }
   f.beamEndX=ex;f.beamEndY=ey;
 }
+// Strahl je Figur (Index wie CHARS). st = Form in drawKamehameha. Besonderheiten (fehlend = Standard): w Trefferbreite (46), dmg Schadensfaktor (1),
+// len max. Länge in px (0 = bis Bildrand), dur Dauer-Faktor (1), min Mindest-Ladung in s (.24), blk Restschaden beim Blocken (.2),
+// tick Trefferabstand in s (.16), pull zieht heran statt wegzustoßen, slow verlangsamt den Gegner (s), chg Ladetempo (1), ball = Riesen-Kugel statt Strahl
+const BEAMS=[
+  {st:'flame'},                          // BLAZE Flammenwelle: Bezugswert
+  {st:'bolt',chg:1.6,dmg:.85},           // VOLT Donnerkanone: lädt schneller, etwas schwächer
+  {st:'spiral',w:38,pull:true},          // ZAP Wirbelstrahl: schmaler, zieht heran
+  {st:'blade',w:30,dmg:1.2},             // RAZOR Klingenstrahl: dünn, stärker
+  {st:'drill',w:32,blk:.55,min:.42},     // SAGE Bohrstrahl: bohrt durch den Block, braucht mehr Ladung
+  {st:'laser',w:26,dmg:1.5,dur:.5,tick:.1},  // VEXA Nadellaser: kurz, dünn, hart
+  {st:'cone',w:80,len:300},              // KRYX Kegelstoß: kurz und breit
+  {st:'wobble',dmg:.6,slow:1.6},         // BLOBB Wabbelwelle: schwach, verlangsamt
+  {st:'ball',ball:true},                 // TORAK Riesen-Ki-Kugel: langsam, groß, Krater
+  {st:'star',dur:1.35}                   // NOVA Sternenstrahl: hält länger
+];
+const beamOf=f=>BEAMS[f.style]||BEAMS[0];
+// TORAK: riesige, langsame Ki-Kugel (kind 0, groß -> Krater), Richtung über hoch/runter
+function throwKiBall(f,input) {
+  const p=projectiles[projectileCursor];projectileCursor=(projectileCursor+1)%MAX_PROJECTILES;
+  const ay=input.down?.55:input.up?-.3:0,l=Math.hypot(1,ay);
+  p.active=true;p.kind=0;p.hit=false;p.owner=f===fighters[0]?0:1;p.big=true;p.r=40;p.speed=290;p.acc=0;
+  p.x=f.x+f.face*50;p.y=f.y-46;p.px=p.x;p.py=p.y;p.vx=f.face/l*p.speed;p.vy=ay/l*p.speed;
+  p.life=3.2;p.power=34*(f.superTime>0?1.35:1);p.color=(f.beamC||[f.color,f.color])[1];
+  burst(p.x,p.y,p.color,22,200);screenShake=Math.max(screenShake,6);f.vx-=f.face*90;
+}
 function fireKamehameha(f,input) {
-  if(f.beamCharge<.24||f.ki<BEAM_COST){f.beamCharge=0;return;}
-  f.ki-=BEAM_COST;f.beam=(f.superTime>0?1.15:.72)+Math.min(.5,(f.beamCharge-.24)*.7);
+  const B=beamOf(f);
+  if(f.beamCharge<(B.min||.24)||f.ki<BEAM_COST){f.beamCharge=0;return;}
+  f.beamShow=.9;
+  if(B.ball){f.ki-=BEAM_COST;f.beamCharge=0;f.beamCooldown=1.3;throwKiBall(f,input);playSfx('beam');return;}
+  f.ki-=BEAM_COST;f.beam=((f.superTime>0?1.15:.72)+Math.min(.5,(f.beamCharge-.24)*.7))*(B.dur||1);
   f.beamCooldown=1.05;f.beamHitCooldown=0;f.beamTerrainHit=false;
   f.beamAngle=input.down?1.15:input.up?-.22:0;
   f.beamCharge=0;traceBeam(f);
@@ -2032,7 +2062,7 @@ function updateKamehameha(f,index,enemy,input,dt) {
   f.beam=Math.max(0,f.beam-dt);
   if(input.beam) {
     if(!f.beamHeld&&f.beamCooldown<=0&&f.ki>=BEAM_COST)f.beamHeld=true;
-    if(f.beamHeld)f.beamCharge=Math.min(.8,f.beamCharge+dt);
+    if(f.beamHeld)f.beamCharge=Math.min(.8,f.beamCharge+dt*(beamOf(f).chg||1));
   } else if(f.beamHeld) {
     f.beamHeld=false;fireKamehameha(f,input);
   }
@@ -2041,27 +2071,27 @@ function updateKamehameha(f,index,enemy,input,dt) {
     traceBeam(f);
     if(clash.on||(enemy.active&&enemy.beam>0&&beamsCross(f,enemy))){if(!clash.on)startClash();return;}  // Strahl-Duell statt Treffer
     if(f.beamHitCooldown<=0&&enemy.active&&enemy.dashInvuln<=0) {
-      const sx=f.x+f.face*21,sy=f.y-40,dx=f.beamEndX-sx,dy=f.beamEndY-sy;
+      const B=beamOf(f),sx=f.x+f.face*21,sy=f.y-40,dx=f.beamEndX-sx,dy=f.beamEndY-sy;
       const lengthSq=dx*dx+dy*dy;
       const t=clamp(((enemy.x-sx)*dx+(enemy.y-45-sy)*dy)/lengthSq,0,1);
       const ex=sx+dx*t,ey=sy+dy*t;
-      if(Math.hypot(enemy.x-ex,enemy.y-45-ey)<46&&!parry(enemy,index)) {
+      if(Math.hypot(enemy.x-ex,enemy.y-45-ey)<(B.w||46)&&!parry(enemy,index)) {
         const blocked=enemy.guarding&&enemy.face===-f.face;
         const scale=blocked?1:registerCombo(f,enemy);
-        enemy.hp=Math.max(0,enemy.hp-(f.superTime>0?23:16)*(blocked?.2:scale));
+        enemy.hp=Math.max(0,enemy.hp-(f.superTime>0?23:16)*(B.dmg||1)*(blocked?(B.blk||.2):scale));
         if(blocked) {
           enemy.hitFlash=.08;enemy.vx+=f.face*45;
           burst(enemy.x,enemy.y-45,'rgb(145,220,255)',9,90);
           screenShake=Math.max(screenShake,1.5);hitStop=Math.max(hitStop,.02);
           playSfx('block');
         } else {
-          enemy.stun=comboStun(enemy,.22);enemy.hitFlash=.18;enemy.vx+=f.face*115;enemy.vy-=65;
+          enemy.stun=comboStun(enemy,.22);enemy.hitFlash=.18;enemy.vx+=f.face*(B.pull?-140:115);enemy.vy-=65;if(B.slow)enemy.slow=B.slow;
           impactBurst(enemy.x,enemy.y-45,f.color,false);screenShake=Math.max(screenShake,3.5);
-          hurt(enemy,f.face,(f.superTime>0?23:16)*scale,false);
+          hurt(enemy,f.face,(f.superTime>0?23:16)*(B.dmg||1)*scale,false);
           hitStop=Math.max(hitStop,.035);
           playSfx('hit');rumble(1-index,.4,.3,60);
         }
-        f.beamHitCooldown=blocked?.24:.16;
+        f.beamHitCooldown=blocked?.24:(B.tick||.16);
       }
     }
     if(!f.beamTerrainHit&&f.beamHitsGround) {
@@ -2415,6 +2445,7 @@ function updateFighter(f,index,dt) {
   if(!input.punch)f.punchHeld=false;
   if(!input.heavy)f.heavyHeld=false;
   if(!enemy.active&&Math.abs(f.vx)>6&&!f.spec)f.face=f.vx>0?1:-1;
+  if(f.slow>0){f.slow-=dt;f.vx*=.94;if(f.vy<0)f.vy*=.94;if(Math.random()<.25)addParticle(f.x+(Math.random()-.5)*24,f.y-30-Math.random()*40,0,-30,'#ff7ad0',2,.5);}  // Wabbelwelle: verlangsamt
   const vyIn=f.vy;
   f.x+=f.vx*dt;f.y+=f.vy*dt;
   const floor=terrainY(f.x);
@@ -2523,6 +2554,7 @@ function update(dt) {
   for(let t=0;t<2;t++)if(fighters[t].tagShow>0)fighters[t].tagShow-=dt;
   for(let t=0;t<2;t++)if(fighters[t].breakShow>0)fighters[t].breakShow-=dt;
   for(let t=0;t<2;t++)if(fighters[t].specShow>0)fighters[t].specShow-=dt;
+  for(let t=0;t<2;t++)if(fighters[t].beamShow>0)fighters[t].beamShow-=dt;
   clock+=dt;updateFighter(fighters[0],0,dt);
   if(fighters[1].active) {
     updateFighter(fighters[1],1,dt);
@@ -3078,19 +3110,74 @@ function drawFighter(f,alpha) {
   }
   ctx.restore();
 }
+// Strahl zeichnen: Form je Figur (BEAMS[].st), Farben f.beamC = [Schein, Strahl, Kern]
+function beamLine(sx,sy,ex,ey){ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);ctx.stroke();}
 function drawKamehameha(f) {
   if(f.beam<=0)return;
   if(clash.on){f.beamEndX=clash.x;f.beamEndY=clash.y;}
-  const sx=f.x+f.face*21,sy=f.y-40;
-  const pulse=.82+.18*Math.sin(clock*55);
-  const bc=f.beamC||[f.color,f.color,'#fff'];
-  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
-  ctx.globalAlpha=.23;ctx.strokeStyle=bc[0];ctx.lineWidth=68*pulse;
-  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
-  ctx.globalAlpha=.82;ctx.strokeStyle=bc[1];ctx.lineWidth=38*pulse;
-  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
-  ctx.globalAlpha=.92;ctx.strokeStyle=bc[2];ctx.lineWidth=14*pulse;
-  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
+  const B=beamOf(f),st=B.st,bc=f.beamC||[f.color,f.color,'#fff'];
+  const sx=f.x+f.face*21,sy=f.y-40,ex=f.beamEndX,ey=f.beamEndY,dx=ex-sx,dy=ey-sy,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
+  const pulse=st==='laser'?1:.82+.18*Math.sin(clock*55);
+  const sc=st==='laser'?.36:st==='blade'||st==='drill'?.66:st==='spiral'?.8:1;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';
+  if(st==='cone') {
+    // Kegel: an der Hand schmal, zum Ende breit (drei Schichten)
+    const w1=Math.min(150,30+len*.42)*pulse;
+    for(let k=0;k<3;k++) {
+      const a=k===0?.25:k===1?.7:.9,m=k===0?1:k===1?.6:.22;
+      ctx.globalAlpha=a;ctx.fillStyle=k===0?bc[0]:k===1?bc[1]:bc[2];ctx.beginPath();
+      ctx.moveTo(sx+nx*8*m,sy+ny*8*m);ctx.lineTo(ex+nx*w1*m*.5,ey+ny*w1*m*.5);ctx.lineTo(ex-nx*w1*m*.5,ey-ny*w1*m*.5);ctx.lineTo(sx-nx*8*m,sy-ny*8*m);ctx.closePath();ctx.fill();
+    }
+  } else {
+    if(st==='wobble') {
+      // Welle: Strahl schlängelt sich (nur Optik, Treffer bleibt gerade)
+      ctx.beginPath();ctx.moveTo(sx,sy);
+      for(let t=8;t<len;t+=8){const o=Math.sin(t*.045-clock*14)*13*Math.min(1,t/50);ctx.lineTo(sx+ux*t+nx*o,sy+uy*t+ny*o);}
+      ctx.lineTo(ex,ey);
+      ctx.globalAlpha=.23;ctx.strokeStyle=bc[0];ctx.lineWidth=60*pulse;ctx.stroke();
+      ctx.globalAlpha=.82;ctx.strokeStyle=bc[1];ctx.lineWidth=32*pulse;ctx.stroke();
+      ctx.globalAlpha=.92;ctx.strokeStyle=bc[2];ctx.lineWidth=11*pulse;ctx.stroke();
+    } else {
+      ctx.globalAlpha=.23;ctx.strokeStyle=bc[0];ctx.lineWidth=68*pulse*sc;beamLine(sx,sy,ex,ey);
+      ctx.globalAlpha=.82;ctx.strokeStyle=bc[1];ctx.lineWidth=38*pulse*sc;beamLine(sx,sy,ex,ey);
+      ctx.globalAlpha=.92;ctx.strokeStyle=bc[2];ctx.lineWidth=14*pulse*Math.max(sc,.5);beamLine(sx,sy,ex,ey);
+    }
+  }
+  // Extras je Form
+  if(st==='flame') {
+    // Flammenzungen abwechselnd oben/unten
+    ctx.beginPath();
+    for(let t=24;t<len-10;t+=22){const s=(Math.floor(t/22)&1)?1:-1,h=(9+7*Math.sin(t*.7+clock*40))*pulse,bx=sx+ux*t+nx*s*16,by=sy+uy*t+ny*s*16;
+      ctx.moveTo(bx-ux*9,by-uy*9);ctx.lineTo(bx+nx*s*h+ux*5,by+ny*s*h+uy*5);ctx.lineTo(bx+ux*9,by+uy*9);ctx.closePath();}
+    ctx.globalAlpha=.75;ctx.fillStyle='#ffb040';ctx.fill();
+  } else if(st==='bolt') {
+    // zwei zuckende Blitze um den Strahl
+    const seed=Math.floor(clock*30);ctx.lineWidth=2.5;
+    for(let s=0;s<2;s++){ctx.beginPath();ctx.moveTo(sx,sy);
+      for(let t=18;t<len;t+=18){const o=(crackRnd(seed+s*13,t)-.5)*44;ctx.lineTo(sx+ux*t+nx*o,sy+uy*t+ny*o);}
+      ctx.lineTo(ex,ey);ctx.globalAlpha=.9;ctx.strokeStyle=s?'#ffffff':bc[2];ctx.stroke();}
+  } else if(st==='spiral'||st==='drill') {
+    // Spirale (ZAP weit, SAGE eng); am Bohrer-Ende eine Spitze
+    const fq=st==='drill'?.15:.06,am=st==='drill'?10:17,sp=st==='drill'?40:25;ctx.lineWidth=3;
+    for(let s=0;s<2;s++){ctx.beginPath();ctx.moveTo(sx,sy);
+      for(let t=6;t<len;t+=6){const o=Math.sin(t*fq-clock*sp+s*Math.PI)*am*Math.min(1,t/30);ctx.lineTo(sx+ux*t+nx*o,sy+uy*t+ny*o);}
+      ctx.globalAlpha=.85;ctx.strokeStyle=s?'#ffffff':bc[2];ctx.stroke();}
+    if(st==='drill'){ctx.globalAlpha=.9;ctx.fillStyle=bc[2];ctx.beginPath();ctx.moveTo(ex+ux*26,ey+uy*26);ctx.lineTo(ex+nx*13,ey+ny*13);ctx.lineTo(ex-nx*13,ey-ny*13);ctx.closePath();ctx.fill();}
+  } else if(st==='blade') {
+    // helle Schneide-Blitzer laufen den Strahl entlang
+    ctx.lineWidth=4;ctx.strokeStyle=f.color;ctx.globalAlpha=.95;ctx.beginPath();
+    for(let i=0;i<4;i++){const t=(i*len/4+clock*900)%len;ctx.moveTo(sx+ux*t+nx*6,sy+uy*t+ny*6);ctx.lineTo(sx+ux*Math.min(len,t+40)+nx*6,sy+uy*Math.min(len,t+40)+ny*6);}
+    ctx.stroke();
+  } else if(st==='laser') {
+    ctx.globalAlpha=.9;ctx.fillStyle=bc[2];ctx.beginPath();ctx.arc(sx,sy,9+Math.sin(clock*60)*2,0,Math.PI*2);ctx.fill();
+  } else if(st==='star') {
+    // funkelnde Sterne entlang des Strahls
+    ctx.fillStyle='#ffffff';ctx.beginPath();
+    const n=Math.min(24,Math.floor(len/36));
+    for(let i=0;i<n;i++){const t=(i*36+clock*260)%len,o=Math.sin(i*2.3)*20,cx=sx+ux*t+nx*o,cy=sy+uy*t+ny*o,r=(3+2.5*Math.sin(clock*20+i))*pulse;
+      ctx.moveTo(cx,cy-r*2);ctx.lineTo(cx+r*.5,cy-r*.5);ctx.lineTo(cx+r*2,cy);ctx.lineTo(cx+r*.5,cy+r*.5);ctx.lineTo(cx,cy+r*2);ctx.lineTo(cx-r*.5,cy+r*.5);ctx.lineTo(cx-r*2,cy);ctx.lineTo(cx-r*.5,cy-r*.5);ctx.closePath();}
+    ctx.globalAlpha=.95;ctx.fill();
+  }
   ctx.restore();
 }
 // Klingenwelle (kind 1): Sichel aus drei Bögen, Öffnung nach hinten, dazu Nachzieh-Streifen
@@ -3238,9 +3325,9 @@ function render(alpha) {
   // Name des Spezialangriffs kurz über dem Kopf (in Weltkoordinaten, damit er beim Neigen gerade bleibt)
   ctx.textAlign='center';ctx.font='900 12px system-ui';
   for(let i=0;i<2;i++) {
-    const f=fighters[i],nm=TXT.specNames[f.style];if(!f.active||!(f.specShow>0)||!nm)continue;
+    const f=fighters[i],sp=f.specShow>0,show=sp?f.specShow:f.beamShow,nm=sp?TXT.specNames[f.style]:TXT.beamNames[f.style];if(!f.active||!(show>0)||!nm)continue;  // Name von Spezialangriff oder Strahl
     const x=f.px+(f.x-f.px)*alpha,y=Math.max(renderCameraY-H/(2*renderZoom)+80/renderZoom,f.py+(f.y-f.py)*alpha-(f.tagShow>0?128:112)*((f.look&&f.look.size)||1));  // nie über/in der HUD-Zone
-    ctx.globalAlpha=clamp(f.specShow/.3,0,1);ctx.fillStyle='#050914';ctx.fillText(nm,x+1,y+1);ctx.fillStyle='#ffe66d';ctx.fillText(nm,x,y);
+    ctx.globalAlpha=clamp(show/.3,0,1);ctx.fillStyle='#050914';ctx.fillText(nm,x+1,y+1);ctx.fillStyle='#ffe66d';ctx.fillText(nm,x,y);
   }
   ctx.globalAlpha=1;
   ctx.restore();
