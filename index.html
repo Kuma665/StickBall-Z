@@ -123,7 +123,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26p</p>
+        <p class="version">v2026-11-26q</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -2777,7 +2777,13 @@ function update(dt) {
     for(let i=0;i<MAX_PROJECTILES;i++){const p=projectiles[i];p.px=p.x;p.py=p.y;}
     previousCameraX=cameraX;previousCameraY=cameraY;previousZoom=zoom;
     if(slowT>0){slowT-=dt;if(slowT<=0)gameSpeed=1;}clock+=dt;updateEffects(dt);return;}  // clock läuft weiter (Siegerpose, Aura)
-  if(state!=='playing')return;
+  if(state!=='playing') {
+    // Menü/Auswahl: Physik steht, Interpolation einfrieren (sonst springt z. B. ein gerade weggeschleuderter Gegner zwischen letzter und vorletzter Position)
+    for(let i=0;i<2;i++){const f=fighters[i];f.px=f.x;f.py=f.y;}
+    for(let i=0;i<MAX_PROJECTILES;i++){const p=projectiles[i];p.px=p.x;p.py=p.y;}
+    previousCameraX=cameraX;previousCameraY=cameraY;previousZoom=zoom;
+    return;
+  }
   if(slowMo>0&&!ultra.on){slowMo-=dt;if(slowMo<=0){slowMo=0;gameSpeed=1;}}
   if(ultra.on){updateUltra(dt);return;}
   if(clash.on){updateClash(dt);return;}
