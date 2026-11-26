@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26b</p>
+        <p class="version">v2026-11-26c</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -196,7 +196,7 @@ const TXT={
   stArea:'FLUGGEBIET 01',stFree:'FREIFLUG',stBot:'KAMPF GEGEN KI',stLocal:'LOKALER KAMPF',stPads:'CONTROLLER: ',
   stAudioNo:'AUDIO NICHT UNTERSTÜTZT',stAudioFail:'AUDIO KANN NICHT STARTEN',lblLocal:'2 SPIELER  ·  ',lblBot:'KI-KAMPF  ·  ',
   // HUD und Ergebnis
-  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
+  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
   specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
   botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
@@ -707,7 +707,7 @@ function resetFighter(f,index) {
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
   f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.cannonHolding=false;f.cannonCharge=0;f.shotQueued=false;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
-  f.tagShow=0;f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
+  f.tagShow=0;f.breakShow=0;f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
 }
 function begin(nextMode) {
   for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);
@@ -2186,7 +2186,9 @@ function updateFighter(f,index,dt) {
         f.punchHit=true;
         const finisher=f.attackStep===3||f.attackType>=3;
         const baseDamage=f.attackType===4?(f.heavyPowered?17:11):f.attackType===5||f.attackType===6?(f.heavyPowered?18:12):f.attackType===3?(f.heavyPowered?19:13):f.attackType===1?12:f.attackType===2?14:f.attackStep===3?17:f.attackStep===2?10:7;
-        const blocked=enemy.guarding&&enemy.face===-f.face;
+        const blockedRaw=enemy.guarding&&enemy.face===-f.face;
+        // Block-Brecher: voll aufgeladener schwerer Schlag oder ULTRA-SCHLAG geht durch den Block
+        const guardBreak=blockedRaw&&(f.ultra||f.smashPower>=2),blocked=blockedRaw&&!guardBreak;
         const scale=blocked?1:registerCombo(f,enemy);
         const damage=baseDamage*(f.superTime>0?1.35:1)*f.smashPower;
         const kb=1+(f.smashPower-1)*.6;
@@ -2200,6 +2202,7 @@ function updateFighter(f,index,dt) {
           const gap=Math.max(0,Math.abs(enemy.x-f.x)-44);
           f.vx+=f.face*(finisher?110:35)+f.face*Math.min(140,gap*1.1);
           enemy.stun=comboStun(enemy,f.attackType===5?.6:finisher?.38:.3);enemy.smashHolding=false;
+          if(guardBreak){enemy.stun=Math.max(enemy.stun,.75);enemy.breakShow=1.1;burst(enemy.x,enemy.y-43,'rgb(145,220,255)',22,240);playSfx('block');}
           enemy.vx+=kb*f.face*(f.attackType===4?460:f.attackType===3?390:f.attackType===5?170:f.attackType===6?320:finisher?340:f.attackStep===2?245:175);
           enemy.vy+=kb*(f.attackType===2?245:f.attackType===6?420:-(f.attackType===5?(f.heavyPowered?520:430):f.attackType===1?275:finisher?190:f.attackStep===2?85:35));
           if(finisher)f.chaseWindow=.7;else f.cancelWindow=.3;
@@ -2325,6 +2328,7 @@ function update(dt) {
   }
   processTags(dt);
   for(let t=0;t<2;t++)if(fighters[t].tagShow>0)fighters[t].tagShow-=dt;
+  for(let t=0;t<2;t++)if(fighters[t].breakShow>0)fighters[t].breakShow-=dt;
   for(let t=0;t<2;t++)if(fighters[t].specShow>0)fighters[t].specShow-=dt;
   clock+=dt;updateFighter(fighters[0],0,dt);
   if(fighters[1].active) {
@@ -2864,6 +2868,9 @@ function drawFighter(f,alpha) {
   }
   if(f.guarding) {
     ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=.9;ctx.textAlign='center';ctx.font='800 9px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText(TXT.block,0,-101);ctx.restore();ctx.globalAlpha=1;
+  }
+  if(f.breakShow>0) {
+    ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=clamp(f.breakShow/.3,0,1);ctx.textAlign='center';ctx.font='900 12px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText(TXT.guardBreak,0,-116);ctx.restore();ctx.globalAlpha=1;
   }
   if(f.tagShow>0) {
     // Name nach dem Einwechseln kurz über dem Kopf (Spiegelung aufheben)
