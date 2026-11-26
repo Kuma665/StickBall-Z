@@ -123,7 +123,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26n</p>
+        <p class="version">v2026-11-26o</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -468,6 +468,19 @@ function playSfx(kind,heavy=false) {
   else if(kind==='crater'){playSweep(110,28,.55,'sine',1,t,b);playNoise(.6,.85,'lowpass',900,120,t,b);playNoise(.15,.5,'bandpass',1800,500,t,b);}
   else if(kind==='kiai'){playSweep(95,70,.32,'sawtooth',.45,t,b);playSweep(480,240,.18,'square',.16,t,b);playNoise(.3,.5,'bandpass',1200,400,t,b);playSweep(160,40,.35,'sine',.7,t+.02,b);}
   else if(kind==='dash'){playNoise(.16,.45,'bandpass',3200,900,t,b);playSweep(680,300,.1,'sine',.25,t,b);}
+  // Eigene Klänge der Spezialangriffe (v2026-11-26o)
+  else if(kind==='fire'){playNoise(.55,.8,'lowpass',1800,300,t,b);playNoise(.4,.45,'bandpass',900,2600,t,b);playSweep(70,140,.45,'sawtooth',.3,t,b);playSweep(140,45,.4,'sine',.7,t+.05,getDrive());}  // BLAZE: Feuer faucht
+  else if(kind==='shing'){[1320,2480,3710].forEach((f,i)=>playSweep(f,f*.97,.5-i*.1,'sine',.18-i*.04,t,b));playNoise(.18,.6,'highpass',4000,9000,t,b);playNoise(.12,.4,'bandpass',2200,800,t,b);}  // RAZOR: Klinge singt
+  else if(kind==='zap'){const n=heavy?7:3;for(let i=0;i<n;i++)playNoise(.018+Math.random()*.02,heavy?.7:.45,'highpass',2500+Math.random()*3000,0,t+i*(heavy?.035:.025)+Math.random()*.01,b);
+    playSweep(heavy?900:1500,heavy?120:400,heavy?.3:.08,'square',heavy?.16:.08,t,b);if(heavy)playSweep(110,50,.3,'sine',.6,t,b);}  // VOLT: Elektro-Knistern
+  else if(kind==='whir'){for(let i=0;i<6;i++)playNoise(.07,.35+(i%2)*.1,'bandpass',1400+i*120,900,t+i*.06,b);playSweep(380,520,.4,'sawtooth',.08,t,b);}  // VEXA: Scheibe surrt
+  else if(kind==='fcharge'){playSweep(200,900,.38,'sine',.2,t,b);playSweep(203,905,.38,'triangle',.12,t,b);playNoise(.38,.2,'bandpass',800,3000,t,b);}  // NOVA: Laden steigt
+  else if(kind==='fusion'){playSweep(55,85,.7,'sawtooth',.35,t,b);playSweep(57,88,.7,'sawtooth',.3,t,b);playSweep(220,660,.5,'triangle',.18,t,b);playNoise(.7,.45,'lowpass',1200,400,t,b);}  // NOVA: Strahl brummt
+  else if(kind==='blink'){playNoise(.14,.6,'highpass',1500,9000,t,b);playSweep(400,2400,.1,'sine',.22,t,b);}  // ZAP: Zisch
+  else if(kind==='clang'){playNoise(.01,.8,'highpass',3000,0,t,b);[520,1370,2210,3150].forEach((f,i)=>playSweep(f,f*.995,.7-i*.12,'sine',.22-i*.04,t,b));playSweep(180,90,.1,'triangle',.4,t,b);}  // SAGE: Konter klirrt
+  else if(kind==='dome'){playSweep(60,30,.7,'sine',1,t,getDrive());playNoise(.5,.6,'lowpass',600,100,t,b);playSweep(300,900,.35,'triangle',.18,t,b);playNoise(.35,.35,'bandpass',2000,4000,t+.03,b);}  // KRYX: Kuppel-Wumms
+  else if(kind==='boing'){const v=.9+Math.random()*.25;playSweep(140*v,520*v,.13,'sine',.5,t,b);playSweep(520*v,260*v,.18,'sine',.4,t+.13,b);playSweep(70,40,.12,'sine',.5,t,getDrive());}  // BLOBB: Boing
+  else if(kind==='stomp'){playSweep(70,25,.7,'sine',1,t,getDrive());playNoise(.7,.9,'lowpass',500,60,t,b);playNoise(.2,.5,'bandpass',1000,300,t,b);}  // TORAK: Stampfen
   else playSweep(heavy?140:200,heavy?50:80,heavy?.24:.12,'sine',heavy?.8:.6,t,b);
 }
 function startMusic() {
@@ -1687,7 +1700,7 @@ function updComet(f,index,enemy,dt) {
     const l=Math.hypot(dx,dy)||1;f.specX=dx/l;f.specY=dy/l;f.face=dx>0?1:-1;
     f.specPh=1;f.specT=0;
     spawnRing(f.x,f.y-40,90,'#ffe66d',5,.3);burst(f.x,f.y-40,'#ffb23e',16,220);flash(.12,'#ffb23e');
-    screenShake=Math.max(screenShake,4);playSfx('beam');rumble(index,.5,.6,120);
+    screenShake=Math.max(screenShake,4);playSfx('fire');rumble(index,.5,.6,120);
     return;
   }
   f.vx=f.specX*COMET_SPEED;f.vy=f.specY*COMET_SPEED;
@@ -1716,7 +1729,7 @@ function updBlade(f,index,enemy,dt) {
     p.x=f.x+f.face*36;p.y=f.y-44;p.px=p.x;p.py=p.y;p.vx=f.face*p.speed;p.vy=0;p.life=2.4;p.power=20;p.color=f.superTime>0?f.supC:f.color;
     f.vx-=f.face*80;
     spawnRing(p.x,p.y,70,'#ffffff',4,.25);burst(p.x,p.y,p.color,14,200);
-    screenShake=Math.max(screenShake,4);playSfx('beam');rumble(index,.4,.5,90);
+    screenShake=Math.max(screenShake,4);playSfx('shing');rumble(index,.4,.5,90);
   }
   if(f.specT>=BLADE_DUR)endSpecial(f);
 }
@@ -1745,7 +1758,7 @@ function quakeStomp(f,index,landed) {
   if(landed)makeCrater(gx,false);
   spawnRing(gx,gy-6,130,'#ffd29a',6,.4);burst(gx,gy-4,'rgb(255,188,112)',18,220);
   for(let i=0;i<10;i++)addParticle(gx+(Math.random()-.5)*50,gy-4,(Math.random()-.5)*260,-220-Math.random()*260,i&1?'#8c96a8':'#5c6178',2.5+Math.random()*2.5,.8);
-  screenShake=Math.max(screenShake,10);flash(.12,'#ffe2b8');playSfx('crater');rumble(index,.8,.6,160);
+  screenShake=Math.max(screenShake,10);flash(.12,'#ffe2b8');playSfx('stomp');rumble(index,.8,.6,160);
   const p=takeProjectile();
   p.active=true;p.kind=2;p.hit=false;p.owner=index;p.big=false;p.r=30;p.speed=640;p.acc=110;
   p.x=gx+f.face*30;p.y=terrainY(p.x);p.px=p.x;p.py=p.y;p.vx=f.face*p.speed;p.vy=0;p.life=1.15;p.power=22;p.color='#ffd34d';
@@ -1777,8 +1790,8 @@ function salvoShot(f,index,enemy,big) {
   p.vx=Math.cos(a)*f.face*p.speed;p.vy=Math.sin(a)*p.speed;p.life=big?2.2:1.5;p.power=big?SALVO_BIGPOW:SALVO_POW;p.color=c;
   f.vx-=f.face*(big?90:14);
   burst(p.x,p.y,c,big?16:4,big?180:90);
-  if(big){spawnRing(p.x,p.y,60,'#ffffff',4,.22);screenShake=Math.max(screenShake,5);rumble(index,.5,.5,100);playSfx('beam');}
-  else{screenShake=Math.max(screenShake,1.2);rumble(index,.15,.3,30);playSfx('shot');}
+  if(big){spawnRing(p.x,p.y,60,'#ffffff',4,.22);screenShake=Math.max(screenShake,5);rumble(index,.5,.5,100);playSfx('zap',true);}
+  else{screenShake=Math.max(screenShake,1.2);rumble(index,.15,.3,30);playSfx('zap');}
 }
 function updSalvo(f,index,enemy,dt) {
   f.vx*=Math.pow(.78,dt*60);f.vy*=Math.pow(.78,dt*60);
@@ -1837,7 +1850,7 @@ function updSickle(f,index,enemy,dt) {
     p.x=f.x+f.face*14;p.y=f.y-84;p.px=p.x;p.py=p.y;p.vx=Math.cos(aim)*f.face*SICKLE_SPEED;p.vy=Math.sin(aim)*SICKLE_SPEED;
     p.life=2.8;p.power=SICKLE_POW;p.color=f.superTime>0?f.supC:'#c04bff';
     spawnRing(p.x,p.y,50,'#ffffff',3,.2);burst(p.x,p.y,p.color,12,180);
-    screenShake=Math.max(screenShake,3);playSfx('beam');rumble(index,.35,.5,80);
+    screenShake=Math.max(screenShake,3);playSfx('whir');rumble(index,.35,.5,80);
     f.specPh=1;f.specT=0;return;
   }
   if(f.specT>=SICKLE_REC)endSpecial(f);
@@ -1894,7 +1907,7 @@ const FUSION_RED='#ff3f55',FUSION_BLUE='#36a9ff';
 function startFusion(f,index,enemy) {
   f.vx*=.2;f.vy*=.2;f.specY=0;
   if(enemy.active)f.specY=clamp(Math.atan2(enemy.y-f.y,(enemy.x-f.x)*f.face),-.5,.5);
-  playSfx('kiai');
+  playSfx('fcharge');
 }
 function traceFusion(f) {
   const sx=f.x+f.face*21,sy=f.y-40,ux=Math.cos(f.specY)*f.face,uy=Math.sin(f.specY);
@@ -1915,7 +1928,7 @@ function updFusion(f,index,enemy,dt) {
       f.specPh=1;f.specT=0;f.ghostTimer=0;traceFusion(f);
       const sx=f.x+f.face*21,sy=f.y-40;
       spawnRing(sx,sy,90,'#ffffff',5,.3);burst(sx,sy,FUSION_RED,14,220);burst(sx,sy,FUSION_BLUE,14,220);
-      flash(.14,'#d8c8ff');screenShake=Math.max(screenShake,7);playSfx('beam');rumble(index,.6,.6,140);
+      flash(.14,'#d8c8ff');screenShake=Math.max(screenShake,7);playSfx('fusion');rumble(index,.6,.6,140);
       f.vx-=f.face*60;
     }
     return;
@@ -1978,7 +1991,7 @@ function drawFusion(f,alpha) {
 // ZAP · Blinkschlag: flackert und verschwindet (Phase 0, unverwundbar), taucht hinter dem Gegner auf (1) und schlägt ihn weg (2 Nachwirkung).
 // Fehlschlag (Gegner ausgewichen/zu weit) → Phase 3: lange Nachwirkung, verwundbar
 const BLINK_OUT=.2,BLINK_IN=.13,BLINK_REC=.22,BLINK_MISS=.5,BLINK_POW=22,BLINK_REACH=100,BLINK_BEHIND=58;
-function startBlink(f){f.vx*=.2;f.vy*=.2;f.dashInvuln=Math.max(f.dashInvuln,BLINK_OUT+.04);spawnRing(f.x,f.y-40,40,'#ffffff',2,.2);playSfx('dash');}
+function startBlink(f){f.vx*=.2;f.vy*=.2;f.dashInvuln=Math.max(f.dashInvuln,BLINK_OUT+.04);spawnRing(f.x,f.y-40,40,'#ffffff',2,.2);playSfx('blink');}
 function updBlink(f,index,enemy,dt) {
   if(f.specPh===0) {
     f.vx=0;f.vy=0;
@@ -1991,7 +2004,7 @@ function updBlink(f,index,enemy,dt) {
     nx=clamp(nx,-worldRadius,worldRadius);ny=Math.min(ny,terrainY(nx));
     f.x=nx;f.y=ny;f.px=nx;f.py=ny;f.vx=0;f.vy=0;
     spawnRing(nx,ny-40,70,'#ffffff',4,.22);burst(nx,ny-40,f.color,12,200);
-    screenShake=Math.max(screenShake,3);playSfx('shot');rumble(index,.3,.5,60);
+    screenShake=Math.max(screenShake,3);playSfx('blink');rumble(index,.3,.5,60);
     f.specPh=1;f.specT=0;return;
   }
   f.vx*=Math.pow(.75,dt*60);f.vy*=Math.pow(.75,dt*60);
@@ -2038,7 +2051,7 @@ function parry(v,ai) {
   v.vx=0;v.vy=0;v.dashInvuln=Math.max(v.dashInvuln,COUNTER_IN+.1);
   spawnRing(v.x,v.y-40,60,'#ffffff',4,.2);
   flash(.14,'#ffffff');hitStop=Math.max(hitStop,.06);screenShake=Math.max(screenShake,4);slowHit(.25);
-  playSfx('dash');rumble(fighters.indexOf(v),.4,.6,80);
+  playSfx('clang');rumble(fighters.indexOf(v),.4,.6,80);
   return true;
 }
 function updCounter(f,index,enemy,dt) {
@@ -2097,7 +2110,7 @@ function updDome(f,index,enemy,dt) {
     spawnRing(cx,cy,DOME_R,'#ffffff',7,.32);spawnRing(cx,cy,DOME_R*1.35,DOME_COLOR,4,.45);
     burst(cx,cy,DOME_COLOR,22,300);burst(cx,cy,'rgb(255,255,255)',14,240);
     flash(.18,'#eaffc0');screenShake=Math.max(screenShake,10);hitStop=Math.max(hitStop,.05);
-    playSfx('crater');rumble(index,.8,.7,160);
+    playSfx('dome');rumble(index,.8,.7,160);
     f.specPh=1;f.specT=0;return;
   }
   if(f.specT>=DOME_REC)endSpecial(f);
@@ -2140,7 +2153,7 @@ function updBall(f,index,enemy,dt) {
     ballAim(f,enemy,1);f.vy=-560;
     if(enemy.active&&enemy.y<f.y-60)f.vy-=Math.min(380,(f.y-enemy.y)*1.1);  // Gegner höher → steiler
     f.specPh=1;f.specT=0;f.specX=0;f.specY=0;f.ghostTimer=0;
-    spawnRing(f.x,f.y-20,50,'#ff7fc8',3,.2);playSfx('dash');return;
+    spawnRing(f.x,f.y-20,50,'#ff7fc8',3,.2);playSfx('boing');return;
   }
   if(f.specPh===1) {
     f.vy+=BALL_GRAV*dt;f.specX+=f.vx*dt/BALL_R;f.ghostTimer-=dt;
@@ -2149,7 +2162,7 @@ function updBall(f,index,enemy,dt) {
     if(f.specT>.06&&f.y>=floor-2&&f.vy>=0) {
       f.specN++;f.specS=.15;f.y=floor;f.vy=-Math.max(420,f.specY*.72);ballAim(f,enemy,.9);
       for(let i=0;i<6;i++)addParticle(f.x+(Math.random()-.5)*30,floor-2,(Math.random()-.5)*180,-80-Math.random()*120,'#8c96a8',2.5,.4);
-      screenShake=Math.max(screenShake,3);playSfx('dash');rumble(index,.3,.4,50);
+      screenShake=Math.max(screenShake,3);playSfx('boing');rumble(index,.3,.4,50);
     }
     if(f.ghostTimer<=0&&enemy.active&&enemy.dashInvuln<=0&&Math.hypot(enemy.x-f.x,enemy.y-42-(f.y-24))<BALL_R+30&&!parry(enemy,index)) {
       const dir=enemy.x>f.x?1:enemy.x<f.x?-1:f.face;
