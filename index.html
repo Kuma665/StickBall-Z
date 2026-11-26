@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26e</p>
+        <p class="version">v2026-11-26f</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -177,7 +177,7 @@ const TXT={
   // Hauptmenü, Pause, Einstellungen
   modeFree:'FREIFLUG',modeBot:'GEGEN KI',modeLocal:'2–4 SPIELER',
   // Kämpfer-Auswahl und Teams (Figurennamen: Reihenfolge wie CHARS)
-  charNames:['BLAZE','VOLT','RAIKO','KENJI','SAGE','VEXA','KRYX','BLOBB','TORAK','NOVA'],
+  charNames:['BLAZE','VOLT','ZAP','RAZOR','SAGE','VEXA','KRYX','BLOBB','TORAK','NOVA'],
   selTitle:'KÄMPFER WÄHLEN',selSize:'Team-Größe',selGo:'LOS!',team:'TEAM ',sizeNames:['1 GEGEN 1','2 GEGEN 2','3 GEGEN 3','4 GEGEN 4'],soloNames:['1 KÄMPFER','2 KÄMPFER','3 KÄMPFER','4 KÄMPFER'],
   ctrlNames:['SPIELER 1','SPIELER 2','SPIELER 3','SPIELER 4'],ctrlBot:'KI',ctrlTag:' · S',teamWins:'TEAM {n} GEWINNT',menuHelp:'STEUERUNG',menuSettings:'Einstellungen',back:'ZURÜCK',
   pause:'PAUSE',pResume:'WEITER',pSettings:'EINSTELLUNGEN',pMenu:'ZUM MENÜ',
@@ -1337,7 +1337,7 @@ function updComet(f,index,enemy,dt) {
   }
 }
 function poseComet(f){spK=6;spA=f.specPh===0?.15*Math.min(1,f.specT/COMET_WIND):.5;}
-// KENJI · Klingenwelle: Schwerthieb, Sichel-Welle fliegt waagerecht übers Bild, zerschneidet Ki-Schüsse (eher langsam)
+// RAZOR · Klingenwelle: Schwerthieb, Sichel-Welle fliegt waagerecht übers Bild, zerschneidet Ki-Schüsse (eher langsam)
 function startBlade(f){f.vx*=.3;f.vy*=.3;playSfx('dash');}
 function updBlade(f,index,enemy,dt) {
   f.vx*=Math.pow(.8,dt*60);f.vy*=Math.pow(.8,dt*60);
@@ -1607,7 +1607,7 @@ function drawFusion(f,alpha) {
   ctx.globalAlpha=fade;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(sx,sy,10*pulse,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
-// RAIKO · Blinkschlag: flackert und verschwindet (Phase 0, unverwundbar), taucht hinter dem Gegner auf (1) und schlägt ihn weg (2 Nachwirkung).
+// ZAP · Blinkschlag: flackert und verschwindet (Phase 0, unverwundbar), taucht hinter dem Gegner auf (1) und schlägt ihn weg (2 Nachwirkung).
 // Fehlschlag (Gegner ausgewichen/zu weit) → Phase 3: lange Nachwirkung, verwundbar
 const BLINK_OUT=.2,BLINK_IN=.13,BLINK_REC=.22,BLINK_MISS=.5,BLINK_POW=22,BLINK_REACH=100,BLINK_BEHIND=58;
 function startBlink(f){f.vx*=.2;f.vy*=.2;f.dashInvuln=Math.max(f.dashInvuln,BLINK_OUT+.04);spawnRing(f.x,f.y-40,40,'#ffffff',2,.2);playSfx('dash');}
@@ -1826,8 +1826,8 @@ function drawBall(f,alpha) {
 const SPECIALS=[
   {id:"comet",cost:25,cd:1.2,ai:{min:70,max:430,dy:260,low:false},start:startComet,update:updComet,pose:poseComet,draw:drawCometTrail},   // BLAZE
   {id:"salvo",cost:30,cd:1.6,ai:{min:140,max:560,dy:200,low:false},start:startSalvo,update:updSalvo,pose:poseSalvo,draw:drawSalvo},   // VOLT
-  {id:"blink",cost:22,cd:1.4,ai:{min:60,max:520,dy:300,low:false},start:startBlink,update:updBlink,pose:poseBlink,draw:drawBlink,hide:hideBlink},   // RAIKO
-  {id:"blade",cost:25,cd:1.4,ai:{min:170,max:640,dy:60,low:false},start:startBlade,update:updBlade,pose:poseBlade},   // KENJI
+  {id:"blink",cost:22,cd:1.4,ai:{min:60,max:520,dy:300,low:false},start:startBlink,update:updBlink,pose:poseBlink,draw:drawBlink,hide:hideBlink},   // ZAP
+  {id:"blade",cost:25,cd:1.4,ai:{min:170,max:640,dy:60,low:false},start:startBlade,update:updBlade,pose:poseBlade},   // RAZOR
   {id:"counter",cost:20,cd:1.8,ai:{min:0,max:170,dy:120,low:false,counter:true},start:startCounter,update:updCounter,pose:poseCounter,draw:drawCounter},   // SAGE
   {id:"sickle",cost:25,cd:1.6,ai:{min:120,max:620,dy:240,low:false},start:startSickle,update:updSickle,pose:poseSickle,draw:drawSickleCharge},   // VEXA
   {id:"dome",cost:28,cd:2.2,ai:{min:0,max:150,dy:140,low:false,shots:true},start:startDome,update:updDome,pose:poseDome,draw:drawDome},   // KRYX
@@ -2417,10 +2417,10 @@ const HAIR=[
    [7,-3, 13,-12, 5,-12, 6,-26, -1,-14, -6,-30, -8,-13, -18,-24, -11,-7, -24,-8, -11,0, -19,6, -8,3]],
   [[7,-4, 9,-14, 4,-12, 4,-25, -1,-14, -4,-27, -6,-13, -11,-23, -9,-8, -14,-13, -8,-1],
    [7,-3, 11,-18, 5,-14, 6,-32, 0,-16, -4,-35, -6,-15, -13,-30, -10,-9, -18,-17, -8,0]],
-  // 2 kurz und ordentlich (RAIKO)
+  // 2 kurz und ordentlich (ZAP)
   [[7,-4, 9,-9, 4,-11, 1,-15, -3,-11, -7,-14, -8,-9, -12,-10, -9,-4, -11,0, -7,1],
    [7,-3, 11,-13, 4,-13, 2,-22, -3,-14, -8,-22, -9,-11, -15,-15, -10,-4, -13,2, -7,2]],
-  // 3 glatt nach hinten, im Nacken länger (KENJI)
+  // 3 glatt nach hinten, im Nacken länger (RAZOR)
   [[8,-3, 6,-9, 0,-11, -6,-10, -10,-7, -12,-2, -13,5, -9,8, -8,2, -6,-3],
    [7,-3, 10,-15, 3,-13, 1,-26, -4,-14, -9,-24, -9,-11, -16,-17, -11,-4, -15,3, -8,2]],
   // 4 wilde Mähne (TORAK)
