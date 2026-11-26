@@ -123,7 +123,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26k</p>
+        <p class="version">v2026-11-26l</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -738,7 +738,7 @@ function terrainY(x) {
     const dx=Math.abs(x-c.x), half=c.w*.5;
     if (dx<half) {
       const t=1-dx/half,s=c.seed;
-      const jag=(Math.sin(x*.11+s)*.5+Math.sin(x*.27+s*1.7)*.3+Math.sin(x*.53+s*.6)*.2)*Math.min(12,c.depth*.06)*Math.min(1,t*3);
+      const jag=(Math.sin(x*.11+s)*.6+Math.sin(x*.27+s*1.7)*.4)*Math.min(12,c.depth*.06)*Math.min(1,t*3);
       y=Math.max(y,GROUND+c.depth*t*t+jag);
     } else if (dx<half*1.22) {
       const u=(dx-half)/(half*.22);rim=Math.max(rim,Math.sin(Math.PI*u)*Math.min(16,c.depth*.07)*(1-u*.3));
@@ -2739,7 +2739,8 @@ function drawBackground() {
 // Bodenhöhen einmal je Bild in einen Puffer (Füllung, Linie und Krater-Glut nutzen ihn)
 const TB=new Float32Array(1600);let tbN=0,tbLeft=0,tbStep=6;
 function drawTerrain() {
-  const left=renderCameraX-W/(2*renderZoom)-50,right=renderCameraX+W/(2*renderZoom)+50,step=6/renderZoom;
+  // Messpunkte fest in der Welt (Raster aus Zweierpotenzen), sonst flimmern die Kraterzacken beim Kamera-Schwenken
+  const step=Math.pow(2,Math.ceil(Math.log2(6/renderZoom))),left=Math.floor((renderCameraX-W/(2*renderZoom)-50)/step)*step,right=renderCameraX+W/(2*renderZoom)+50;
   tbLeft=left;tbStep=step;tbN=Math.min(TB.length,Math.ceil((right-left)/step)+1);for(let k=0;k<tbN;k++)TB[k]=terrainY(left+k*step);
   ctx.beginPath();ctx.moveTo(left,TB[0]);
   for(let k=1;k<tbN;k++)ctx.lineTo(left+k*step,TB[k]);
