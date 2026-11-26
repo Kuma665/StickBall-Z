@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-25k</p>
+        <p class="version">v2026-11-26</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -1824,16 +1824,16 @@ function drawBall(f,alpha) {
   ctx.restore();
 }
 const SPECIALS=[
-  {id:"comet",cost:40,cd:2.6,ai:{min:70,max:430,dy:260,low:false},start:startComet,update:updComet,pose:poseComet,draw:drawCometTrail},   // BLAZE
-  {id:"salvo",cost:45,cd:3.4,ai:{min:140,max:560,dy:200,low:false},start:startSalvo,update:updSalvo,pose:poseSalvo,draw:drawSalvo},   // VOLT
-  {id:"blink",cost:35,cd:3.0,ai:{min:60,max:520,dy:300,low:false},start:startBlink,update:updBlink,pose:poseBlink,draw:drawBlink,hide:hideBlink},   // SORA
-  {id:"blade",cost:40,cd:3.2,ai:{min:170,max:640,dy:60,low:false},start:startBlade,update:updBlade,pose:poseBlade},   // JIN
-  {id:"counter",cost:30,cd:3.5,ai:{min:0,max:170,dy:120,low:false,counter:true},start:startCounter,update:updCounter,pose:poseCounter,draw:drawCounter},   // SAGE
-  {id:"sickle",cost:40,cd:3.4,ai:{min:120,max:620,dy:240,low:false},start:startSickle,update:updSickle,pose:poseSickle,draw:drawSickleCharge},   // VEXA
-  {id:"dome",cost:40,cd:4.0,ai:{min:0,max:150,dy:140,low:false,shots:true},start:startDome,update:updDome,pose:poseDome,draw:drawDome},   // KRYX
-  {id:"ball",cost:40,cd:3.6,ai:{min:80,max:480,dy:200,low:false},start:startBall,update:updBall,pose:poseBall,draw:drawBall,hide:hideBall},   // BLOBB
-  {id:"quake",cost:50,cd:3.6,ai:{min:0,max:460,dy:90,low:true},start:startQuake,update:updQuake,pose:poseQuake},      // TORAK
-  {id:"fusion",cost:60,cd:4.5,ai:{min:60,max:420,dy:180,low:false},start:startFusion,update:updFusion,pose:poseFusion,draw:drawFusion}   // NOVA
+  {id:"comet",cost:25,cd:1.2,ai:{min:70,max:430,dy:260,low:false},start:startComet,update:updComet,pose:poseComet,draw:drawCometTrail},   // BLAZE
+  {id:"salvo",cost:30,cd:1.6,ai:{min:140,max:560,dy:200,low:false},start:startSalvo,update:updSalvo,pose:poseSalvo,draw:drawSalvo},   // VOLT
+  {id:"blink",cost:22,cd:1.4,ai:{min:60,max:520,dy:300,low:false},start:startBlink,update:updBlink,pose:poseBlink,draw:drawBlink,hide:hideBlink},   // SORA
+  {id:"blade",cost:25,cd:1.4,ai:{min:170,max:640,dy:60,low:false},start:startBlade,update:updBlade,pose:poseBlade},   // JIN
+  {id:"counter",cost:20,cd:1.8,ai:{min:0,max:170,dy:120,low:false,counter:true},start:startCounter,update:updCounter,pose:poseCounter,draw:drawCounter},   // SAGE
+  {id:"sickle",cost:25,cd:1.6,ai:{min:120,max:620,dy:240,low:false},start:startSickle,update:updSickle,pose:poseSickle,draw:drawSickleCharge},   // VEXA
+  {id:"dome",cost:28,cd:2.2,ai:{min:0,max:150,dy:140,low:false,shots:true},start:startDome,update:updDome,pose:poseDome,draw:drawDome},   // KRYX
+  {id:"ball",cost:25,cd:1.8,ai:{min:80,max:480,dy:200,low:false},start:startBall,update:updBall,pose:poseBall,draw:drawBall,hide:hideBall},   // BLOBB
+  {id:"quake",cost:32,cd:1.6,ai:{min:0,max:460,dy:90,low:true},start:startQuake,update:updQuake,pose:poseQuake},      // TORAK
+  {id:"fusion",cost:40,cd:2.4,ai:{min:60,max:420,dy:180,low:false},start:startFusion,update:updFusion,pose:poseFusion,draw:drawFusion}   // NOVA
 ];
 function updateKamehameha(f,index,enemy,input,dt) {
   f.kiaiCooldown=Math.max(0,f.kiaiCooldown-dt);
