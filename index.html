@@ -123,7 +123,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26o</p>
+        <p class="version">v2026-11-26p</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -212,7 +212,7 @@ const TXT={
   stArea:'FLUGGEBIET 01',stFree:'FREIFLUG',stBot:'KAMPF GEGEN KI',stLocal:'LOKALER KAMPF',stPads:'CONTROLLER: ',
   stAudioNo:'AUDIO NICHT UNTERSTÜTZT',stAudioFail:'AUDIO KANN NICHT STARTEN',lblLocal:'2 SPIELER  ·  ',lblBot:'KI-KAMPF  ·  ',
   // HUD und Ergebnis
-  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',chase:'JAGEN!',chaseNoKi:'KI!',chaseHit:'VERFOLGUNG ×',escape:'AUSGEWICHEN!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
+  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',chase:'JAGEN!',chaseNoKi:'KI!',chaseHit:'VERFOLGUNG ×',escape:'AUSGEWICHEN!',perfect:'PERFEKT!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
   specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
   beamNames:['FLAMMENWELLE','DONNERKANONE','WIRBELSTRAHL','KLINGENSTRAHL','BOHRSTRAHL','NADELLASER','KEGELSTOSS','WABBELWELLE','RIESEN-KI-KUGEL','STERNENSTRAHL'],
@@ -222,17 +222,17 @@ const TXT={
   guideKeyTitle:'Steuerung · Spieler 1',guidePadTitle:'Steuerung · Controller',guideTouchTitle:'Steuerung · Touch',
   guideKey:[['Fliegen / lenken','<span><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></span>'],['Leichte Combo · bis zu 3 Treffer','<kbd>F</kbd>'],
     ['Heavy · nach Treffer nochmal: Verfolgen · 100 Ki: ULTRA','<kbd>V</kbd>'],['Hoch + Schlag: Uppercut · Runter + Schlag: Slam','<kbd>W/S</kbd> + <kbd>F</kbd>'],
-    ['Im Flug vorwärts + Schlag: Rush','<kbd>A/D</kbd> + <kbd>F</kbd>'],['Blocken · runter + vom Gegner weg','<kbd>S</kbd> + <kbd>A/D</kbd>'],
+    ['Im Flug vorwärts + Schlag: Rush','<kbd>A/D</kbd> + <kbd>F</kbd>'],['Blocken · runter + weg · genau beim Schlag: Perfekt-Block','<kbd>S</kbd> + <kbd>A/D</kbd>'],
     ['Ausweichen · Richtung doppelt antippen, halten: Turbo','<kbd>A/D · ←/→</kbd>'],['Ki-Schuss · auch im Flug lenkbar','<kbd>G</kbd> + <kbd>WASD</kbd>'],
     ['Antippen: Ki-Druckwelle (20 Ki) · halten: Kamehameha, hoch/runter lenkt','<kbd>T</kbd> + <kbd>W/S</kbd>'],['Spezialangriff (je Figur, 40–50 Ki)','<kbd>E</kbd>'],['Ki laden','<kbd>H</kbd>'],
     ['Super-Saiyajin · bei 100 Ki','<kbd>R</kbd>'],['Kämpfer wechseln (Team)','<kbd>Q</kbd>'],['Spieler 2 · Combo / Heavy / Schuss / Spezial / Wechseln','<span><kbd>J</kbd> <kbd>U</kbd> <kbd>K</kbd> <kbd>N</kbd> <kbd>P</kbd></span>']],
   ruleKey:'<kbd>S</kbd> + <kbd>G</kbd> zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. <kbd>Esc</kbd> pausiert.',
-  guidePad:[['Fliegen / lenken','<kbd>Stick</kbd>'],['Blocken','a'],['Leichte Combo · bis zu 3 Treffer','x'],['Stark · halten lädt · nochmal: Verfolgen · 100 Ki: ULTRA','y'],
+  guidePad:[['Fliegen / lenken','<kbd>Stick</kbd>'],['Blocken · genau beim Schlag: Perfekt-Block','a'],['Leichte Combo · bis zu 3 Treffer','x'],['Stark · halten lädt · nochmal: Verfolgen · 100 Ki: ULTRA','y'],
     ['Ausweichen · halten: Turbo','b'],['Spezialangriff (je Figur, 40–50 Ki)','l1'],['Ki-Schuss · halten: Kanone','r1'],['Antippen: Ki-Druckwelle · halten: Kamehameha','r2'],
     ['Ki laden','l2'],['Super-Saiyajin · bei 100 Ki','l3'],['Kämpfer wechseln (Team)','r3']],
   rulePad:'Stick runter + {r1} zielt auf den Boden und reißt große Krater. Je weiter du fliegst, desto größer wird die Welt. {start} pausiert.',
   guideTouch:[['Fliegen / zielen · links irgendwo ziehen','<kbd>Stick</kbd>'],['Antippen: Ausweichen · halten + Richtung: Turbo','<kbd>DASH</kbd>'],
-    ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · nach Treffer nochmal: Verfolgen · 100 Ki: ULTRA','<kbd>H</kbd>'],['Blocken · Stick runter + vom Gegner weg','<kbd>Stick</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
+    ['Leichte Combo','<kbd>✊</kbd>'],['Heavy · nach Treffer nochmal: Verfolgen · 100 Ki: ULTRA','<kbd>H</kbd>'],['Blocken · Stick runter + weg · genau beim Schlag: Perfekt','<kbd>Stick</kbd>'],['Ki-Schuss','<kbd>KI!</kbd>'],
     ['Antippen: Ki-Druckwelle · halten: Kamehameha','<kbd>KAME</kbd>'],['Spezialangriff (je Figur, 40–50 Ki)','<kbd>SPEZ</kbd>'],['Ki laden','<kbd>KI</kbd>'],['Super-Saiyajin · bei 100 Ki','<kbd>SSJ</kbd>'],['Kämpfer wechseln (Team)','<kbd>⇄</kbd>']],
   ruleTouch:'Stick runter + <kbd>KI!</kbd> zielt auf den Boden. <kbd>❚❚</kbd> pausiert.',
   // alte Hinweiszeile #hint (per CSS ausgeblendet)
@@ -284,6 +284,7 @@ let slowMo=0,shakeKX=0,shakeKY=0,zoomKick=0;
 const SHAKE_MAX=16,impactFx={t:0,max:.2,x:0,y:0,color:'#fff',big:false,seed:0};
 // Verfolgung: Ki je Glied der Kette (1./2./3.), Wartezeit nach dem Treffer + offenes Fenster danach, Ausbrech-Fenster des Opfers + Kosten
 const CHASE_KI=[4,8,12],CHASE_DELAY=.25,CHASE_OPEN=.8,CHASE_ESC_T=.17,CHASE_ESC_KI=15;
+const PERFECT_T=.15,PERFECT_CD=.3,PERFECT_STUN=.45;  // Perfekt-Block: Fenster, Sperre nach Loslassen, Erstarren des Angreifers
 function slowHit(t){if(ultra.on||state!=='playing')return;gameSpeed=Math.min(gameSpeed,.35);slowMo=Math.max(slowMo,t);}
 function camKick(x,y){shakeKX=clamp(shakeKX+x,-18,18);shakeKY=clamp(shakeKY+y,-14,14);}
 function impactLines(x,y,color,big){const e=impactFx;e.t=e.max=big?.26:.16;e.x=x;e.y=y;e.color=color;e.big=big;e.seed=Math.random()*100;}
@@ -959,7 +960,7 @@ function resetFighter(f,index) {
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
   f.face=index===0?1:-1;f.hp=MAX_HP;f.winPose=0;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
   f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.cannonHolding=false;f.cannonCharge=0;f.shotQueued=false;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
-  f.tagShow=0;f.breakShow=0;f.chaseN=0;f.chasePunch=false;f.chaseBuf=false;f.chaseShow=0;f.chaseShowN=0;f.escShow=0;f.escapeT=0;f.escBot=0;f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
+  f.tagShow=0;f.breakShow=0;f.chaseN=0;f.chasePunch=false;f.chaseBuf=false;f.chaseShow=0;f.chaseShowN=0;f.escShow=0;f.perfShow=0;f.pbT=0;f.pbCd=0;f.wasGuard=false;f.escapeT=0;f.escBot=0;f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
 }
 function begin(nextMode) {
   for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);
@@ -2035,6 +2036,22 @@ function drawBlink(f,alpha) {
 // Stelle (specX/specY), SAGE taucht hinter dem Angreifer auf (1) und kontert (2). Ohne Treffer verpufft die Haltung (3, kurz verwundbar).
 const COUNTER_T=.6,COUNTER_IN=.16,COUNTER_REC=.26,COUNTER_MISS=.32,COUNTER_POW=24;
 function startCounter(f){f.vx*=.2;f.vy*=.2;spawnRing(f.x,f.y-40,46,'#f2f0e6',3,.25);playSfx('block');}
+// Perfekt-Block (nur Schläge): Block gerade erst begonnen (pbT) -> kein Schaden, Blocker taucht hinter dem Angreifer auf, Angreifer erstarrt kurz.
+// Nicht gegen den ULTRA-SCHLAG; KI schafft es nur mit BOT_LVL.perfect. true = Schlag abgefangen
+function perfectBlock(v,a) {
+  if(!v.guarding||!(v.pbT>0)||v.face!==-a.face||a.ultra)return false;
+  if(v.bot&&Math.random()>=(BOT_LVL[settings.bot]||BOT_LVL[0]).perfect)return false;
+  const vi=fighters.indexOf(v),side=a.x>=v.x?1:-1,nx=clamp(a.x+side*50,-worldRadius,worldRadius);
+  v.pbT=0;v.perfShow=1.1;v.ki=Math.min(100,v.ki+10);
+  const g=addGhost(v);if(g){g.color='#ffffff';g.life=g.max=.3;}
+  burst(v.x,v.y-42,'rgb(145,220,255)',14,200);
+  v.x=nx;v.y=Math.min(a.y,terrainY(nx));v.px=v.x;v.py=v.y;v.face=-side;v.vx=0;v.vy=0;v.dashInvuln=Math.max(v.dashInvuln,.25);
+  a.stun=Math.max(a.stun,PERFECT_STUN);a.punchHit=true;a.vx*=.2;a.vy*=.2;a.smashHolding=false;a.comboQueued=false;a.comboWindow=0;a.chaseN=0;a.chaseWindow=0;
+  spawnRing(v.x,v.y-42,80,'#a8f3ff',4,.25);spawnRing(a.x,a.y-42,60,'#ffffff',3,.2);
+  flash(.15,'#dff8ff');hitStop=Math.max(hitStop,.05);screenShake=Math.max(screenShake,4);slowHit(.25);
+  playSfx('clang');rumble(vi,.4,.6,90);
+  return true;
+}
 // Wird an jeder Trefferstelle gefragt (v = Getroffener, ai = Index des Angreifers): true = Angriff abgefangen, Treffer fällt aus
 function parry(v,ai) {
   if(!v.spec||v.stun>0||v.specPh!==0)return false;
@@ -2298,7 +2315,7 @@ function damage(f,from,p) {
 // tag = Chance je Schritt, bei wenig Leben den Kämpfer zu wechseln · spec = Chance, den Spezialangriff zu nutzen (einmal je Bereitschaft entschieden)
 // atk/rest = Dauer [min,max] s der Angriffs- bzw. Pausenphase (Pause: Abstand halten, laden, nur blocken/kontern) · gap = Mindestabstand zwischen Schüssen (s)
 // react = so lange (s) muss ein gegnerischer Schlag schon laufen, bevor die KI ihn sieht (menschliche Reaktionszeit)
-const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25,spec:.2,chase:.3,esc:.1,atk:[.9,1.5],rest:[1.6,2.6],gap:1.7,react:.2},{think:6,punch:.15,heavy:.86,block:.6,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5,spec:.45,chase:.6,esc:.3,atk:[1.2,2],rest:[1,1.7],gap:1.1,react:.16},{think:2,punch:.15,heavy:.86,block:.85,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8,spec:.7,chase:.9,esc:.5,atk:[1.5,2.4],rest:[.5,1],gap:.65,react:.12}];
+const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25,spec:.2,chase:.3,esc:.1,perfect:0,atk:[.9,1.5],rest:[1.6,2.6],gap:1.7,react:.2},{think:6,punch:.15,heavy:.86,block:.6,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5,spec:.45,chase:.6,esc:.3,perfect:.1,atk:[1.2,2],rest:[1,1.7],gap:1.1,react:.16},{think:2,punch:.15,heavy:.86,block:.85,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8,spec:.7,chase:.9,esc:.5,perfect:.25,atk:[1.5,2.4],rest:[.5,1],gap:.65,react:.12}];
 const BOT_KEYS=['right','left','up','down','beam','heavy','punch','shot','charge','dash'];
 const BOT_MEM=[0,1].map(()=>({t:0,cr:false,cy:false,ph:0,phT:0,shotT:0,pt:0,pb:false,ud:false,wantUltra:false,sd:false,sdT:0,wantSpec:false,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
 function updateBot(f,target,input,index) {
@@ -2415,6 +2432,11 @@ function updateFighter(f,index,dt) {
   if(stunned){f.smashHolding=false;f.cannonHolding=false;}
   const backingAway=f.face>0?input.left:input.right;
   f.guarding=enemy.active&&(input.guard||(input.down&&backingAway))&&!f.charging&&!stunned&&!input.punch&&!input.heavy&&!f.spec;
+  // Perfekt-Block: Fenster PERFECT_T ab Blockbeginn; nach dem Loslassen erst nach PERFECT_CD wieder (kein Dauer-Tippen)
+  f.pbT=Math.max(0,(f.pbT||0)-dt);f.pbCd=Math.max(0,(f.pbCd||0)-dt);
+  if(f.guarding&&!f.wasGuard&&f.pbCd<=0)f.pbT=PERFECT_T;
+  if(!f.guarding&&f.wasGuard){f.pbCd=PERFECT_CD;f.pbT=0;}
+  f.wasGuard=f.guarding;
   // Ausbrechen: kurz nach dem Auftauchen des Verfolgers ○/✕/runter -> ausweichen (15 Ki), Kette endet
   if(f.escapeT>0) {
     f.escapeT-=dt;
@@ -2593,7 +2615,7 @@ function updateFighter(f,index,dt) {
       const inVerticalRange=f.attackType===4?Math.abs(verticalDelta)<120:f.attackType===1?verticalDelta>-150&&verticalDelta<80:
         f.attackType===5?verticalDelta>-175&&verticalDelta<70:f.attackType===6?verticalDelta>-45&&verticalDelta<175:
         f.attackType===2?verticalDelta>-45&&verticalDelta<160:Math.abs(verticalDelta)<(f.attackStep===3?105:82);
-      if(enemy.active&&enemy.dashInvuln<=0&&(enemy.x-f.x)*f.face>-18&&(enemy.x-f.x)*f.face<reach&&inVerticalRange&&!parry(enemy,index)) {
+      if(enemy.active&&enemy.dashInvuln<=0&&(enemy.x-f.x)*f.face>-18&&(enemy.x-f.x)*f.face<reach&&inVerticalRange&&!parry(enemy,index)&&!perfectBlock(enemy,f)) {
         f.punchHit=true;
         const finisher=f.attackStep===3||f.attackType>=3;
         const baseDamage=f.attackType===4?(f.heavyPowered?17:11):f.attackType===5||f.attackType===6?(f.heavyPowered?18:12):f.attackType===3?(f.heavyPowered?19:13):f.attackType===1?12:f.attackType===2?14:f.attackStep===3?17:f.attackStep===2?10:7;
@@ -2769,7 +2791,7 @@ function update(dt) {
   }
   processTags(dt);
   for(let t=0;t<2;t++)if(fighters[t].tagShow>0)fighters[t].tagShow-=dt;
-  for(let t=0;t<2;t++){const f=fighters[t];if(f.breakShow>0)f.breakShow-=dt;if(f.chaseShow>0)f.chaseShow-=dt;if(f.escShow>0)f.escShow-=dt;}
+  for(let t=0;t<2;t++){const f=fighters[t];if(f.breakShow>0)f.breakShow-=dt;if(f.chaseShow>0)f.chaseShow-=dt;if(f.escShow>0)f.escShow-=dt;if(f.perfShow>0)f.perfShow-=dt;}
   for(let t=0;t<2;t++)if(fighters[t].specShow>0)fighters[t].specShow-=dt;
   for(let t=0;t<2;t++)if(fighters[t].beamShow>0)fighters[t].beamShow-=dt;
   clock+=dt;updateFighter(fighters[0],0,dt);
@@ -3322,10 +3344,10 @@ function drawFighter(f,alpha) {
   if(f.breakShow>0) {
     ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=clamp(f.breakShow/.3,0,1);ctx.textAlign='center';ctx.font='900 12px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText(TXT.guardBreak,0,-116);ctx.restore();ctx.globalAlpha=1;
   }
-  if(f.chaseShow>0||f.escShow>0) {
-    // Verfolgungs-Kette (Angreifer) bzw. Ausbrechen (Opfer) kurz über dem Kopf
-    const esc=f.escShow>0,t=esc?TXT.escape:TXT.chaseHit+f.chaseShowN;
-    ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=clamp((esc?f.escShow:f.chaseShow)/.3,0,1);ctx.textAlign='center';ctx.font='900 12px system-ui';
+  if(f.chaseShow>0||f.escShow>0||f.perfShow>0) {
+    // Verfolgungs-Kette (Angreifer), Ausbrechen bzw. Perfekt-Block (Verteidiger) kurz über dem Kopf
+    const pf=f.perfShow>0,esc=pf||f.escShow>0,t=pf?TXT.perfect:esc?TXT.escape:TXT.chaseHit+f.chaseShowN;
+    ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=clamp((pf?f.perfShow:esc?f.escShow:f.chaseShow)/.3,0,1);ctx.textAlign='center';ctx.font='900 12px system-ui';
     ctx.fillStyle='#050914';ctx.fillText(t,1,-127);ctx.fillStyle=esc?'#a8f3ff':'#ffe66d';ctx.fillText(t,0,-128);ctx.restore();ctx.globalAlpha=1;
   }
   if(f.tagShow>0) {
