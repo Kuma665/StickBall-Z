@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26g</p>
+        <p class="version">v2026-11-26h</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -178,6 +178,19 @@ const TXT={
   modeFree:'FREIFLUG',modeBot:'GEGEN KI',modeLocal:'2–4 SPIELER',
   // Kämpfer-Auswahl und Teams (Figurennamen: Reihenfolge wie CHARS)
   charNames:['BLAZE','VOLT','ZAP','RAZOR','SAGE','VEXA','KRYX','BLOBB','TORAK','NOVA'],
+  // Siegersprüche je Figur (Index wie CHARS), einer wird zufällig gewählt
+  winQuotes:[
+    ['Ich werde jeden Tag stärker!','Guter Kampf! Nochmal?','Mein Feuer brennt heißer denn je!'],
+    ['Hmpf. Du warst nie auf meinem Level.','Ich bin der Prinz der Blitze!','Merk dir meinen Namen: VOLT!'],
+    ['Zu langsam! Viel zu langsam!','Hast du mich überhaupt gesehen?','Zack – und weg!'],
+    ['Meine Klinge irrt sich nie.','Ein Schnitt genügt.','Trainiere weiter, dann sehen wir uns wieder.'],
+    ['Geduld schlägt Kraft.','Du hast noch viel zu lernen, junger Kämpfer.','Wahre Stärke kommt von innen.'],
+    ['Wie niedlich. Du hast es wirklich versucht.','Knie nieder vor deiner Herrscherin!','Das war nicht mal ein Prozent meiner Kraft.'],
+    ['Ich bin perfekt!','Mein Panzer ist unzerbrechlich!','Mehr Gegner! Ich will noch stärker werden!'],
+    ['Blubb! Das hat Spaß gemacht!','Dich mach ich zu Pudding!','Hunger! Gibt’s jetzt Kekse?'],
+    ['MEHR! ICH WILL MEHR!','Niemand kann mich aufhalten!','TORAK ZERSTÖRT ALLES!'],
+    ['Zwei Herzen, eine Kraft!','Zusammen sind wir unschlagbar!','Das ist die Macht der Fusion!']
+  ],
   selTitle:'KÄMPFER WÄHLEN',selSize:'Team-Größe',selGo:'LOS!',team:'TEAM ',sizeNames:['1 GEGEN 1','2 GEGEN 2','3 GEGEN 3','4 GEGEN 4'],soloNames:['1 KÄMPFER','2 KÄMPFER','3 KÄMPFER','4 KÄMPFER'],
   ctrlNames:['SPIELER 1','SPIELER 2','SPIELER 3','SPIELER 4'],ctrlBot:'KI',ctrlTag:' · S',teamWins:'TEAM {n} GEWINNT',menuHelp:'STEUERUNG',menuSettings:'Einstellungen',back:'ZURÜCK',
   pause:'PAUSE',pResume:'WEITER',pSettings:'EINSTELLUNGEN',pMenu:'ZUM MENÜ',
@@ -199,7 +212,7 @@ const TXT={
   world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
   specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
-  botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',clash:'STRAHL-DUELL!',clashMash:'SCHNELL DRÜCKEN!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
+  botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',clash:'STRAHL-DUELL!',clashMash:'SCHNELL DRÜCKEN!',quote:'„{x}“',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
   guideKeyTitle:'Steuerung · Spieler 1',guidePadTitle:'Steuerung · Controller',guideTouchTitle:'Steuerung · Touch',
@@ -706,7 +719,7 @@ function resetFighter(f,index) {
   f.spec=false;f.specT=0;f.specPh=0;f.specX=1;f.specY=0;f.specHit=false;f.specCd=0;f.specShow=0;f.specN=0;f.specS=0;
   clearWounds(f);f.dashDirY=0;f.boosting=false;f.boostKey=0;f.ghostTimer=0;f.kiaiCooldown=0;f.r2Held=false;f.r2Time=0;f.comboCount=0;
   f.x=index===0?-120:160;f.y=terrainY(f.x)-2;f.vx=0;f.vy=0;f.px=f.x;f.py=f.y;
-  f.face=index===0?1:-1;f.hp=MAX_HP;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
+  f.face=index===0?1:-1;f.hp=MAX_HP;f.winPose=0;f.ki=65;f.superTime=0;f.superHeld=false;f.charging=false;f.guarding=false;f.fire=0;f.shotAnim=0;f.beam=0;f.beamCharge=0;f.beamHeld=false;f.beamCooldown=0;f.beamHitCooldown=0;f.beamTerrainHit=false;f.beamHitsGround=false;f.beamAngle=0;f.beamEndX=0;f.beamEndY=0;f.stun=0;f.hitFlash=0;
   f.dashTapLeft=0;f.dashTapRight=0;f.dashTime=0;f.dashInvuln=0;f.dashCooldown=0;f.dashDir=1;f.dashLeftHeld=false;f.dashRightHeld=false;f.shotHeld=false;f.guideShot=-1;f.cannonHolding=false;f.cannonCharge=0;f.shotQueued=false;f.smashHolding=false;f.smashCharge=0;f.smashPower=1;f.cancelWindow=0;f.chaseWindow=0;f.comboCount=0;
   f.tagShow=0;f.breakShow=0;f.punch=0;f.punchBuffer=0;f.heavyBuffer=0;f.bufferedAttackType=0;f.bufferedHeavyType=3;f.attackStep=0;f.attackType=0;f.heavyPowered=false;f.attackDuration=0;f.comboWindow=0;f.comboQueued=false;f.queuedAttack=0;f.queuedAttackType=0;f.comboDisplay=0;f.comboHits=0;f.punchHit=false;f.punchCooldown=0;f.punchHeld=false;f.heavyHeld=false;f.t=0;
 }
@@ -1102,9 +1115,20 @@ function rumble(index,strong,weak,ms) {
 }
 function pauseGame(){state='paused';setPauseFocus(0);pauseLayer.hidden=false;updateTouch();}
 function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill(0);state='playing';pauseLayer.hidden=true;updateTouch();if(audioEnabled)startMusic();}
-function backToMenu(){state='menu';pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;}
+function backToMenu(){state='menu';pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;for(const f of fighters){if(f.winPose){f.winPose=0;f.charging=false;}}}
+// ---- Siegerpose am Matchende: 1 Faust hoch, 2 Arme verschränkt, 3 Power-up mit Aura (Lade-Pose). Spruch aus TXT.winQuotes ----
+const WIN_POSE=[1,2,1,2,2,2,3,1,3,1];
+let winQuote='';
+function winPose(f) {
+  if(f.spec)endSpecial(f);
+  f.punch=0;f.attackType=0;f.attackStep=0;f.comboQueued=false;f.beam=0;f.beamHeld=false;f.beamCharge=0;f.smashHolding=false;f.cannonHolding=false;
+  f.guarding=false;f.shotAnim=0;f.stun=0;f.hitFlash=0;f.boosting=false;
+  f.winPose=WIN_POSE[f.style]||1;f.charging=f.winPose===3;if(f.charging)f.ki=Math.max(f.ki,99);  // groÃe Aura, aber kein âSUPER BEREITâ im HUD
+  const q=TXT.winQuotes[f.style]||[''];winQuote=q[Math.floor(Math.random()*q.length)];
+}
 function endMatch(w) {
   state='over';winner=w;updateTouch();
+  winPose(fighters[w]);
   ultra.on=false;gameSpeed=KO_SPEED;slowT=KO_SLOW_T;clash.on=false;  // letzter K.o.: kurz Zeitlupe
   screenShake=Math.max(screenShake,14);
   // K.O.: Druckwelle, Blitz, bei Blut großer Spritzer (Partikel laufen im Endbildschirm weiter)
@@ -2391,7 +2415,7 @@ function updateEffects(dt) {
   screenShake=Math.max(0,screenShake-26*dt);
 }
 function update(dt) {
-  if(state==='over'){if(slowT>0){slowT-=dt;if(slowT<=0)gameSpeed=1;}updateEffects(dt);return;}
+  if(state==='over'){if(slowT>0){slowT-=dt;if(slowT<=0)gameSpeed=1;}clock+=dt;updateEffects(dt);return;}  // clock läuft weiter (Siegerpose, Aura)
   if(state!=='playing')return;
   if(ultra.on){updateUltra(dt);return;}
   if(clash.on){updateClash(dt);return;}
@@ -2731,6 +2755,8 @@ function drawFighter(f,alpha) {
     bendJoint(sx,sy,bhX,bhY,13.5);beX=jointX;beY=jointY;
     bendJoint(sx,sy,fhX,fhY,13.5);feX=jointX;feY=jointY;
   }
+  else if(f.winPose===1){beX=-12;beY=-38;bhX=-4;bhY=-29;feX=17;feY=-55;fhX=25;fhY=-72+Math.sin(clock*7)*2.5;}  // Sieg: Faust hoch, andere Hand an der Hüfte
+  else if(f.winPose===2){beX=13;beY=-37;bhX=-3;bhY=-40;feX=14;feY=-35;fhX=-1;fhY=-43+breathe*.4;}  // Sieg: Arme verschränkt
   else if(f.guarding){beX=4;beY=-36;bhX=13;bhY=-55;feX=11;feY=-36;fhX=5;fhY=-56;}
   else if(f.charging){const ct=clamp(f.ki/100,0,1),sh=Math.sin(clock*40)*(.6+ct*1.2);beX=sx-7+sh;beY=sy+8;bhX=sx-2;bhY=sy+16-sh;feX=sx+4-sh;feY=sy+9;fhX=sx+10;fhY=sy+15+sh;}
   else if(shot>0||ready) {
@@ -3138,11 +3164,13 @@ function render(alpha) {
   if(state==='playing'||state==='over')drawHud();
   if(state==='over'&&winner>=0) {
     const wf=fighters[winner];
-    ctx.fillStyle='#050914c0';ctx.fillRect(0,H/2-38,W,76);
+    const wy=(wf.py+(wf.y-wf.py)*alpha-50-renderCameraY)*renderZoom+H/2,by=wy<H*.52?H*.76:H*.34;  // Banner weicht dem Sieger aus
+    ctx.fillStyle='#050914c0';ctx.fillRect(0,by-46,W,88);
+    if(winQuote){ctx.textAlign="center";ctx.font="italic 700 14px system-ui";ctx.fillStyle="#f2f6ff";ctx.fillText(fmt(TXT.quote,{x:winQuote}),W/2,by-22);}
     ctx.textAlign='center';ctx.font='900 28px system-ui';ctx.fillStyle=wf.color;
-    ctx.fillText(teams[winner].size>1?fmt(TXT.teamWins,{n:winner+1}):wf.name+(wf.bot?TXT.winBotTag:'')+TXT.wins,W/2,H/2+4);
+    ctx.fillText(teams[winner].size>1?fmt(TXT.teamWins,{n:winner+1}):wf.name+(wf.bot?TXT.winBotTag:'')+TXT.wins,W/2,by+10);
     ctx.font='700 10px system-ui';ctx.fillStyle='#c4d2e8';
-    if(overParts)drawPadLine(padKind,overParts,W/2,H/2+24,10);else ctx.fillText(overText,W/2,H/2+24);
+    if(overParts)drawPadLine(padKind,overParts,W/2,by+30,10);else ctx.fillText(overText,W/2,by+30);
   }
   if(state==='menu') {
     for(let i=0;i<5;i++) {
