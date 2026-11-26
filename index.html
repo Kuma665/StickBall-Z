@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26f</p>
+        <p class="version">v2026-11-26g</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -199,7 +199,7 @@ const TXT={
   world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
   specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
-  botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
+  botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',clash:'STRAHL-DUELL!',clashMash:'SCHNELL DRÜCKEN!',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
   guideKeyTitle:'Steuerung · Spieler 1',guidePadTitle:'Steuerung · Controller',guideTouchTitle:'Steuerung · Touch',
@@ -263,6 +263,7 @@ let padKind = '', overParts = null, overText = TXT.overKey;
 // ULTRA-SCHLAG: volle Ki + schwerer Schlag; Treffer -> Szene (Kämpfer eingefroren, 3 Treffer, Röntgenbild je nach Blut-Einstellung)
 let gameSpeed=1,slowT=0;
 const ultra={on:false,t:0,att:0,vic:1,hits:0,dmg:0};
+const clash={on:false,t:0,pos:0,x:0,y:0,btn:[false,false],bt:[0,0],snd:0,fx:0};
 const ULTRA_T=.36,ULTRA_HITS=[.06,.17,.28],ULTRA_SPEED=.22,KO_SLOW_T=.3,KO_SPEED=.3;
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
 const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=TXT.gfxNames,GFX_LEVELS=TXT.gfxLevels,GFX_DPR=[1,1.5,2],GORE_NAMES=TXT.goreNames;
@@ -715,7 +716,7 @@ function begin(nextMode) {
   mode=nextMode;state='playing';menu.hidden=true;pauseLayer.hidden=true;updateTouch();
   startAudio();
   hitStop=0;tagReq.fill(0);
-  ultra.on=false;gameSpeed=1;slowT=0;
+  ultra.on=false;gameSpeed=1;slowT=0;clash.on=false;
   fighters[0].active=true;
   fighters[1].active=mode!=='free';
   for(let i=0;i<MAX_CRATERS;i++)craters[i].active=false;
@@ -1104,7 +1105,7 @@ function resumeGame(){for(let s=0;s<padStates.length;s++)padStates[s].latch.fill
 function backToMenu(){state='menu';pauseLayer.hidden=true;menu.hidden=false;updateTouch();padCount=-1;status.textContent=TXT.stArea;}
 function endMatch(w) {
   state='over';winner=w;updateTouch();
-  ultra.on=false;gameSpeed=KO_SPEED;slowT=KO_SLOW_T;  // letzter K.o.: kurz Zeitlupe
+  ultra.on=false;gameSpeed=KO_SPEED;slowT=KO_SLOW_T;clash.on=false;  // letzter K.o.: kurz Zeitlupe
   screenShake=Math.max(screenShake,14);
   // K.O.: Druckwelle, Blitz, bei Blut großer Spritzer (Partikel laufen im Endbildschirm weiter)
   const l=fighters[1-w],dir=Math.sign(l.x-fighters[w].x)||1;
@@ -1143,6 +1144,80 @@ function updateUltra(dt) {
     v.stun=Math.max(v.stun,.7);v.vx=a.face*560;v.vy=-320;a.vx=-a.face*60;
     spawnRing(v.x,v.y-44,180,'#fff',6,.5);flash(.3,'#fff');screenShake=Math.max(screenShake,14);hitStop=.08;
   }
+}
+// ---- STRAHL-DUELL: treffen sich zwei Strahlen, drücken beide schnell (Kamehameha/Schlag/Schuss). Die Kugel wandert zum Verlierer. ----
+// clash.pos −1..1 (positiv = Kugel bei Kämpfer 1, Kämpfer 0 gewinnt). Szene läuft in Spielzeit, Kämpfer/Schüsse eingefroren (wie ULTRA).
+const CLASH_T=4.5,CLASH_PUSH=.075,CLASH_DIST=60,CLASH_BOT=[4.5,6.5,8.5];  // Höchstdauer s, Schub je Druck, Abstand der Strahlen, KI-Drücke/s je Stärke
+function segPointDist(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy||1,t=clamp(((px-x1)*dx+(py-y1)*dy)/l,0,1);return Math.hypot(px-x1-dx*t,py-y1-dy*t);}
+function beamsCross(a,b) {
+  if(a.face===b.face||Math.sign(b.x-a.x)!==a.face)return false;  // nur gegeneinander
+  const ax=a.x+a.face*21,ay=a.y-40,bx=b.x+b.face*21,by=b.y-40;
+  for(let k=0;k<=24;k++){const t=k/24,x=ax+(a.beamEndX-ax)*t,y=ay+(a.beamEndY-ay)*t;if(segPointDist(x,y,bx,by,b.beamEndX,b.beamEndY)<CLASH_DIST)return true;}
+  return false;
+}
+function clashPoint() {
+  const a=fighters[0],b=fighters[1],ax=a.x+a.face*21,ay=a.y-40,bx=b.x+b.face*21,by=b.y-40,k=.5+.45*clash.pos;
+  clash.x=ax+(bx-ax)*k;clash.y=ay+(by-ay)*k;
+}
+function startClash() {
+  clash.on=true;clash.t=0;clash.pos=0;clash.snd=0;clash.fx=0;
+  for(let i=0;i<2;i++) {
+    const f=fighters[i];clash.btn[i]=true;clash.bt[i]=.4;
+    f.vx=0;f.vy=0;f.beamHeld=false;f.beamCharge=0;f.smashHolding=false;f.cannonHolding=false;f.stun=0;f.beam=Math.max(f.beam,.3);
+  }
+  clashPoint();hitStop=0;flash(.3,'#fff');screenShake=Math.max(screenShake,10);
+  spawnRing(clash.x,clash.y,120,'#fff',6,.4);playSfx('beam');rumble(0,.6,.6,200);rumble(1,.6,.6,200);
+}
+function updateClash(dt) {
+  clash.t+=dt;clock+=dt;
+  for(let i=0;i<2;i++){const f=fighters[i];f.px=f.x;f.py=f.y;f.beam=Math.max(f.beam,.3);}
+  for(let i=0;i<MAX_PROJECTILES;i++){const p=projectiles[i];p.px=p.x;p.py=p.y;}
+  previousCameraX=cameraX;previousCameraY=cameraY;previousZoom=zoom;
+  for(let i=0;i<2;i++) {
+    const f=fighters[i];let press=false;
+    if(f.bot){clash.bt[i]-=dt;if(clash.bt[i]<=0){press=true;clash.bt[i]=1/(CLASH_BOT[settings.bot]*(.75+Math.random()*.5));}}
+    else{const inp=readInput(f,i),down=inp.beam||inp.punch||inp.heavy||inp.shot;press=down&&!clash.btn[i];clash.btn[i]=down;}
+    if(press){clash.pos+=(i===0?1:-1)*CLASH_PUSH*(f.superTime>0?1.25:1);rumble(i,.25,.35,40);}
+  }
+  clashPoint();
+  clash.fx-=dt;
+  if(clash.fx<=0){clash.fx=.06;const a=fighters[0],b=fighters[1];burst(clash.x,clash.y,a.beamC[1],3,260);burst(clash.x,clash.y,b.beamC[1],3,260);screenShake=Math.max(screenShake,3);}
+  if(clash.t-clash.snd>.22){clash.snd=clash.t;playSfx('shot');}
+  updateEffects(dt);
+  if(Math.abs(clash.pos)>=1)endClash(clash.pos>0?0:1);
+  else if(clash.t>=CLASH_T)endClash(-1);
+}
+function endClash(w) {
+  clash.on=false;clashPoint();
+  const cx=clash.x,cy=clash.y;
+  for(let i=0;i<2;i++){const f=fighters[i];f.beamCooldown=Math.max(f.beamCooldown,1.2);}
+  if(w<0) {
+    // Gleichstand: Explosion in der Mitte, beide fliegen zurück
+    for(let i=0;i<2;i++){const f=fighters[i];f.beam=0;f.hp=Math.max(0,f.hp-8);f.stun=Math.max(f.stun,.45);f.vx=-f.face*480;f.vy=-220;f.hitFlash=.18;}
+    spawnRing(cx,cy,200,'#fff',8,.5);spawnRing(cx,cy,300,fighters[0].beamC[1],4,.7);spawnRing(cx,cy,260,fighters[1].beamC[1],4,.6);
+    burst(cx,cy,'#fff',30,380);if(terrainY(cx)-cy<140)makeCrater(cx,true);
+    flash(.5,'#fff');screenShake=Math.max(screenShake,16);hitStop=.08;playSfx('crater');playSfx('hit',true);
+    rumble(0,1,.8,300);rumble(1,1,.8,300);return;
+  }
+  const a=fighters[w],v=fighters[1-w],dmg=MAX_HP*.22*(a.superTime>0?1.3:1);
+  v.beam=0;a.beam=.4;a.beamHitCooldown=.6;traceBeam(a);  // Gewinner-Strahl rauscht durch (Schaden nur einmal hier)
+  v.hp=Math.max(0,v.hp-dmg);v.stun=Math.max(v.stun,.9);v.hitFlash=.2;v.vx=a.face*640;v.vy=-300;
+  impactBurst(v.x,v.y-45,a.beamC[1],true);hurt(v,a.face,dmg,true);
+  spawnRing(v.x,v.y-45,220,'#fff',7,.5);spawnRing(v.x,v.y-45,300,a.beamC[1],4,.7);
+  flash(.45,'#fff');screenShake=Math.max(screenShake,14);hitStop=.1;playSfx('hit',true);
+  rumble(1-w,1,.9,380);rumble(w,.4,.5,160);
+}
+function drawClash() {
+  const a=fighters[0],b=fighters[1],x=clash.x,y=clash.y,p=.85+.15*Math.sin(clock*48),t=Math.min(1,clash.t/.15);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  ctx.globalAlpha=.35*t;ctx.fillStyle=a.beamC[1];ctx.beginPath();ctx.arc(x-a.face*10,y,78*p,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=b.beamC[1];ctx.beginPath();ctx.arc(x-b.face*10,y,78*p,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.8*t;ctx.fillStyle=a.beamC[1];ctx.beginPath();ctx.arc(x-a.face*6,y,42*p,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=b.beamC[1];ctx.beginPath();ctx.arc(x-b.face*6,y,42*p,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=t;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,24*p,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.beginPath();
+  for(let k=0;k<8;k++){const an=k*.785+clock*7,r1=34*p,r2=(62+18*Math.sin(clock*30+k*2))*p;ctx.moveTo(x+Math.cos(an)*r1,y+Math.sin(an)*r1);ctx.lineTo(x+Math.cos(an)*r2,y+Math.sin(an)*r2);}
+  ctx.stroke();ctx.restore();
 }
 // ---- Team-Wechsel: nur ein Kämpfer je Team auf dem Platz; Leben/Ki der Wartenden bleiben gespeichert ----
 const TAG_COOLDOWN=1.2;
@@ -1856,6 +1931,7 @@ function updateKamehameha(f,index,enemy,input,dt) {
   if(f.beam>0) {
     f.beamAngle=clamp(f.beamAngle+((input.down?1:0)-(input.up?1:0))*1.6*dt,-1.2,1.2);
     traceBeam(f);
+    if(clash.on||(enemy.active&&enemy.beam>0&&beamsCross(f,enemy))){if(!clash.on)startClash();return;}  // Strahl-Duell statt Treffer
     if(f.beamHitCooldown<=0&&enemy.active&&enemy.dashInvuln<=0) {
       const sx=f.x+f.face*21,sy=f.y-40,dx=f.beamEndX-sx,dy=f.beamEndY-sy;
       const lengthSq=dx*dx+dy*dy;
@@ -2318,6 +2394,7 @@ function update(dt) {
   if(state==='over'){if(slowT>0){slowT-=dt;if(slowT<=0)gameSpeed=1;}updateEffects(dt);return;}
   if(state!=='playing')return;
   if(ultra.on){updateUltra(dt);return;}
+  if(clash.on){updateClash(dt);return;}
   if(hitStop>0) {
     hitStop=Math.max(0,hitStop-dt);
     // Während Hit-Pause Interpolation einfrieren, sonst zittert die Darstellung
@@ -2881,6 +2958,7 @@ function drawFighter(f,alpha) {
 }
 function drawKamehameha(f) {
   if(f.beam<=0)return;
+  if(clash.on){f.beamEndX=clash.x;f.beamEndY=clash.y;}
   const sx=f.x+f.face*21,sy=f.y-40;
   const pulse=.82+.18*Math.sin(clock*55);
   const bc=f.beamC||[f.color,f.color,'#fff'];
@@ -2996,7 +3074,7 @@ function render(alpha) {
     }
     ctx.globalAlpha=1;
   }
-  drawKamehameha(fighters[0]);drawKamehameha(fighters[1]);
+  drawKamehameha(fighters[0]);drawKamehameha(fighters[1]);if(clash.on)drawClash();
   for(let i=0;i<MAX_PARTICLES;i++) {
     const p=particles[i];if(!p.active)continue;
     ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;
@@ -3049,6 +3127,12 @@ function render(alpha) {
     ctx.globalAlpha=clamp(a,0,1);ctx.textAlign='center';ctx.font='900 34px system-ui';ctx.lineJoin='round';
     ctx.strokeStyle='#050914';ctx.lineWidth=6;ctx.strokeText(TXT.ultra,W/2,H*.24);
     ctx.fillStyle=fighters[ultra.att].superTime>0?fighters[ultra.att].supC:'#ffffff';ctx.fillText(TXT.ultra,W/2,H*.24);ctx.globalAlpha=1;
+  }
+  if(clash.on) {
+    ctx.globalAlpha=Math.min(1,clash.t/.12);ctx.textAlign='center';ctx.lineJoin='round';ctx.strokeStyle='#050914';
+    ctx.font='900 34px system-ui';ctx.lineWidth=6;ctx.strokeText(TXT.clash,W/2,H*.24);ctx.fillStyle='#fff';ctx.fillText(TXT.clash,W/2,H*.24);
+    if(Math.sin(clock*14)>-.3){ctx.font='900 18px system-ui';ctx.lineWidth=4;ctx.strokeText(TXT.clashMash,W/2,H*.24+28);ctx.fillStyle='#ffe66d';ctx.fillText(TXT.clashMash,W/2,H*.24+28);}
+    ctx.globalAlpha=1;
   }
   if(screenFlash>0){ctx.globalAlpha=Math.min(.6,screenFlash);ctx.fillStyle=flashColor;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
   if(state==='playing'||state==='over')drawHud();
