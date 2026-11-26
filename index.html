@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26</p>
+        <p class="version">v2026-11-26b</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -732,7 +732,7 @@ function begin(nextMode) {
   for(let t=0;t<2;t++) {
     const tm=teams[t];tm.size=t===1&&mode==='free'?1:cfg.size;tm.cur=0;tm.cd=0;
     for(let s=0;s<4;s++){const m=tm.m[s];m.c=cfg.p[t][s];m.ctrl=cfg.c[t][s];m.hp=MAX_HP;m.ki=65;m.out=s>=tm.size;if(fighters[t].active&&s<tm.size&&m.ctrl>=0)humans.add(m.ctrl);}
-    applyMember(fighters[t],tm.m[0]);BOT_MEM[t].t=0;
+    applyMember(fighters[t],tm.m[0]);Object.assign(BOT_MEM[t],{t:0,ph:1,phT:0,shotT:0,pt:0});
   }
   ctrlTags=humans.size>1;
   touchControls.classList.toggle('tag',teams[0].size>1);
@@ -1913,9 +1913,11 @@ function damage(f,from,p) {
 // think = Schritte bis zur nächsten Entscheidung (dazwischen bleibt die letzte), punch/heavy = Schwelle für den Angriffstakt,
 // block/shot = Wahrscheinlichkeit je Entscheidung, beamFull = Kamehameha nur bei vollem Ki, kiai = Chance je Schritt, sich aus Combos zu befreien
 // tag = Chance je Schritt, bei wenig Leben den Kämpfer zu wechseln · spec = Chance, den Spezialangriff zu nutzen (einmal je Bereitschaft entschieden)
-const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25,spec:.2},{think:6,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5,spec:.45},{think:2,punch:.15,heavy:.86,block:1,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8,spec:.7}];
+// atk/rest = Dauer [min,max] s der Angriffs- bzw. Pausenphase (Pause: Abstand halten, laden, nur blocken/kontern) · gap = Mindestabstand zwischen Schüssen (s)
+// react = so lange (s) muss ein gegnerischer Schlag schon laufen, bevor die KI ihn sieht (menschliche Reaktionszeit)
+const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25,spec:.2,atk:[.9,1.5],rest:[1.6,2.6],gap:1.7,react:.2},{think:6,punch:.15,heavy:.86,block:.6,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5,spec:.45,atk:[1.2,2],rest:[1,1.7],gap:1.1,react:.16},{think:2,punch:.15,heavy:.86,block:.85,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8,spec:.7,atk:[1.5,2.4],rest:[.5,1],gap:.65,react:.12}];
 const BOT_KEYS=['right','left','up','down','beam','heavy','punch','shot','charge','dash'];
-const BOT_MEM=[0,1].map(()=>({t:0,ud:false,wantUltra:false,sd:false,sdT:0,wantSpec:false,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
+const BOT_MEM=[0,1].map(()=>({t:0,ph:0,phT:0,shotT:0,pt:0,pb:false,ud:false,wantUltra:false,sd:false,sdT:0,wantSpec:false,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
 function updateBot(f,target,input,index) {
   const lv=BOT_LVL[settings.bot]||BOT_LVL[0],mem=BOT_MEM[index];
   // Bei voller Ki einmal entscheiden: ULTRA-SCHLAG versuchen (je nach Stärke) statt Super/Kamehameha
@@ -1924,30 +1926,40 @@ function updateBot(f,target,input,index) {
   const sp=SPECIALS[f.style];
   if(!sp||f.specCd>0)mem.sd=false;else if(!mem.sd||(mem.sdT-=DT)<=0){mem.sd=true;mem.sdT=3;mem.wantSpec=Math.random()<lv.spec;}  // alle 3 s neu würfeln
   const save=!!sp&&mem.sd&&mem.wantSpec&&f.ki<sp.cost;  // Wunsch gewürfelt, aber zu wenig Ki: sparen (keine Ki-Ausgaben, auf Abstand laden)
+  // Rhythmus: Angriffsphase (ph 0) und Pause (ph 1) wechseln sich ab, damit die KI nicht pausenlos angreift
+  if((mem.phT-=DT)<=0){mem.ph=mem.ph?0:1;const r=mem.ph?lv.rest:lv.atk;mem.phT=r[0]+Math.random()*(r[1]-r[0]);}
+  mem.shotT=Math.max(0,mem.shotT-DT);
+  // Gegnerischer Schlag: einmal je Schlag würfeln, ob geblockt wird; sichtbar erst nach der Reaktionszeit
+  if(target.punch>0){if(mem.pt===0)mem.pb=Math.random()<lv.block;mem.pt+=DT;}else mem.pt=0;
   if(--mem.t<=0) {
     mem.t=lv.think;
     const dx=target.x-f.x,dy=target.y-f.y,d=Math.abs(dx);
+    // Gegner kommt in der Pause ganz nah: Pause endet (sonst ließe sie sich wehrlos verprügeln)
+    if(mem.ph===1&&d<110&&Math.abs(dy)<100){mem.ph=0;mem.phT=lv.atk[0]+Math.random()*(lv.atk[1]-lv.atk[0]);}
+    const rest=mem.ph===1;
     const aimLen=Math.hypot(dx,dy)||1;mem.aimX=dx/aimLen;mem.aimY=dy/aimLen;
-    mem.right=dx>115;mem.left=dx<-115;
+    if(rest){mem.right=dx<0?d<230:d>420;mem.left=dx>0?d<230:d>420;}  // Pause: Abstand 230–420 halten
+    else{mem.right=dx>115;mem.left=dx<-115;}
     // Höhe: y wächst nach unten – steigen, wenn das Ziel höher ist; sinken, wenn es tiefer ist
     mem.up=dy<-32;
     mem.down=dy>35;
-    if(d<145&&Math.abs(dy)<95&&target.punch>0&&Math.random()<lv.block) {
+    if(d<145&&Math.abs(dy)<95&&target.punch>0&&mem.pt>=lv.react&&mem.pb) {
       mem.down=true;
       mem.left=dx>0;mem.right=dx<0;
     }
-    mem.beam=!save&&d<360&&f.beamCooldown<=0&&f.ki>=(lv.beamFull?100:BEAM_COST)&&!(mem.wantUltra&&f.ki>=100);
+    mem.beam=!rest&&!save&&d<360&&f.beamCooldown<=0&&f.ki>=(lv.beamFull?100:BEAM_COST)&&!(mem.wantUltra&&f.ki>=100);
     const attackPulse=Math.sin(clock*7.5);
     mem.heavy=false;mem.punch=false;mem.shot=false;
-    if(d<125&&Math.abs(dy)<100&&f.punchCooldown<=0) {
+    if(rest){}  // Pause: keine Angriffe
+    else if(d<125&&Math.abs(dy)<100&&f.punchCooldown<=0) {
       if(mem.wantUltra&&f.ki>=100)mem.heavy=true;
       else if(!save&&f.ki>=12&&attackPulse>lv.heavy)mem.heavy=true;
       else mem.punch=attackPulse>lv.punch;
-    } else if(!save&&d<590&&f.fire<=0&&f.ki>=7)mem.shot=Math.random()<lv.shot;
-    mem.charge=(f.ki<35||save)&&d>220;
-    mem.dash=d>520&&!mem.charge;
+    } else if(!save&&d<590&&f.fire<=0&&mem.shotT<=0&&f.ki>=7&&Math.random()<lv.shot){mem.shot=true;mem.shotT=lv.gap;}
+    mem.charge=(f.ki<(rest?80:35)||save)&&d>220;
+    mem.dash=!rest&&d>520&&!mem.charge;
     // Spezialangriff nur bei passendem Abstand/Lage (Hinweis in SPECIALS[c].ai)
-    if(sp&&mem.wantSpec&&mem.sd&&!(mem.wantUltra&&f.ki>=100)&&f.stun<=0&&!f.beamHeld&&f.beam<=0&&f.punch<=0&&target.active) {
+    if(sp&&mem.wantSpec&&mem.sd&&(!rest||sp.ai.counter)&&!(mem.wantUltra&&f.ki>=100)&&f.stun<=0&&!f.beamHeld&&f.beam<=0&&f.punch<=0&&target.active) {
       const a=sp.ai,low=target.y>terrainY(target.x)-70;
       const fit=a.counter?(d<a.max&&Math.abs(dy)<a.dy&&(target.punch>0||target.smashHolding||target.spec))||target.beam>0||shotNear(f,index,150):a.low?low&&((d<=a.max&&Math.abs(dy)<a.dy)||(d<70&&dy>60)):d>=a.min&&d<=a.max&&Math.abs(dy)<a.dy||(!!a.shots&&shotNear(f,index,150));  // KRYX: auch gegen nahe Schüsse
       if(fit&&startSpecial(f,index,target))mem.wantSpec=false;
