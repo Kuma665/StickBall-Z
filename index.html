@@ -102,6 +102,7 @@ html.touch-ui .touch:not([hidden]){display:block}
 .select-card{width:min(640px,96%);padding:10px 16px 12px;border:1px solid #46536e;border-radius:8px;background:#0c1323f5}
 .select-card h2{margin:0 0 6px;font-size:16px;letter-spacing:.08em;text-align:center}
 .sel-size{justify-content:center;margin:0 auto 4px;width:max-content}
+.sel-top{display:flex;justify-content:center;gap:14px;margin:0 auto 4px}.sel-top .sel-size{margin:0}
 .sel-teams{display:grid;grid-template-columns:1fr 1fr;gap:14px}.select.solo .sel-teams{grid-template-columns:1fr;width:52%;margin:0 auto}.select.solo .sel-team h3{display:none}
 .sel-team h3{margin:2px 0 2px;color:var(--muted);font-size:10px;letter-spacing:.16em;text-align:center}
 .sel-slot{display:flex;align-items:center;gap:6px;margin:2px 0;padding:1px 5px;border-radius:5px}.sel-slot[hidden]{display:none}
@@ -122,7 +123,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26j</p>
+        <p class="version">v2026-11-26k</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -145,7 +146,8 @@ html.touch-ui .touch:not([hidden]){display:block}
       <div class="set-row" data-set="back"><button type="button" class="set-back" data-t="back"></button></div>
     </div></div>
     <div class="select" id="select" hidden><div class="select-card"><h2 data-t="selTitle"></h2>
-      <div class="set-row sel-size" id="selSizeRow"><span data-t="selSize"></span><button type="button" class="set-val" id="selSize"></button></div>
+      <div class="sel-top"><div class="set-row sel-size" id="selSizeRow"><span data-t="selSize"></span><button type="button" class="set-val" id="selSize"></button></div>
+      <div class="set-row sel-size" id="selArenaRow"><span data-t="selArena"></span><button type="button" class="set-val" id="selArena"></button></div></div>
       <div class="sel-teams"><div class="sel-team" id="selT0"><h3></h3></div><div class="sel-team" id="selT1"><h3></h3></div></div>
       <div class="sel-btns"><button type="button" class="set-back" id="selGo" data-t="selGo"></button><button type="button" class="set-back secondary" id="selBack" data-t="back"></button></div>
     </div></div>
@@ -191,7 +193,7 @@ const TXT={
     ['MEHR! ICH WILL MEHR!','Niemand kann mich aufhalten!','TORAK ZERSTÖRT ALLES!'],
     ['Zwei Herzen, eine Kraft!','Zusammen sind wir unschlagbar!','Das ist die Macht der Fusion!']
   ],
-  selTitle:'KÄMPFER WÄHLEN',selSize:'Team-Größe',selGo:'LOS!',team:'TEAM ',sizeNames:['1 GEGEN 1','2 GEGEN 2','3 GEGEN 3','4 GEGEN 4'],soloNames:['1 KÄMPFER','2 KÄMPFER','3 KÄMPFER','4 KÄMPFER'],
+  selTitle:'KÄMPFER WÄHLEN',selSize:'Team-Größe',selArena:'Arena',arenaNames:['NACHT','FELSWÜSTE','STADT','EISBERGE','VULKAN'],arenaRandom:'ZUFALL',selGo:'LOS!',team:'TEAM ',sizeNames:['1 GEGEN 1','2 GEGEN 2','3 GEGEN 3','4 GEGEN 4'],soloNames:['1 KÄMPFER','2 KÄMPFER','3 KÄMPFER','4 KÄMPFER'],
   ctrlNames:['SPIELER 1','SPIELER 2','SPIELER 3','SPIELER 4'],ctrlBot:'KI',ctrlTag:' · S',teamWins:'TEAM {n} GEWINNT',menuHelp:'STEUERUNG',menuSettings:'Einstellungen',back:'ZURÜCK',
   pause:'PAUSE',pResume:'WEITER',pSettings:'EINSTELLUNGEN',pMenu:'ZUM MENÜ',
   setTitle:'EINSTELLUNGEN',setMusic:'Musik',setSfx:'Soundeffekte',setVib:'Vibration',setGfx:'Grafik',setGore:'Blut & Wunden',setBot:'KI-Stärke',botNames:['LEICHT','NORMAL','SCHWER'],
@@ -281,7 +283,7 @@ const clash={on:false,t:0,pos:0,x:0,y:0,btn:[false,false],bt:[0,0],snd:0,fx:0};
 const ULTRA_T=.36,ULTRA_HITS=[.06,.17,.28],ULTRA_SPEED=.22,KO_SLOW_T=.3,KO_SPEED=.3;
 // ---- Einstellungen: robust aus localStorage lesen (fehlende/kaputte Werte -> Standard) ----
 const SETTINGS_KEY='stickballz.settings.v1',GFX_NAMES=TXT.gfxNames,GFX_LEVELS=TXT.gfxLevels,GFX_DPR=[1,1.5,2],GORE_NAMES=TXT.goreNames;
-const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,bot:0,mute:false,fsOff:false,lastMode:'free',teams:null};
+const settings={music:.7,sfx:.8,vibration:true,gfx:0,gore:2,bot:0,mute:false,fsOff:false,lastMode:'free',arena:-1,teams:null};
 // Teams je Modus: size 1–4, p = Figuren [Team][Platz], c = Steuerung [Team][Platz] (0–3 = Spieler 1–4, -1 = KI; Freiflug ohne KI)
 const TEAM_PICKS=[[0,2,3,4],[1,5,6,7]];
 function defaultTeams(m){return {size:1,p:TEAM_PICKS.map(a=>a.slice()),c:[[0,0,0,0],m==='bot'?[-1,-1,-1,-1]:[1,1,1,1]]};}
@@ -332,6 +334,7 @@ try {
     if(Number.isInteger(d.gfx)&&d.gfx>=0&&d.gfx<=3)settings.gfx=d.gfx;
     if(Number.isInteger(d.gore)&&d.gore>=0&&d.gore<=2)settings.gore=d.gore;
     if(Number.isInteger(d.bot)&&d.bot>=0&&d.bot<=2)settings.bot=d.bot;
+    if(Number.isInteger(d.arena)&&d.arena>=-1&&d.arena<=4)settings.arena=d.arena;  // -1 Zufall, 0..4 = ARENAS
     if(d.lastMode==='free'||d.lastMode==='bot'||d.lastMode==='local')settings.lastMode=d.lastMode;
     if(d.teams&&typeof d.teams==='object')for(const m of ['free','bot','local'])settings.teams[m]=readTeams(d.teams[m],m);
   }
@@ -583,6 +586,126 @@ skyCtx.fillStyle=skyGradient;skyCtx.fillRect(0,0,W,H);
 const skyGlow=skyCtx.createRadialGradient(W*.72,H*.24,3,W*.72,H*.24,390);
 skyGlow.addColorStop(0,'rgba(39,87,136,.24)');skyGlow.addColorStop(1,'rgba(8,13,27,0)');
 skyCtx.fillStyle=skyGlow;skyCtx.fillRect(0,0,W,H);
+// ---- Arenen: Himmel, Hintergrund, Boden und zerstörbare Deko-Objekte (Index = settings.arena, -1 = Zufall) ----
+// sky = Verlauf oben/Mitte/unten, glow = Lichtschein, stars = Sternen-Deckkraft, far/farStyle = Silhouette (0 Hügel, 1 Tafelberge, 2 Skyline, 3 Eisgipfel, 4 Vulkane),
+// ground = Boden-Verlauf, line = Bodenlinie, grid = Schichtlinien, rock = Brocken, prop = Objektart (0 keine, 1 Felssäule, 2 Hochhaus, 3 Eisspitze, 4 Lavasäule), pc = Objektfarben
+const ARENAS=[
+  {sky:['#090d1c','#101d35','#172842'],glow:'rgba(39,87,136,.24)',stars:1,far:'#101a30',farStyle:0,ground:['#2c4966','#1c314b','#111f34','#0b1322'],line:'#4ce1e8',grid:'#2e5371',rock:'#3a5c80',prop:0},
+  {sky:['#2f6fb4','#86bde3','#f0d39c'],glow:'rgba(255,240,180,.6)',stars:0,far:'#e4b98c',farStyle:1,ground:['#c9864f','#a8653a','#7a4527','#4a2a18'],line:'#ffd08a',grid:'#9a5a33',rock:'#b8794a',prop:1,pc:['#b06a3c','#8a4f2c','#d08f5c']},
+  {sky:['#1a1240','#5a2a6a','#e0745a'],glow:'rgba(255,170,110,.4)',stars:.4,far:'#24183c',farStyle:2,ground:['#4a4f5c','#363a45','#25282f','#16181d'],line:'#ffcf6a',grid:'#5a5f6e',rock:'#6a6f7c',prop:2,pc:['#3a3f52','#2a2e3c','#ffd66a']},
+  {sky:['#0e2a4a','#2f6fa0','#bfe6f7'],glow:'rgba(220,250,255,.45)',stars:.3,far:'#8fbcd8',farStyle:3,ground:['#dff4ff','#a8d8f0','#6fa8cc','#3a6f94'],line:'#ffffff',grid:'#8cc0dc',rock:'#bfe4f5',prop:3,pc:['#bfe8ff','#7fb8dc','#ffffff']},
+  {sky:['#12060a','#3a0e10','#7a2412'],glow:'rgba(255,90,30,.38)',stars:0,far:'#2a0c0c',farStyle:4,ground:['#3a2422','#2a1616','#1c0e0e','#0e0606'],line:'#ff6a2a',grid:'#5a2a22',rock:'#4a2c28',prop:4,pc:['#2a1414','#1a0a0a','#ff7a2a']}
+];
+let arena=ARENAS[0],arenaIdx=0;
+const propGone=new Map();  // zerstörte Objekte: Platz-Nummer -> true (bis zum nächsten Kampf)
+function applyArena(i) {
+  arenaIdx=i;arena=ARENAS[i]||ARENAS[0];const A=arena;
+  const g=skyCtx.createLinearGradient(0,0,0,H);g.addColorStop(0,A.sky[0]);g.addColorStop(.6,A.sky[1]);g.addColorStop(1,A.sky[2]);
+  skyCtx.fillStyle=g;skyCtx.fillRect(0,0,skyCanvas.width,H);
+  const gl=skyCtx.createRadialGradient(skyCanvas.width*.72,H*.24,3,skyCanvas.width*.72,H*.24,390);gl.addColorStop(0,A.glow);gl.addColorStop(1,'rgba(0,0,0,0)');
+  skyCtx.fillStyle=gl;skyCtx.fillRect(0,0,skyCanvas.width,H);
+  rockGradient=null;
+}
+// Hintergrund-Silhouette je Arena (Höhe in Bildschirm-Pixeln aus Welt-x)
+const tri=v=>{const f=v-Math.floor(v);return 1-Math.abs(f*2-1);};
+function farY(wx) {
+  switch(arena.farStyle) {
+    case 1:{const m=Math.sin(wx*.0012)+Math.sin(wx*.0031)*.5;return 330-(m>.45?70:m>-.15?30:0);}
+    case 3:return 318-tri(wx*.004)*70-tri(wx*.011)*24;
+    case 4:return 335-Math.pow(tri(wx*.0011),3)*150-tri(wx*.006)*10;
+    default:return 300+Math.sin(wx*.002)*22+Math.sin(wx*.006)*15;
+  }
+}
+function drawSkyline(oy) {
+  // Stadt: Hochhaus-Silhouetten (Breite 46 in Bildschirm-Einheiten), einige Fenster leuchten
+  const off=renderCameraX*.25,k0=Math.floor(off/46)-1,k1=k0+Math.ceil(W/46)+2;
+  ctx.fillStyle=arena.far;ctx.beginPath();
+  for(let k=k0;k<=k1;k++){const h=60+crackRnd(k,3)*130,x=k*46-off;ctx.rect(x,oy+330-h,40,h+300);}
+  ctx.fill();
+  ctx.fillStyle='#ffcf7a';ctx.globalAlpha=.35;ctx.beginPath();
+  for(let k=k0;k<=k1;k++){const h=60+crackRnd(k,3)*130,x=k*46-off;for(let r=0;r<6;r++)for(let c=0;c<3;c++)if(crackRnd(k*31+r,c)>.72)ctx.rect(x+5+c*12,oy+342-h+r*16,5,7);}
+  ctx.fill();ctx.globalAlpha=1;
+}
+// Zerstörbare Objekte: feste Plätze alle PROP_SP px, Zufall aus der Platz-Nummer (gespeichert wird nur propGone)
+const PROP_SP=330,PROP_TMP={x:0,w:0,h:0,k:0};
+function propAt(k) {
+  const P=PROP_TMP,t=arena.prop;
+  if(!t||crackRnd(k,1)>(t===2?.8:.55)||Math.abs(k*PROP_SP)<260)return null;  // nicht direkt am Start
+  P.k=k;P.x=k*PROP_SP+(crackRnd(k,2)-.5)*120;const s=crackRnd(k,4);
+  if(t===1){P.w=40+s*40;P.h=90+s*130;}else if(t===2){P.w=70+s*50;P.h=140+s*200;}else if(t===3){P.w=40+s*34;P.h=100+s*140;}else{P.w=36+s*30;P.h=80+s*110;}
+  return P;
+}
+function breakProp(P) {
+  propGone.set(P.k,true);
+  const gy=terrainY(P.x);
+  spawnRocks(P.x,gy-P.h*.4,arena.prop===2?7:5,420,arena.prop===4?1:0);
+  burst(P.x,gy-P.h*.5,arena.pc[2],12,180);burst(P.x,gy-P.h*.3,arena.rock,10,140);
+  screenShake=Math.max(screenShake,4);playSfx('crater');
+}
+// Prüft Kämpfer (schnell/geschleudert), Strahlen und Schüsse gegen Objekte in der Nähe (jeden Physikschritt)
+function updateProps() {
+  if(!arena.prop)return;
+  const a=fighters[0],b=fighters[1].active?fighters[1]:a;
+  const lo=Math.floor((Math.min(a.x,b.x)-700)/PROP_SP),hi=Math.ceil((Math.max(a.x,b.x)+700)/PROP_SP);
+  for(let k=lo;k<=hi;k++) {
+    if(propGone.has(k))continue;const P=propAt(k);if(!P)continue;
+    const gy=terrainY(P.x),x0=P.x-P.w*.5,x1=P.x+P.w*.5,y0=gy-P.h;
+    let hit=false;
+    for(let i=0;i<2&&!hit;i++) {
+      const f=fighters[i];if(!f.active)continue;
+      const sp=Math.hypot(f.vx,f.vy);
+      if((sp>520||(f.stun>0&&sp>280))&&f.x>x0-14&&f.x<x1+14&&f.y>y0&&f.y-70<gy)hit=true;
+      if(!hit&&f.beam>0){const sx=f.x+f.face*21,sy=f.y-40;for(let t=0;t<=1;t+=.04){const x=sx+(f.beamEndX-sx)*t,y=sy+(f.beamEndY-sy)*t;if(x>x0&&x<x1&&y>y0&&y<gy){hit=true;break;}}}
+    }
+    for(let i=0;i<MAX_PROJECTILES&&!hit;i++){const p=projectiles[i];if(p.active&&p.x>x0-p.r&&p.x<x1+p.r&&p.y>y0-p.r&&p.y<gy)hit=true;}
+    if(hit)breakProp(P);
+  }
+}
+// Krater zerstören Objekte in Reichweite
+function cratersBreakProps(x,w) {
+  if(!arena.prop)return;
+  for(let k=Math.floor((x-w)/PROP_SP);k<=Math.ceil((x+w)/PROP_SP);k++){if(propGone.has(k))continue;const P=propAt(k);if(P&&Math.abs(P.x-x)<w*.5+P.w*.5)breakProp(P);}
+}
+function drawProps(left,right) {
+  if(!arena.prop)return;
+  const t=arena.prop,pc=arena.pc,detail=renderZoom>.3;
+  for(let k=Math.floor((left-150)/PROP_SP);k<=Math.ceil((right+150)/PROP_SP);k++) {
+    const P=propAt(k);if(!P)continue;
+    const gone=propGone.has(k),gy=terrainY(P.x)+4,h=gone?P.h*.2:P.h,w=P.w,x=P.x,s=k*7.31;
+    ctx.beginPath();
+    if(t===1||t===4) {
+      // Felssäule / Lavasäule: oben schmaler, zerstört mit gezackter Kante
+      const tw=w*.62;ctx.moveTo(x-w*.5,gy);ctx.lineTo(x-tw*.5,gy-h);
+      if(gone){for(let j=1;j<=4;j++)ctx.lineTo(x-tw*.5+tw*j/4,gy-h+(j&1?10:-4)*crackRnd(s,j));}else ctx.lineTo(x+tw*.5,gy-h);
+      ctx.lineTo(x+w*.5,gy);ctx.closePath();ctx.fillStyle=pc[0];ctx.fill();
+      ctx.beginPath();ctx.moveTo(x+w*.12,gy);ctx.lineTo(x+tw*.12,gy-h);ctx.lineTo(x+tw*.5,gy-h);ctx.lineTo(x+w*.5,gy);ctx.closePath();ctx.fillStyle=pc[1];ctx.fill();
+      if(detail) {
+        ctx.beginPath();
+        if(t===1){for(let y=gy-18;y>gy-h+8;y-=26){const q=(gy-y)/h,hw=(w*.5)*(1-q)+(tw*.5)*q;ctx.moveTo(x-hw,y);ctx.lineTo(x+hw,y);}ctx.lineWidth=3;ctx.strokeStyle=pc[2];ctx.globalAlpha=.5;ctx.stroke();ctx.globalAlpha=1;}
+        else{let yy=gy-6,xx=x-w*.1;ctx.moveTo(xx,yy);for(let j=0;j<5;j++){xx+=(crackRnd(s,j)-.5)*w*.5;yy-=h/5;ctx.lineTo(xx,Math.max(yy,gy-h));}ctx.lineWidth=2.5;ctx.strokeStyle=pc[2];ctx.globalAlpha=.85+.15*Math.sin(clock*4+k);ctx.stroke();ctx.globalAlpha=1;}
+      }
+    } else if(t===2) {
+      // Hochhaus: Fenster-Raster (ein Pfad), zerstört nur der Stumpf mit Zacken
+      ctx.moveTo(x-w*.5,gy);ctx.lineTo(x-w*.5,gy-h);
+      if(gone){for(let j=1;j<=5;j++)ctx.lineTo(x-w*.5+w*j/5,gy-h+(j&1?14:-6)*crackRnd(s,j));}else ctx.lineTo(x+w*.5,gy-h);
+      ctx.lineTo(x+w*.5,gy);ctx.closePath();ctx.fillStyle=pc[0];ctx.fill();
+      ctx.fillStyle=pc[1];ctx.fillRect(x+w*.3,gy-h,w*.2,h);
+      if(!gone){ctx.fillStyle=pc[0];ctx.fillRect(x-2,gy-h-18,4,18);}
+      if(detail) {
+        ctx.beginPath();const cols=Math.floor((w-12)/16),rows=Math.floor((h-16)/22);
+        for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(crackRnd(k*13+r,c)>.45)ctx.rect(x-w*.5+8+c*16,gy-h+10+r*22,8,11);
+        ctx.fillStyle=pc[2];ctx.globalAlpha=.8;ctx.fill();ctx.globalAlpha=1;
+      }
+    } else if(t===3) {
+      // Eisspitze: Dreieck mit hellem Grat, zerstört abgebrochen
+      const top=gy-h,tw=gone?w*.5:0;
+      ctx.moveTo(x-w*.5,gy);ctx.lineTo(x-tw*.5,top);ctx.lineTo(x+tw*.5,top+(gone?8:0));ctx.lineTo(x+w*.5,gy);ctx.closePath();
+      ctx.globalAlpha=.88;ctx.fillStyle=pc[0];ctx.fill();
+      ctx.beginPath();ctx.moveTo(x,gy);ctx.lineTo(x+tw*.5,top);ctx.lineTo(x+w*.5,gy);ctx.closePath();ctx.fillStyle=pc[1];ctx.fill();ctx.globalAlpha=1;
+      if(detail){ctx.beginPath();ctx.moveTo(x-w*.22,gy-6);ctx.lineTo(x-tw*.3,top+6);ctx.lineWidth=2.5;ctx.strokeStyle=pc[2];ctx.stroke();}
+    }
+  }
+}
 const shellEl=document.querySelector('.shell');
 // Vollbild: Spielfeld füllt die ganze Fläche (innerhalb der Safe-Area). Menüs/Schrift skalieren mit der Höhe
 // (Bezug SHELL_H = 402 px), die logische Breite W wächst mit dem Seitenverhältnis (Höhe bleibt H = 540).
@@ -713,7 +836,7 @@ function makeCrater(x,big) {
   if(c.active&&Math.abs(c.x-x)<(c.w+w)*.35) {
     c.x=(c.x+x)*.5;c.w=Math.min(760,Math.max(c.w,w)+52);c.depth=Math.min(330,c.depth+(big?82:46));
   } else {c.active=true;c.x=x;c.w=w;c.depth=big?220:128;}
-  c.seed=c.seed||Math.random()*100;c.heat=1;spawnRocks(x,terrainY(x),big?9:5,big?620:430,1);
+  c.seed=c.seed||Math.random()*100;c.heat=1;spawnRocks(x,terrainY(x),big?9:5,big?620:430,1);cratersBreakProps(x,c.w);
   for(let i=0;i<MAX_SPLATS;i++){const s=splats[i];if(s.active&&Math.abs(s.x-c.x)<c.w*.5)s.active=false;}
   spawnRing(x,terrainY(x)-6,big?190:110,'#ffd29a',big?6:4,big?.5:.35);
   if(big)flash(.22,'#ffe2b8');
@@ -758,7 +881,7 @@ function rockPath(hotOnly) {
 function drawRocks() {
   ctx.lineJoin='round';
   if(!rockPath(false))return;
-  ctx.fillStyle='#3a5c80';ctx.fill();ctx.lineWidth=1.6;ctx.strokeStyle='#0d1a2c';ctx.stroke();
+  ctx.fillStyle=arena.rock;ctx.fill();ctx.lineWidth=1.6;ctx.strokeStyle='#0d1a2c';ctx.stroke();
   if(rockPath(true)){ctx.globalAlpha=.85;ctx.strokeStyle='#ff8a3a';ctx.stroke();ctx.globalAlpha=1;}
 }
 // Flache Furche/Aufschlag-Mulde (z. B. wer betäubt über den Boden rutscht): verschmilzt nur per Maximum, kein Knall
@@ -818,6 +941,7 @@ function begin(nextMode) {
   fighters[0].active=true;
   fighters[1].active=mode!=='free';
   for(let i=0;i<MAX_CRATERS;i++)craters[i].active=false;for(let i=0;i<MAX_ROCKS;i++)rocks[i].active=false;
+  propGone.clear();applyArena(settings.arena<0?Math.floor(Math.random()*ARENAS.length):settings.arena);
   for(let i=0;i<MAX_PROJECTILES;i++)projectiles[i].active=false;
   for(let i=0;i<MAX_PARTICLES;i++)particles[i].active=false;
   for(let i=0;i<MAX_SPLATS;i++)splats[i].active=false;
@@ -1046,8 +1170,9 @@ settingRows.forEach((row,i)=>{
 // ---- Kämpfer-Auswahl (aus dem Hauptmenü vor jedem Kampf): Team-Größe, je Platz Figur (◀▶) und Steuerung (✕/Klick wechselt Spieler 1–4 / KI) ----
 const selectLayer=document.getElementById('select'),selSizeRow=document.getElementById('selSizeRow'),selSizeBtn=document.getElementById('selSize');
 const selGo=document.getElementById('selGo'),selBack=document.getElementById('selBack'),selSlots=[];
+const selArenaRow=document.getElementById('selArenaRow'),selArenaBtn=document.getElementById('selArena');
 let selectOpen=false,selMode='bot',selRow=0,selCol=0,selSlotLen=4,selGrid=[];
-const SEL_SIZE={k:'size',el:selSizeRow},SEL_GO={k:'go',el:selGo},SEL_BACK={k:'back',el:selBack},SEL_BTNS=[SEL_GO,SEL_BACK],SEL_ALL=[SEL_SIZE,SEL_GO,SEL_BACK];
+const SEL_SIZE={k:'size',el:selSizeRow},SEL_ARENA={k:'arena',el:selArenaRow},SEL_GO={k:'go',el:selGo},SEL_BACK={k:'back',el:selBack},SEL_BTNS=[SEL_GO,SEL_BACK],SEL_ALL=[SEL_SIZE,SEL_ARENA,SEL_GO,SEL_BACK];
 const portraitF=Object.assign({},fighters[0]);  // Vorschau-Figur (eigene Kopie, nie im Spiel)
 function drawPortrait(pic,c) {
   if(pic.dataset.c===String(c))return;
@@ -1079,6 +1204,7 @@ function renderSelect() {
   const cfg=selCfg(),solo=selMode==='free';
   selectLayer.classList.toggle('solo',solo);
   selSizeBtn.textContent='◀ '+(solo?TXT.soloNames:TXT.sizeNames)[cfg.size-1]+' ▶';
+  selArenaBtn.textContent='◀ '+(settings.arena<0?TXT.arenaRandom:TXT.arenaNames[settings.arena])+' ▶';
   for(let t=0;t<2;t++)document.querySelector('#selT'+t+' h3').textContent=TXT.team+(t+1);
   document.getElementById('selT1').hidden=solo;
   if(fixTeams(cfg,selMode))saveSettings();
@@ -1091,7 +1217,7 @@ function renderSelect() {
     drawPortrait(sl.pic,c);
   }
   // Fokus-Raster: oben Größe, je Platz eine Zeile [T1 Figur, T1 Steuerung, T2 Figur, T2 Steuerung], unten LOS/ZURÜCK
-  selSlotLen=solo?2:4;selGrid=[[SEL_SIZE]];
+  selSlotLen=solo?2:4;selGrid=[[SEL_SIZE],[SEL_ARENA]];
   for(let s=0;s<cfg.size;s++){const row=[];for(let t=0;t<(solo?1:2);t++)row.push(...selSlots[t*4+s].cells);selGrid.push(row);}
   selGrid.push(SEL_BTNS);
   selRow=clamp(selRow,0,selGrid.length-1);selCol=clamp(selCol,0,selSlotLen-1);
@@ -1107,6 +1233,7 @@ function openSelect(m){selMode=m;selectOpen=true;selectLayer.hidden=false;selRow
 function closeSelect(){selectOpen=false;selectLayer.hidden=true;}
 function startFromSelect(){saveSettings();closeSelect();begin(selMode);}
 function changeSize(d,wrap){const cfg=selCfg();cfg.size=wrap?(cfg.size+d+3)%4+1:clamp(cfg.size+d,1,4);saveSettings();renderSelect();}
+function changeArena(d){settings.arena=(settings.arena+1+d+6)%6-1;saveSettings();renderSelect();}  // -1 Zufall, 0..4
 // Nächste/vorige Figur; im selben Team schon gewählte werden übersprungen
 function changeChar(sl,d){
   const cfg=selCfg(),N=CHARS.length;let c=cfg.p[sl.t][sl.s];
@@ -1123,15 +1250,17 @@ function moveSelFocus(d){selRow=(selRow+d+selGrid.length)%selGrid.length;renderS
 function selLeftRight(d) {
   const cell=selCell();
   if(cell===SEL_SIZE)changeSize(d,false);
+  else if(cell===SEL_ARENA)changeArena(d);
   else{selCol=cell===SEL_GO?selSlotLen/2:cell===SEL_BACK?0:(selCol+d+selSlotLen)%selSlotLen;renderSelect();}
 }
 function selActivate() {
   const cell=selCell();
-  if(cell===SEL_SIZE)changeSize(1,true);else if(cell===SEL_GO)startFromSelect();else if(cell===SEL_BACK)closeSelect();
+  if(cell===SEL_SIZE)changeSize(1,true);else if(cell===SEL_ARENA)changeArena(1);else if(cell===SEL_GO)startFromSelect();else if(cell===SEL_BACK)closeSelect();
   else if(cell.k==='char')changeChar(cell.sl,1);else cycleCtrl(cell.sl);
 }
 function selCharStep(d){const cell=selCell();if(cell.k==='char')changeChar(cell.sl,d);}  // □ zurück, L1/R1 blättern
 selSizeBtn.addEventListener('click',()=>{focusSelCell(SEL_SIZE);changeSize(1,true);});
+selArenaBtn.addEventListener('click',()=>{focusSelCell(SEL_ARENA);changeArena(1);});
 selGo.addEventListener('click',startFromSelect);selBack.addEventListener('click',closeSelect);
 function setPauseFocus(i){pauseFocus=(i+pauseButtons.length)%pauseButtons.length;for(let k=0;k<pauseButtons.length;k++)pauseButtons[k].classList.toggle('pad-focus',k===pauseFocus);}
 function setMenuFocus(i) {
@@ -2566,7 +2695,7 @@ function update(dt) {
     // Leine im Kampf: waagerechten Abstand begrenzen, damit niemand aus dem Bild fliegt
     leash(fighters[0],fighters[1],'x','vx',MAX_SEP_X);
   }
-  updateProjectiles(dt);
+  updateProjectiles(dt);updateProps();
   updateEffects(dt);
   const focus=fighters[1].active?(fighters[0].x+fighters[1].x)*.5:fighters[0].x;
   const secondActive=fighters[1].active;
@@ -2592,19 +2721,20 @@ function update(dt) {
 }
 function drawBackground() {
   ctx.drawImage(skyCanvas,0,0,W,H);
-  for(let i=0;i<stars.length;i++) {
+  if(arena.stars>0)  for(let i=0;i<stars.length;i++) {
     const s=stars[i],x=((s.x-renderCameraX*.035)%STAR_W+STAR_W)%STAR_W;if(x>W)continue;
-    ctx.globalAlpha=s.a;ctx.fillStyle='#dbeaff';ctx.fillRect(x,s.y-renderCameraY*.035,s.r,s.r);
+    ctx.globalAlpha=s.a*arena.stars;ctx.fillStyle='#dbeaff';ctx.fillRect(x,s.y-renderCameraY*.035,s.r,s.r);
   }
   ctx.globalAlpha=1;
-  ctx.fillStyle='#101a30';
+  ctx.fillStyle=arena.far;
+  if(arena.farStyle===2)drawSkyline(-renderCameraY*.1+5);else {
   ctx.beginPath();ctx.moveTo(0,H);
   for(let x=0;x<=W+50;x+=50) {
     const wx=renderCameraX+(x-W/2)/renderZoom;
-    const y=300+Math.sin(wx*.002)*22+Math.sin(wx*.006)*15;
+    const y=farY(wx);
     ctx.lineTo(x,y-renderCameraY*.1+35);
   }
-  ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+  ctx.lineTo(W,H);ctx.closePath();ctx.fill();}
 }
 // Bodenhöhen einmal je Bild in einen Puffer (Füllung, Linie und Krater-Glut nutzen ihn)
 const TB=new Float32Array(1600);let tbN=0,tbLeft=0,tbStep=6;
@@ -2618,14 +2748,15 @@ function drawTerrain() {
   // Gradient nur einmal erzeugen (Weltkoordinaten, gilt mit jeder Kamera-Transformation)
   if(!rockGradient){
     rockGradient=ctx.createLinearGradient(0,GROUND,0,GROUND+1000);
-    rockGradient.addColorStop(0,'#2c4966');rockGradient.addColorStop(.22,'#1c314b');rockGradient.addColorStop(.62,'#111f34');rockGradient.addColorStop(1,'#0b1322');
+    const G=arena.ground;rockGradient.addColorStop(0,G[0]);rockGradient.addColorStop(.22,G[1]);rockGradient.addColorStop(.62,G[2]);rockGradient.addColorStop(1,G[3]);
   }
   ctx.fillStyle=rockGradient;ctx.fill();
   drawCraterFx(left,right,step);
+  drawProps(left,right);
   ctx.beginPath();ctx.moveTo(left,TB[0]);
   for(let k=1;k<tbN;k++)ctx.lineTo(left+k*step,TB[k]);
-  ctx.lineWidth=3/renderZoom;ctx.strokeStyle='#4ce1e8';ctx.stroke();
-  ctx.lineWidth=1/renderZoom;ctx.strokeStyle='#2e5371';
+  ctx.lineWidth=3/renderZoom;ctx.strokeStyle=arena.line;ctx.stroke();
+  ctx.lineWidth=1/renderZoom;ctx.strokeStyle=arena.grid;
   for(let y=GROUND+45;y<bottom;y+=62) {
     ctx.globalAlpha=y<GROUND+300?.75:.3;
     ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
