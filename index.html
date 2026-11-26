@@ -122,7 +122,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26c</p>
+        <p class="version">v2026-11-26d</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -227,16 +227,16 @@ const TXT={
 // acc = wehendes Teil (band Stirnband · scarf Schal · cape Umhang), cross = verschränkte Arme im Stand, size = nur Darstellung (Trefferzonen gleich),
 // Extras: sword (Schwert auf dem Rücken), tail ('tail' / 'sting' mit Stachel), horns, antenna, belly (runder Bauch)
 const CHARS=[
-  {color:'#ff3f55',dark:'#a9233b',belt:'#ffb23e',hair:0,hairColor:'#2a0c14',acc:'band',accColor:'#ffb23e'},
-  {color:'#36a9ff',dark:'#155fb6',belt:'#e8f6ff',hair:1,hairColor:'#0c1a33',acc:'scarf',accColor:'#e8f6ff',cross:true},
-  {color:'#ff8a2a',dark:'#a34a12',belt:'#f2f0e6',hair:2,hairColor:'#1a0f2e'},
-  {color:'#a46bff',dark:'#5b32a8',belt:'#e2e8f2',hair:3,hairColor:'#2b1a10',acc:'scarf',accColor:'#2b3a4e',sword:true},
-  {color:'#1f9e5c',dark:'#0e5c36',belt:'#2b2140',hair:7,hairColor:'#f2f0e6',fixHair:true,acc:'cape',accColor:'#f2f0e6',cross:true},
-  {color:'#e6e0ff',dark:'#8f78d8',belt:'#c04bff',hair:6,hairColor:'#b04cff',fixHair:true,cross:true,horns:true,tail:'tail',evil:true},
-  {color:'#c2ea5a',dark:'#6c8f1f',belt:'#2c3318',hair:5,hairColor:'#4d6a12',fixHair:true,tail:'sting',evil:true},
-  {color:'#ff7fc8',dark:'#c2468f',belt:'#5a2a7a',hair:-1,antenna:true,belly:true,size:1.05,evil:true},
-  {color:'#5c6178',dark:'#33374a',belt:'#ffd34d',hair:4,hairColor:'#3a1208',size:1.14,evil:true,sup:['#d4f55a','#f4ffd0','#7fa02a','#aacb42','#6f8c25'],whiteEyes:true},
-  {color:'#e4f3ff',dark:'#2a6ef0',belt:'#ffc23e',hair:0,hairColor:'#0d2a66',acc:'scarf',accColor:'#ffffff'}
+  {color:'#ff3f55',dark:'#a9233b',belt:'#ffb23e',hair:0,hairColor:'#2a0c14',acc:'band',accColor:'#ffb23e',beam:['#ff2a1a','#ff5a2a','#fff0d0']},
+  {color:'#36a9ff',dark:'#155fb6',belt:'#e8f6ff',hair:1,hairColor:'#0c1a33',acc:'scarf',accColor:'#e8f6ff',cross:true,beam:['#2050ff','#3a7bff','#dfe9ff']},
+  {color:'#ff8a2a',dark:'#a34a12',belt:'#f2f0e6',hair:2,hairColor:'#1a0f2e',beam:['#ff8a10','#ffa82a','#fff6d8']},
+  {color:'#a46bff',dark:'#5b32a8',belt:'#e2e8f2',hair:3,hairColor:'#2b1a10',acc:'scarf',accColor:'#2b3a4e',sword:true,beam:['#9fc4ff','#e8f0ff','#ffffff']},
+  {color:'#1f9e5c',dark:'#0e5c36',belt:'#2b2140',hair:7,hairColor:'#f2f0e6',fixHair:true,acc:'cape',accColor:'#f2f0e6',cross:true,beam:['#10d0b0','#2ee6d0','#e0fffa']},
+  {color:'#e6e0ff',dark:'#8f78d8',belt:'#c04bff',hair:6,hairColor:'#b04cff',fixHair:true,cross:true,horns:true,tail:'tail',evil:true,beam:['#8a1cff','#a84cff','#f0dcff']},
+  {color:'#c2ea5a',dark:'#6c8f1f',belt:'#2c3318',hair:5,hairColor:'#4d6a12',fixHair:true,tail:'sting',evil:true,beam:['#e0c000','#ffe02a','#fffbe0']},
+  {color:'#ff7fc8',dark:'#c2468f',belt:'#5a2a7a',hair:-1,antenna:true,belly:true,size:1.05,evil:true,beam:['#ff3aa8','#ff7ad0','#fff0fa']},
+  {color:'#5c6178',dark:'#33374a',belt:'#ffd34d',hair:4,hairColor:'#3a1208',size:1.14,evil:true,sup:['#d4f55a','#f4ffd0','#7fa02a','#aacb42','#6f8c25'],whiteEyes:true,beam:['#40e020','#7cff3a','#efffe0']},
+  {color:'#e4f3ff',dark:'#2a6ef0',belt:'#ffc23e',hair:0,hairColor:'#0d2a66',acc:'scarf',accColor:'#ffffff',beam:['#ff3f55','#36a9ff','#ffffff']}
 ];
 // Farben mischen (#rrggbb), einmalig beim Start: mid = Oberkörper (zwischen vorn/hinten), bootDark = hinterer Stiefel
 function mixHex(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);let o='#';for(let s=16;s>=0;s-=8){const v=Math.round(((pa>>s)&255)*(1-t)+((pb>>s)&255)*t);o+=(v<16?'0':'')+v.toString(16);}return o;}
@@ -535,7 +535,7 @@ const tagReq=new Uint8Array(4);  // Wechsel-Wunsch je Spieler 1–4 (Tastendruck
 let ctrlTags=false;  // Name im HUD mit „· S2“, wenn mehrere Spieler mitspielen
 function applyMember(f,m){
   const L=CHARS[m.c];
-  f.look=L;f.style=m.c;f.supC=L.sup?L.sup[0]:'#ffe66d';f.supCore=L.sup?L.sup[1]:'#fff6c4';f.supDark=L.sup?L.sup[2]:'#c9a640';f.supMid=L.sup?L.sup[3]:'#e0bd4f';f.supBoot=L.sup?L.sup[4]:'#a8892f';f.name=TXT.charNames[m.c];f.color=L.color;f.dark=L.dark;f.belt=L.belt;
+  f.look=L;f.style=m.c;f.beamC=L.beam||[L.color,L.color,'#fff'];f.supC=L.sup?L.sup[0]:'#ffe66d';f.supCore=L.sup?L.sup[1]:'#fff6c4';f.supDark=L.sup?L.sup[2]:'#c9a640';f.supMid=L.sup?L.sup[3]:'#e0bd4f';f.supBoot=L.sup?L.sup[4]:'#a8892f';f.name=TXT.charNames[m.c];f.color=L.color;f.dark=L.dark;f.belt=L.belt;
   f.ctrl=m.ctrl;f.bot=m.ctrl<0;f.hp=m.hp;f.ki=m.ki;
 }
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 40;
@@ -1232,7 +1232,7 @@ function fireKamehameha(f,input) {
   f.beamCooldown=1.05;f.beamHitCooldown=0;f.beamTerrainHit=false;
   f.beamAngle=input.down?1.15:input.up?-.22:0;
   f.beamCharge=0;traceBeam(f);
-  burst(f.x+f.face*28,f.y-52,f.color,24,170);
+  burst(f.x+f.face*28,f.y-52,(f.beamC||[f.color])[1],24,170);
   screenShake=Math.max(screenShake,5);
   playSfx('beam');
 }
@@ -2855,10 +2855,10 @@ function drawFighter(f,alpha) {
     ctx.fillStyle=f.color;ctx.beginPath();ctx.arc(ox,oy,9,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   }
   if(ready) {
-    const glow=.55+.35*Math.sin(clock*20),orb=7+charge*(cannonC>0?13:10);
-    ctx.globalAlpha=.22*glow;ctx.fillStyle=ssj?f.supC:f.color;ctx.beginPath();ctx.arc(punchX+3,punchY,orb*2.7,0,Math.PI*2);ctx.fill();
+    const glow=.55+.35*Math.sin(clock*20),orb=7+charge*(cannonC>0?13:10),oc=cannonC>0||spId==='fusion'||!f.beamC?(ssj?f.supC:f.color):f.beamC[1];
+    ctx.globalAlpha=.22*glow;ctx.fillStyle=oc;ctx.beginPath();ctx.arc(punchX+3,punchY,orb*2.7,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=glow;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(punchX+3,punchY,orb*.55,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=ssj?f.supC:f.color;ctx.beginPath();ctx.arc(punchX+3,punchY,orb,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=oc;ctx.beginPath();ctx.arc(punchX+3,punchY,orb,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=.8;ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(punchX+3,punchY,orb+4,clock*5,clock*5+Math.PI*1.35);ctx.stroke();ctx.globalAlpha=1;
   }
   if(f.comboDisplay>0&&f.comboHits>1) {
@@ -2883,13 +2883,13 @@ function drawKamehameha(f) {
   if(f.beam<=0)return;
   const sx=f.x+f.face*21,sy=f.y-40;
   const pulse=.82+.18*Math.sin(clock*55);
-  const beamColor=f.superTime>0?f.supC:f.color;
+  const bc=f.beamC||[f.color,f.color,'#fff'];
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
-  ctx.globalAlpha=.23;ctx.strokeStyle=beamColor;ctx.lineWidth=68*pulse;
+  ctx.globalAlpha=.23;ctx.strokeStyle=bc[0];ctx.lineWidth=68*pulse;
   ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
-  ctx.globalAlpha=.82;ctx.strokeStyle=beamColor;ctx.lineWidth=38*pulse;
+  ctx.globalAlpha=.82;ctx.strokeStyle=bc[1];ctx.lineWidth=38*pulse;
   ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
-  ctx.globalAlpha=.92;ctx.strokeStyle='#fff';ctx.lineWidth=14*pulse;
+  ctx.globalAlpha=.92;ctx.strokeStyle=bc[2];ctx.lineWidth=14*pulse;
   ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(f.beamEndX,f.beamEndY);ctx.stroke();
   ctx.restore();
 }
