@@ -123,7 +123,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-26r</p>
+        <p class="version">v2026-11-27</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -2315,7 +2315,7 @@ function damage(f,from,p) {
 // tag = Chance je Schritt, bei wenig Leben den Kämpfer zu wechseln · spec = Chance, den Spezialangriff zu nutzen (einmal je Bereitschaft entschieden)
 // atk/rest = Dauer [min,max] s der Angriffs- bzw. Pausenphase (Pause: Abstand halten, laden, nur blocken/kontern) · gap = Mindestabstand zwischen Schüssen (s)
 // react = so lange (s) muss ein gegnerischer Schlag schon laufen, bevor die KI ihn sieht (menschliche Reaktionszeit)
-const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25,spec:.2,chase:.1,esc:0,perfect:0,maxChase:1,atk:[.9,1.5],rest:[1.6,2.6],gap:1.7,react:.2},{think:6,punch:.15,heavy:.86,block:.6,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5,spec:.45,chase:.3,esc:.12,perfect:.04,maxChase:2,atk:[1.2,2],rest:[1,1.7],gap:1.1,react:.16},{think:2,punch:.15,heavy:.86,block:.85,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8,spec:.7,chase:.9,esc:.5,perfect:.25,maxChase:3,atk:[1.5,2.4],rest:[.5,1],gap:.65,react:.12}];
+const BOT_LVL=[{think:18,punch:.6,heavy:.95,block:.3,shot:.5,beamFull:true,kiai:0,tag:.004,ultra:.25,spec:.2,chase:.1,esc:0,perfect:0,maxChase:1,atk:[.9,1.5],rest:[1.6,2.6],gap:1.7,react:.2},{think:6,punch:.15,heavy:.86,block:.45,shot:1,beamFull:false,kiai:.05,tag:.012,ultra:.5,spec:.45,chase:.3,esc:.12,perfect:.04,maxChase:2,atk:[1.2,2],rest:[1.4,2.2],gap:1.1,react:.16},{think:2,punch:.15,heavy:.86,block:.85,shot:1,beamFull:false,kiai:.12,tag:.025,ultra:.8,spec:.7,chase:.9,esc:.5,perfect:.25,maxChase:3,atk:[1.5,2.4],rest:[.5,1],gap:.65,react:.12}];
 const BOT_KEYS=['right','left','up','down','beam','heavy','punch','shot','charge','dash'];
 const BOT_MEM=[0,1].map(()=>({t:0,cr:false,cy:false,ph:0,phT:0,shotT:0,pt:0,pb:false,ud:false,wantUltra:false,sd:false,sdT:0,wantSpec:false,aimX:1,aimY:0,right:false,left:false,up:false,down:false,beam:false,heavy:false,punch:false,shot:false,charge:false,dash:false}));
 function updateBot(f,target,input,index) {
