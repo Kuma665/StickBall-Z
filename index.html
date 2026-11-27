@@ -139,7 +139,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-27b</p>
+        <p class="version">v2026-11-27c</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -233,7 +233,7 @@ const TXT={
   stArea:'FLUGGEBIET 01',stFree:'FREIFLUG',stBot:'KAMPF GEGEN KI',stLocal:'LOKALER KAMPF',stPads:'CONTROLLER: ',
   stAudioNo:'AUDIO NICHT UNTERSTÜTZT',stAudioFail:'AUDIO KANN NICHT STARTEN',lblLocal:'2 SPIELER  ·  ',lblBot:'KI-KAMPF  ·  ',
   // HUD und Ergebnis
-  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',chase:'JAGEN!',chaseNoKi:'KI!',chaseHit:'VERFOLGUNG ×',escape:'AUSGEWICHEN!',perfect:'PERFEKT!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
+  world:'WELT ×',km:' KM',worldSep:'  ·  ',combo:'COMBO ×',block:'BLOCK',guardBreak:'BLOCK GEBROCHEN!',wallHit:'AUFPRALL!',chase:'JAGEN!',chaseNoKi:'KI!',chaseHit:'VERFOLGUNG ×',escape:'AUSGEWICHEN!',perfect:'PERFEKT!',superPre:'SUPER ',superSuf:'s',superReady:'SUPER BEREIT',
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
   specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
   beamNames:['FLAMMENWELLE','DONNERKANONE','WIRBELSTRAHL','KLINGENSTRAHL','BOHRSTRAHL','NADELLASER','KEGELSTOSS','WABBELWELLE','RIESEN-KI-KUGEL','STERNENSTRAHL'],
@@ -687,7 +687,7 @@ skyCtx.fillStyle=skyGlow;skyCtx.fillRect(0,0,W,H);
 // sky = Verlauf oben/Mitte/unten, glow = Lichtschein, stars = Sternen-Deckkraft, far/farStyle = Silhouette (0 Hügel, 1 Tafelberge, 2 Skyline, 3 Eisgipfel, 4 Vulkane),
 // ground = Boden-Verlauf, line = Bodenlinie, grid = Schichtlinien, rock = Brocken, prop = Objektart (0 keine, 1 Felssäule, 2 Hochhaus, 3 Eisspitze, 4 Lavasäule), pc = Objektfarben
 const ARENAS=[
-  {sky:['#090d1c','#101d35','#172842'],glow:'rgba(39,87,136,.24)',stars:1,far:'#101a30',farStyle:0,ground:['#2c4966','#1c314b','#111f34','#0b1322'],line:'#4ce1e8',grid:'#2e5371',rock:'#3a5c80',prop:0},
+  {sky:['#090d1c','#101d35','#172842'],glow:'rgba(39,87,136,.24)',stars:1,far:'#101a30',farStyle:0,ground:['#2c4966','#1c314b','#111f34','#0b1322'],line:'#4ce1e8',grid:'#2e5371',rock:'#3a5c80',prop:1,pc:['#44698c','#2e4b6a','#4ce1e8']},
   {sky:['#2f6fb4','#86bde3','#f0d39c'],glow:'rgba(255,240,180,.6)',stars:0,far:'#e4b98c',farStyle:1,ground:['#c9864f','#a8653a','#7a4527','#4a2a18'],line:'#ffd08a',grid:'#9a5a33',rock:'#b8794a',prop:1,pc:['#b06a3c','#8a4f2c','#d08f5c']},
   {sky:['#1a1240','#5a2a6a','#e0745a'],glow:'rgba(255,170,110,.4)',stars:.4,far:'#24183c',farStyle:2,ground:['#4a4f5c','#363a45','#25282f','#16181d'],line:'#ffcf6a',grid:'#5a5f6e',rock:'#6a6f7c',prop:2,pc:['#3a3f52','#2a2e3c','#ffd66a']},
   {sky:['#0e2a4a','#2f6fa0','#bfe6f7'],glow:'rgba(220,250,255,.45)',stars:.3,far:'#8fbcd8',farStyle:3,ground:['#dff4ff','#a8d8f0','#6fa8cc','#3a6f94'],line:'#ffffff',grid:'#8cc0dc',rock:'#bfe4f5',prop:3,pc:['#bfe8ff','#7fb8dc','#ffffff']},
@@ -739,9 +739,25 @@ function breakProp(P) {
   burst(P.x,gy-P.h*.5,arena.pc[2],12,180);burst(P.x,gy-P.h*.3,arena.rock,10,140);
   screenShake=Math.max(screenShake,4);playSfx('crater');
 }
+// Aufprall: vom Gegner weggeschleuderter (betäubter) Kämpfer kracht in ein Objekt -> Bonus-Schaden 5–9 % je nach Tempo,
+// Abprall mit 40 % Tempo, Betäubung länger, Verfolgung für den Gegner sofort frei. Höchstens WALL_MAX je Flug (wallN, zurück bei Ende der Betäubung)
+const WALL_SPEED=360,WALL_MAX=2;
+function wallSlam(f,o,P,sp,i) {
+  f.wallN=(f.wallN||0)+1;
+  const dmg=MAX_HP*(.05+.04*clamp((sp-WALL_SPEED)/700,0,1)),dir=Math.sign(f.vx)||(f.x<P.x?1:-1);
+  f.hp=Math.max(0,f.hp-dmg);
+  f.vx=-f.vx*.4;f.vy=f.vy*.4-120;
+  f.stun=Math.min(f.stun+.35,1.6);f.hitFlash=.2;f.wallShow=1.1;
+  hurt(f,-dir,dmg*.5,true);
+  impactBurst(f.x,f.y-40,arena.pc[2],true);impactLines(f.x,f.y-40,arena.pc[2],true);
+  camKick(dir*8,-4);screenShake=Math.max(screenShake,8);hitStop=Math.max(hitStop,.08);
+  playSfx('hit',true);rumble(i,.9,.7,160);
+  o.chaseWindow=Math.max(o.chaseWindow,CHASE_OPEN);o.chaseBuf=false;
+}
 // Prüft Kämpfer (schnell/geschleudert), Strahlen und Schüsse gegen Objekte in der Nähe (jeden Physikschritt)
 function updateProps() {
   if(!arena.prop)return;
+  for(let i=0;i<2;i++)if(fighters[i].stun<=0)fighters[i].wallN=0;
   const a=fighters[0],b=fighters[1].active?fighters[1]:a;
   const lo=Math.floor((Math.min(a.x,b.x)-700)/PROP_SP),hi=Math.ceil((Math.max(a.x,b.x)+700)/PROP_SP);
   for(let k=lo;k<=hi;k++) {
@@ -751,7 +767,10 @@ function updateProps() {
     for(let i=0;i<2&&!hit;i++) {
       const f=fighters[i];if(!f.active)continue;
       const sp=Math.hypot(f.vx,f.vy);
-      if((sp>520||(f.stun>0&&sp>280))&&f.x>x0-14&&f.x<x1+14&&f.y>y0&&f.y-70<gy)hit=true;
+      if((sp>520||(f.stun>0&&sp>280))&&f.x>x0-14&&f.x<x1+14&&f.y>y0&&f.y-70<gy) {
+        hit=true;const o=fighters[1-i];
+        if(f.stun>0&&sp>WALL_SPEED&&o.active&&mode!=='free'&&(f.wallN||0)<WALL_MAX&&!ultra.on&&!clash.on)wallSlam(f,o,P,sp,i);
+      }
       if(!hit&&f.beam>0){const sx=f.x+f.face*21,sy=f.y-40;for(let t=0;t<=1;t+=.04){const x=sx+(f.beamEndX-sx)*t,y=sy+(f.beamEndY-sy)*t;if(x>x0&&x<x1&&y>y0&&y<gy){hit=true;break;}}}
     }
     for(let i=0;i<MAX_PROJECTILES&&!hit;i++){const p=projectiles[i];if(p.active&&p.x>x0-p.r&&p.x<x1+p.r&&p.y>y0-p.r&&p.y<gy)hit=true;}
@@ -2982,7 +3001,7 @@ function update(dt) {
   }
   processTags(dt);
   for(let t=0;t<2;t++)if(fighters[t].tagShow>0)fighters[t].tagShow-=dt;
-  for(let t=0;t<2;t++){const f=fighters[t];if(f.breakShow>0)f.breakShow-=dt;if(f.chaseShow>0)f.chaseShow-=dt;if(f.escShow>0)f.escShow-=dt;if(f.perfShow>0)f.perfShow-=dt;}
+  for(let t=0;t<2;t++){const f=fighters[t];if(f.breakShow>0)f.breakShow-=dt;if(f.wallShow>0)f.wallShow-=dt;if(f.chaseShow>0)f.chaseShow-=dt;if(f.escShow>0)f.escShow-=dt;if(f.perfShow>0)f.perfShow-=dt;}
   for(let t=0;t<2;t++)if(fighters[t].specShow>0)fighters[t].specShow-=dt;
   for(let t=0;t<2;t++)if(fighters[t].beamShow>0)fighters[t].beamShow-=dt;
   clock+=dt;updateFighter(fighters[0],0,dt);
@@ -3532,8 +3551,12 @@ function drawFighter(f,alpha) {
   if(f.guarding) {
     ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=.9;ctx.textAlign='center';ctx.font='800 9px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText(TXT.block,0,-101);ctx.restore();ctx.globalAlpha=1;
   }
-  if(f.breakShow>0) {
-    ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=clamp(f.breakShow/.3,0,1);ctx.textAlign='center';ctx.font='900 12px system-ui';ctx.fillStyle='#a8f3ff';ctx.fillText(TXT.guardBreak,0,-116);ctx.restore();ctx.globalAlpha=1;
+  if(f.breakShow>0||f.wallShow>0) {
+    // Block gebrochen bzw. Aufprall (Block hat Vorrang, beide an derselben Stelle)
+    const bk=f.breakShow>0,t=bk?f.breakShow:f.wallShow;
+    ctx.save();ctx.scale(f.face,1);ctx.globalAlpha=clamp(t/.3,0,1);ctx.textAlign='center';ctx.font='900 12px system-ui';
+    if(!bk){ctx.fillStyle='#050914';ctx.fillText(TXT.wallHit,1,-115);}
+    ctx.fillStyle=bk?'#a8f3ff':'#ffb04a';ctx.fillText(bk?TXT.guardBreak:TXT.wallHit,0,-116);ctx.restore();ctx.globalAlpha=1;
   }
   if(f.chaseShow>0||f.escShow>0||f.perfShow>0) {
     // Verfolgungs-Kette (Angreifer), Ausbrechen bzw. Perfekt-Block (Verteidiger) kurz über dem Kopf
