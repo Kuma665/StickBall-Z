@@ -111,6 +111,22 @@ html.touch-ui .touch:not([hidden]){display:block}
 .sel-char{flex:1;min-width:0}.sel-ctrl{min-width:84px;flex-shrink:0;color:#c7d3ea}
 .sel-btns{display:flex;justify-content:center;gap:8px;margin-top:7px}.sel-btns .set-back{width:auto;min-width:120px;margin:0}
 .sel-btns .set-back.secondary{border:1px solid #46536e;background:#151e30;color:var(--white)}.sel-btns .set-back.pad-focus{outline:2px solid var(--cyan);outline-offset:2px}
+.editor{position:absolute;inset:0;z-index:5;display:grid;place-items:center;background:#050914d4}.editor[hidden]{display:none}
+.ed-card{width:min(680px,97%);padding:8px 12px 10px;border:1px solid #46536e;border-radius:8px;background:#0c1323f5}
+.ed-card h2{margin:0 0 6px;font-size:16px;letter-spacing:.08em;text-align:center}
+.ed-main{display:grid;grid-template-columns:minmax(118px,.75fr) 1fr 1fr;gap:8px}
+.ed-col{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ed-pic{width:132px;height:165px;align-self:center;border-radius:6px;background:radial-gradient(ellipse at 50% 85%,#1e2c48 0%,#0c1323 70%)}
+.ed-row{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:2px 3px;border-radius:5px;color:#c7d3ea;font-size:10px;font-weight:700;white-space:nowrap}
+.ed-row>span{flex:0 0 64px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ed-row .set-val{min-width:0;flex:1 1 auto;padding:5px 3px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed-left .ed-row .set-val{max-width:none;flex:1 1 auto}
+.ed-row.pad-focus{outline:2px solid var(--cyan);outline-offset:0}
+.ed-sw{display:inline-block;width:30px;height:10px;border:1px solid #ffffff55;border-radius:3px;vertical-align:-1px}
+.ed-name{flex:1;min-width:0;padding:5px 6px;border:1px solid #46536e;border-radius:4px;background:#151e30;color:var(--white);font:inherit;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+.ed-name:focus{outline:2px solid var(--orange);outline-offset:0}
+.ed-dice{flex-shrink:0;width:28px;padding:4px 0;border:1px solid #46536e;border-radius:4px;background:#151e30;color:var(--white);font-size:12px;cursor:pointer}
+.ed-btns{margin-top:6px}.ed-btns .set-back{min-width:104px}.ed-btns .set-back.off{opacity:.4}
 .touch .touch-tag{display:none}.touch.tag .touch-tag{display:block}
 .rotate{display:none}
 @media(orientation:portrait) and (pointer:coarse){.rotate{position:fixed;inset:0;z-index:60;display:grid;place-items:center;align-content:center;gap:10px;background:#070a15f5;color:var(--white);font-size:15px;font-weight:800;letter-spacing:.12em;text-align:center}.rotate b{font-size:42px;color:var(--orange)}}
@@ -123,12 +139,13 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-27</p>
+        <p class="version">v2026-11-27b</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
           <button class="mode" data-mode="bot" data-t="modeBot"></button>
           <button class="mode" data-mode="local" data-t="modeLocal"></button>
+          <button class="mode" id="menuEditor" type="button" data-t="menuEditor"></button>
           <button class="mode" id="menuHelp" type="button" data-t="menuHelp"></button>
           <button class="mode" id="menuSettings" type="button" data-ta="menuSettings">⚙</button>
         </div>
@@ -151,6 +168,10 @@ html.touch-ui .touch:not([hidden]){display:block}
       <div class="set-row sel-size" id="selArenaRow"><span data-t="selArena"></span><button type="button" class="set-val" id="selArena"></button></div></div>
       <div class="sel-teams"><div class="sel-team" id="selT0"><h3></h3></div><div class="sel-team" id="selT1"><h3></h3></div></div>
       <div class="sel-btns"><button type="button" class="set-back" id="selGo" data-t="selGo"></button><button type="button" class="set-back secondary" id="selBack" data-t="back"></button></div>
+    </div></div>
+    <div class="editor" id="editor" hidden><div class="ed-card"><h2 data-t="edTitle"></h2>
+      <div class="ed-main"><div class="ed-col ed-left" id="edCol0"><canvas class="ed-pic" id="edPic" width="264" height="330"></canvas></div><div class="ed-col" id="edCol1"></div><div class="ed-col" id="edCol2"></div></div>
+      <div class="sel-btns ed-btns"><button type="button" class="set-back secondary" id="edRandom" data-t="edRandom"></button><button type="button" class="set-back secondary" id="edDelete" data-t="edDelete"></button><button type="button" class="set-back" id="edDone" data-t="edDone"></button></div>
     </div></div>
     <button class="mute-btn" id="fsBtn" type="button">⛶</button>
     <button class="mute-btn" id="muteBtn" type="button">🔊</button>
@@ -216,6 +237,15 @@ const TXT={
   // Spezialangriffe (Index wie CHARS, leer = keiner, dann normale Druckwelle)
   specNames:['KOMETENFAUST','BLITZ-SALVE','BLINKSCHLAG','KLINGENWELLE','UMHANG-KONTER','SICHELSCHEIBE','PANZER-KUPPEL','GUMMIBAUCH','ERDBEBEN-STAMPFER','FUSIONSSTRAHL'],
   beamNames:['FLAMMENWELLE','DONNERKANONE','WIRBELSTRAHL','KLINGENSTRAHL','BOHRSTRAHL','NADELLASER','KEGELSTOSS','WABBELWELLE','RIESEN-KI-KUGEL','STERNENSTRAHL'],
+  // Kämpfer-Editor (Hauptmenü „KÄMPFER“); Listen in der Reihenfolge der gespeicherten Werte
+  menuEditor:'KÄMPFER',edTitle:'KÄMPFER BAUEN',edSlot:'PLATZ {n}',edNew:' · NEU',edNamePh:'NAME',edRndName:'Zufallsname',edDefName:'KÄMPFER',
+  edViews:['NORMAL','SUPER'],edBody:'Körper',edBelt:'Gürtel',edForm:'Form',edForms:['NORMAL','GROSS','RUND','KLEIN'],edEyes:'Augen',edEyesN:['HELD','BÖSE','WILD'],
+  edStance:'Haltung',edStances:['KAMPF','COOL'],edHair:'Frisur',edHairs:['KEINE','STACHELIG','HOCH','KURZ','GLATT','MÄHNE','KAMM','KAPPE','KOPFTUCH'],
+  edHairC:'Haarfarbe',edHairSup:'Super-Haare',edHairSups:['GOLD','BLEIBEN'],edAcc:'Kleidung',edAccs:['NICHTS','STIRNBAND','SCHAL','UMHANG'],edAccC:'Farbe',
+  edExtra:'Extra',edExtras:['NICHTS','SCHWERT','SCHWANZ','STACHEL','HÖRNER','ANTENNE','HÖRNER+SCHWANZ'],edSup:'Super-Farbe',edSups:['GOLD','GRÜN','BLAU','ROT','PINK','SILBER'],
+  edSpec:'Spezial',edBeam:'Strahl',edWin:'Siegerpose',edWins:['FAUST','ARME','POWER'],edRandom:'🎲 ZUFALL',edDelete:'LÖSCHEN',edSure:'WIRKLICH?',edDone:'FERTIG',
+  edSyl:['KA','ZO','RI','VO','DRA','GO','NE','XA','TU','BRO','KI','ZE','MO','RA','JI','TA','LU','VE','GRA','NO','SHI','KRO'],edEnd:['','','N','X','K','R','S','Z'],
+  customQuotes:['Mein eigener Stil schlägt alles!','Niemand ist stärker als ich!','Komm wieder, wenn du mehr Power hast!','Ich habe mich selbst erfunden – und gewonnen!'],
   botTag:' · KI',winBotTag:' (KI)',wins:' GEWINNT',ultra:'ULTRA-SCHLAG!',clash:'STRAHL-DUELL!',clashMash:'SCHNELL DRÜCKEN!',quote:'„{x}“',keyTouchSuper:'SSJ',keySuper1:'R',keySuper2:'O',
   overKey:'Enter / Tippen: Revanche  ·  Esc: Menü',overTouch:'Tippen: Revanche  ·  Zurück: Menü',rematch:' Revanche',toMenu:' Menü',
   // Steuerung (Anleitung)
@@ -258,6 +288,47 @@ const CHARS=[
 // Farben mischen (#rrggbb), einmalig beim Start: mid = Oberkörper (zwischen vorn/hinten), bootDark = hinterer Stiefel
 function mixHex(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);let o='#';for(let s=16;s>=0;s-=8){const v=Math.round(((pa>>s)&255)*(1-t)+((pb>>s)&255)*t);o+=(v<16?'0':'')+v.toString(16);}return o;}
 for(const L of CHARS){L.mid=mixHex(L.color,L.dark,.55);L.bootDark=mixHex(L.belt,'#05080f',.45);}
+// ---- Eigene Kämpfer (Editor): CUSTOM_MAX feste Plätze hinten an CHARS (Index BUILTIN_N + Platz), leerer Platz = Platzhalter mit none.
+// Gespeichert unter CUSTOM_KEY als Liste kurzer Zahlen-Felder (Indizes in Paletten/Listen), robust gelesen über cleanCustom.
+// In gespeicherten Teams steht ein eigener Kämpfer als CUSTOM_ID + Platz (toStable/fromStable), damit neue eingebaute Figuren hinten dazukommen können.
+const BUILTIN_N=CHARS.length,CUSTOM_MAX=6,CUSTOM_ID=100,CUSTOM_KEY='stickballz.custom.v1';
+const PAL=['#ff3f55','#ff8a2a','#ffd34d','#c2ea5a','#2fbf6a','#22c9b5','#4fd8ff','#36a9ff','#6a7bff','#a46bff','#e05cff','#ff7fc8','#f2f0e6','#b8c4d6','#5c6178','#2b3a4e'];
+const HAIR_PAL=['#14161f','#2a0c14','#0c1a33','#3a1208','#7a4a24','#f2f0e6','#ffd34d','#ff8a2a','#ff3f55','#36a9ff','#2fbf6a','#b04cff','#ff7fc8'];
+const SUP_SETS=[null,['#d4f55a','#f4ffd0','#7fa02a','#aacb42','#6f8c25'],['#6fd0ff','#e0f6ff','#2a78c0','#4aa6e6','#2a6aa0'],['#ff6a5a','#ffe0d8','#b02a2a','#e04a40','#a02a24'],['#ff8ad8','#ffe6f6','#b03a8a','#e060b8','#9a3478'],['#e8eef8','#ffffff','#8a96aa','#c0cad8','#7c8698']];
+const ED_EXTRAS=[{},{sword:true},{tail:'tail'},{tail:'sting'},{horns:true},{antenna:true},{horns:true,tail:'tail'}];
+// Felder: Anzahl Werte und Standard (b Körper, g Gürtel, f Form, e Augen, k Haltung, h Frisur 0 = keine, hc Haarfarbe, hf Super-Haare bleiben,
+// a Kleidung, ac deren Farbe, x Extra, s Super-Farbe, sp Spezialangriff, bm Strahl (je Index wie CHARS), w Siegerpose 0–2)
+const ED_N={b:PAL.length,g:PAL.length,f:4,e:3,k:2,h:9,hc:HAIR_PAL.length,hf:2,a:4,ac:PAL.length,x:7,s:SUP_SETS.length,sp:BUILTIN_N,bm:BUILTIN_N,w:3};
+const ED_DEF={b:0,g:2,f:0,e:0,k:0,h:1,hc:0,hf:0,a:1,ac:2,x:0,s:0,sp:0,bm:0,w:0};
+const customs=new Array(CUSTOM_MAX).fill(null);
+const cleanName=s=>String(s).toUpperCase().replace(/[^A-Z0-9ÄÖÜ\- ]/g,'').replace(/^ +/,'').slice(0,8);
+function cleanCustom(d,i) {
+  if(!d||typeof d!=='object')return null;
+  const o={n:typeof d.n==='string'?cleanName(d.n).trim():''};
+  for(const k in ED_N)o[k]=Number.isInteger(d[k])&&d[k]>=0&&d[k]<ED_N[k]?d[k]:ED_DEF[k];
+  if(!o.n)o.n=TXT.edDefName+' '+(i+1);
+  return o;
+}
+function customLook(d) {
+  const color=PAL[d.b],L=Object.assign({color,dark:mixHex(color,'#000000',.45),belt:PAL[d.g],hair:d.h-1,hairColor:HAIR_PAL[d.hc],fixHair:d.hf===1,
+    acc:[null,'band','scarf','cape'][d.a],accColor:PAL[d.ac],cross:d.k===1,evil:d.e>0,whiteEyes:d.e===2,size:[1,1.14,1.05,.92][d.f],belly:d.f===2,
+    sup:SUP_SETS[d.s],beam:CHARS[d.bm].beam,custom:true},ED_EXTRAS[d.x]);
+  L.mid=mixHex(L.color,L.dark,.55);L.bootDark=mixHex(L.belt,'#05080f',.45);
+  return L;
+}
+// Platz i neu belegen (d = gesäuberte Daten oder null); v zählt hoch, damit Vorschaubilder neu gezeichnet werden
+function setCustom(i,d) {
+  const k=BUILTIN_N+i,v=((CHARS[k]&&CHARS[k].v)||0)+1;
+  customs[i]=d;CHARS[k]=d?customLook(d):Object.assign({},CHARS[0],{none:true});CHARS[k].v=v;TXT.charNames[k]=d?d.n:'';
+  if(customLinked)linkCustom(i);
+}
+let customLinked=false;
+try{const a=JSON.parse(localStorage.getItem(CUSTOM_KEY)||'null');if(Array.isArray(a))for(let i=0;i<CUSTOM_MAX;i++)customs[i]=cleanCustom(a[i],i);}catch(e){}
+for(let i=0;i<CUSTOM_MAX;i++)setCustom(i,customs[i]);
+function saveCustoms(){try{localStorage.setItem(CUSTOM_KEY,JSON.stringify(customs));}catch(e){}}
+const charOk=c=>Number.isInteger(c)&&c>=0&&c<CHARS.length&&!CHARS[c].none;
+const toStable=c=>c>=BUILTIN_N?CUSTOM_ID+c-BUILTIN_N:c;
+const fromStable=v=>!Number.isInteger(v)?-1:v>=0&&v<BUILTIN_N?v:v>=CUSTOM_ID&&v<CUSTOM_ID+CUSTOM_MAX&&customs[v-CUSTOM_ID]?BUILTIN_N+v-CUSTOM_ID:-1;
 function fmt(s,o){return s.replace(/\{(\w+)\}/g,(m,k)=>k in o?o[k]:m);}
 function applyTexts(){
   document.querySelectorAll('[data-t]').forEach(e=>{e.textContent=TXT[e.dataset.t];});
@@ -302,7 +373,7 @@ function readTeams(d,m){
   if(Number.isInteger(d.size)&&d.size>=1&&d.size<=4)t.size=d.size;
   for(let k=0;k<2;k++)for(let s=0;s<4;s++){
     const p=d.p&&d.p[k]&&d.p[k][s],c=d.c&&d.c[k]&&d.c[k][s];
-    if(Number.isInteger(p)&&p>=0&&p<CHARS.length)t.p[k][s]=p;
+    const pr=fromStable(p);if(pr>=0)t.p[k][s]=pr;  // gespeichert stabil (eigene Kämpfer = CUSTOM_ID + Platz)
     if(Number.isInteger(c)&&c>=(m==='free'?0:-1)&&c<=3)t.c[k][s]=c;
   }
   fixTeams(t,m);
@@ -315,9 +386,9 @@ const charInTeam=(cfg,t,c,skip)=>{for(let s=0;s<cfg.size;s++)if(s!==skip&&cfg.p[
 // Ein Spieler nur in einem Team (nicht im Freiflug): kommt er in beiden vor, bekommt Team 2 den nächsten freien Spieler, sonst KI
 function fixTeams(cfg,m){
   let ch=false;
-  for(let t=0;t<2;t++)for(let s=1;s<cfg.size;s++){
+  for(let t=0;t<2;t++)for(let s=0;s<cfg.size;s++){  // auch Platz 0: gelöschter eigener Kämpfer -> nächster gültiger
     let c=cfg.p[t][s];
-    for(let n=0;n<CHARS.length;n++){let dup=false;for(let q=0;q<s;q++)if(cfg.p[t][q]===c)dup=true;if(!dup)break;c=(c+1)%CHARS.length;}
+    for(let n=0;n<CHARS.length;n++){let dup=!charOk(c);for(let q=0;q<s;q++)if(cfg.p[t][q]===c)dup=true;if(!dup)break;c=(c+1)%CHARS.length;}
     if(c!==cfg.p[t][s]){cfg.p[t][s]=c;ch=true;}
   }
   if(m==='free')return ch;
@@ -350,7 +421,8 @@ try {
     if(d.teams&&typeof d.teams==='object')for(const m of ['free','bot','local'])settings.teams[m]=readTeams(d.teams[m],m);
   }
 }catch(e){}
-function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch(e){}}
+// Team-Figuren stabil speichern (eigene Kämpfer als CUSTOM_ID + Platz)
+function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings,(k,v)=>k==='p'&&Array.isArray(v)?v.map(a=>Array.isArray(a)?a.map(toStable):a):v));}catch(e){}}
 // Grafik: 0 niedrig · 1 mittel · 2 hoch; Auto startet hoch und stuft bei Ruckeln herunter
 let gfxAuto=2,fxLevel=2,fxSkip=0,frameEma=1/60,autoTimer=0,statusTick=0,rockGradient=null;
 function applyGfx(){fxLevel=settings.gfx===0?gfxAuto:settings.gfx-1;resize();}
@@ -538,7 +610,7 @@ function updateCornerUI() {
   let txt='';
   if(padKind&&inMenu&&!helpOpen) {
     const s=k=>padBadge(padKind,k);
-    txt=selectOpen?s('a')+' '+TXT.change+' · '+s('b')+' '+TXT.hintBack:settingsOpen?s('a')+' '+TXT.ok+' · '+s('b')+' '+TXT.hintBack:state==='paused'?s('a')+' '+TXT.select+' · '+s('b')+' '+TXT.resume:s('a')+' '+TXT.ok;
+    txt=selectOpen||editorOpen?s('a')+' '+TXT.change+' · '+s('b')+' '+TXT.hintBack:settingsOpen?s('a')+' '+TXT.ok+' · '+s('b')+' '+TXT.hintBack:state==='paused'?s('a')+' '+TXT.select+' · '+s('b')+' '+TXT.resume:s('a')+' '+TXT.ok;
   }
   const key=(inMenu?'1':'0')+(creditsOpen?'c':'')+txt;
   if(key===cornerKey)return;
@@ -575,9 +647,10 @@ const fighters = [
 const teams=[0,1].map(()=>({size:1,cur:0,cd:0,m:[0,1,2,3].map(()=>({c:0,ctrl:0,hp:MAX_HP,ki:65,out:false}))}));
 const tagReq=new Uint8Array(4);  // Wechsel-Wunsch je Spieler 1–4 (Tastendruck, wird im nächsten Physikschritt ausgewertet)
 let ctrlTags=false;  // Name im HUD mit „· S2“, wenn mehrere Spieler mitspielen
+// Aussehen setzen (auch für die Editor-Vorschau mit ungespeichertem Entwurf)
+function applyLook(f,L){f.look=L;f.beamC=L.beam||[L.color,L.color,'#fff'];f.supC=L.sup?L.sup[0]:'#ffe66d';f.supCore=L.sup?L.sup[1]:'#fff6c4';f.supDark=L.sup?L.sup[2]:'#c9a640';f.supMid=L.sup?L.sup[3]:'#e0bd4f';f.supBoot=L.sup?L.sup[4]:'#a8892f';f.color=L.color;f.dark=L.dark;f.belt=L.belt;}
 function applyMember(f,m){
-  const L=CHARS[m.c];
-  f.look=L;f.style=m.c;f.beamC=L.beam||[L.color,L.color,'#fff'];f.supC=L.sup?L.sup[0]:'#ffe66d';f.supCore=L.sup?L.sup[1]:'#fff6c4';f.supDark=L.sup?L.sup[2]:'#c9a640';f.supMid=L.sup?L.sup[3]:'#e0bd4f';f.supBoot=L.sup?L.sup[4]:'#a8892f';f.name=TXT.charNames[m.c];f.color=L.color;f.dark=L.dark;f.belt=L.belt;
+  applyLook(f,CHARS[m.c]);f.style=m.c;f.name=TXT.charNames[m.c];
   f.ctrl=m.ctrl;f.bot=m.ctrl<0;f.hp=m.hp;f.ki=m.ki;
 }
 const MAX_PROJECTILES = 36, MAX_PARTICLES = 260, MAX_CRATERS = 64;
@@ -1074,7 +1147,7 @@ const PAD_MAX=4,padSlots=[-1,-1,-1,-1];
 const padStates=[0,1,2,3].map(()=>({connected:false,id:'',kind:'xbox',ax:0,ay:0,rx:0,ry:0,rCool:0,navDir:0,navY:0,btn:new Uint8Array(PAD_BUTTONS),prev:new Uint8Array(PAD_BUTTONS),latch:new Uint8Array(PAD_BUTTONS),eff:new Uint8Array(PAD_BUTTONS)}));
 let padCount=-1,menuFocus=0,winner=-1;
 const modeButtons=Array.from(document.querySelectorAll('.menu .modes button'));
-function activateMenuButton(b){if(b.dataset.mode)openSelect(b.dataset.mode);else if(b.id==='menuHelp')openHelp();else openSettings();}
+function activateMenuButton(b){if(b.dataset.mode)openSelect(b.dataset.mode);else if(b.id==='menuEditor')openEditor();else if(b.id==='menuHelp')openHelp();else openSettings();}
 // Steuerungs-Fenster aus dem Hauptmenü: ✕/○/Esc/Zurück schließt, hoch/runter scrollt
 const helpLayer=document.getElementById('help');let helpOpen=false;
 function openHelp(){helpOpen=true;helpLayer.hidden=false;guideEl.scrollTop=0;}
@@ -1210,8 +1283,9 @@ let selectOpen=false,selMode='bot',selRow=0,selCol=0,selSlotLen=4,selGrid=[];
 const SEL_SIZE={k:'size',el:selSizeRow},SEL_ARENA={k:'arena',el:selArenaRow},SEL_GO={k:'go',el:selGo},SEL_BACK={k:'back',el:selBack},SEL_BTNS=[SEL_GO,SEL_BACK],SEL_ALL=[SEL_SIZE,SEL_ARENA,SEL_GO,SEL_BACK];
 const portraitF=Object.assign({},fighters[0]);  // Vorschau-Figur (eigene Kopie, nie im Spiel)
 function drawPortrait(pic,c) {
-  if(pic.dataset.c===String(c))return;
-  pic.dataset.c=c;
+  const key=c+':'+(CHARS[c].v||0);  // v: eigener Kämpfer geändert -> neu zeichnen
+  if(pic.dataset.c===key)return;
+  pic.dataset.c=key;
   const pc=pic.getContext('2d');pc.setTransform(1,0,0,1,0,0);pc.clearRect(0,0,pic.width,pic.height);
   const f=portraitF;resetFighter(f,0);applyMember(f,{c,ctrl:0,hp:MAX_HP,ki:65});
   f.x=0;f.y=terrainY(0);f.px=f.x;f.py=f.y;f.vx=0;f.vy=0;f.face=1;f.active=true;f.t=.4;f.superTime=0;
@@ -1247,7 +1321,7 @@ function renderSelect() {
     const show=sl.s<cfg.size&&!(solo&&sl.t===1);sl.el.hidden=!show;
     if(!show)continue;
     const c=cfg.p[sl.t][sl.s],k=cfg.c[sl.t][sl.s];
-    sl.charBtn.textContent='◀ '+TXT.charNames[c]+' ▶';sl.charBtn.style.color=CHARS[c].color;
+    sl.charBtn.textContent='◀ '+(c>=BUILTIN_N?'★':'')+TXT.charNames[c]+' ▶';sl.charBtn.style.color=CHARS[c].color;
     sl.ctrlBtn.textContent=k<0?TXT.ctrlBot:TXT.ctrlNames[k];
     drawPortrait(sl.pic,c);
   }
@@ -1272,7 +1346,7 @@ function changeArena(d){settings.arena=(settings.arena+1+d+6)%6-1;saveSettings()
 // Nächste/vorige Figur; im selben Team schon gewählte werden übersprungen
 function changeChar(sl,d){
   const cfg=selCfg(),N=CHARS.length;let c=cfg.p[sl.t][sl.s];
-  for(let n=0;n<N;n++){c=(c+d+N)%N;if(!charInTeam(cfg,sl.t,c,sl.s))break;}
+  for(let n=0;n<N;n++){c=(c+d+N)%N;if(charOk(c)&&!charInTeam(cfg,sl.t,c,sl.s))break;}
   cfg.p[sl.t][sl.s]=c;saveSettings();renderSelect();
 }
 // Nächster Spieler/KI; außer im Freiflug werden Spieler übersprungen, die im anderen Team (sichtbare Plätze) schon spielen
@@ -1297,6 +1371,108 @@ function selCharStep(d){const cell=selCell();if(cell.k==='char')changeChar(cell.
 selSizeBtn.addEventListener('click',()=>{focusSelCell(SEL_SIZE);changeSize(1,true);});
 selArenaBtn.addEventListener('click',()=>{focusSelCell(SEL_ARENA);changeArena(1);});
 selGo.addEventListener('click',startFromSelect);selBack.addEventListener('click',closeSelect);
+// ---- Kämpfer-Editor (Hauptmenü „KÄMPFER“): CUSTOM_MAX Plätze; jede Änderung wird sofort gespeichert (leerer Platz erst bei Änderung oder FERTIG).
+// Raster aus 3 Spalten (links Platz/Name/Ansicht, Mitte Aussehen, rechts Kleidung/Angriffe), unter jeder Spalte ein Knopf (ZUFALL/LÖSCHEN/FERTIG).
+// Steuerkreuz bewegt, ✕/Enter nächster Wert, □/L1 voriger, R1 nächster, ○/Esc zurück; Tippen auf linke/rechte Hälfte des Werts = voriger/nächster.
+const editorLayer=document.getElementById('editor'),edPic=document.getElementById('edPic');
+const ED_ROWS=[
+  [['b','edBody','pal'],['g','edBelt','pal'],['f','edForm','edForms'],['e','edEyes','edEyesN'],['k','edStance','edStances'],['h','edHair','edHairs'],['hc','edHairC','hair'],['hf','edHairSup','edHairSups']],
+  [['a','edAcc','edAccs'],['ac','edAccC','pal'],['x','edExtra','edExtras'],['s','edSup','sup'],['sp','edSpec','spec'],['bm','edBeam','beam'],['w','edWin','edWins']]
+];
+let editorOpen=false,edSlot=0,edDraft=null,edSaved=false,edSuper=false,edCol=0,edRow=0,edDelT=0;
+const edF=Object.assign({},fighters[0]),edGrid=[[],[],[]];  // Vorschau-Figur (eigene Kopie, nie im Spiel)
+function edRowEl(parent,label){const r=document.createElement('div');r.className='ed-row';if(label){const s=document.createElement('span');s.textContent=label;r.appendChild(s);}parent.appendChild(r);return r;}
+function edValBtn(row){const b=document.createElement('button');b.type='button';b.className='set-val';row.appendChild(b);return b;}
+const edCol0=document.getElementById('edCol0');
+const edSlotRow=edRowEl(edCol0),edSlotBtn=edValBtn(edSlotRow);
+const edNameRow=edRowEl(edCol0),edNameIn=document.createElement('input'),edDice=document.createElement('button');
+edNameIn.className='ed-name';edNameIn.maxLength=8;edNameIn.autocomplete='off';edNameIn.spellcheck=false;edNameIn.placeholder=TXT.edNamePh;edNameIn.setAttribute('aria-label',TXT.edNamePh);
+edDice.type='button';edDice.className='ed-dice';edDice.textContent='🎲';edDice.setAttribute('aria-label',TXT.edRndName);
+edNameRow.append(edNameIn,edDice);
+const edViewRow=edRowEl(edCol0),edViewBtn=edValBtn(edViewRow);
+edGrid[0].push({k:'slot',el:edSlotRow,val:edSlotBtn},{k:'name',el:edNameRow},{k:'view',el:edViewRow,val:edViewBtn});
+for(let c=0;c<2;c++){const col=document.getElementById('edCol'+(c+1));for(const [k,lab,list] of ED_ROWS[c]){const r=edRowEl(col,TXT[lab]);edGrid[c+1].push({k,el:r,val:edValBtn(r),list});}}
+const edBtns=['edRandom','edDelete','edDone'].map(id=>({k:id,el:document.getElementById(id)}));
+for(let c=0;c<3;c++)edGrid[c].push(edBtns[c]);
+const rndInt=n=>Math.floor(Math.random()*n);
+function rndName(){const s=TXT.edSyl,e=TXT.edEnd;let n=s[rndInt(s.length)]+s[rndInt(s.length)];if(Math.random()<.35)n+=s[rndInt(s.length)];return (n+e[rndInt(e.length)]).slice(0,8);}
+function randomCustom() {
+  const d={n:rndName()};for(const k in ED_N)d[k]=rndInt(ED_N[k]);
+  if(d.g===d.b)d.g=(d.b+6)%PAL.length;if(d.ac===d.b)d.ac=(d.b+9)%PAL.length;
+  d.e=Math.random()<.55?0:1+rndInt(2);d.hf=Math.random()<.25?1:0;d.h=Math.random()<.1?0:1+rndInt(8);d.f=Math.random()<.5?0:rndInt(4);d.x=Math.random()<.4?0:rndInt(7);
+  return d;
+}
+// Entwurf des aktuellen Platzes laden (leer -> zufälliger Vorschlag, noch nicht gespeichert)
+function loadDraft(){const d=customs[edSlot];edDraft=d?Object.assign({},d):randomCustom();edSaved=!!d;edDelT=0;edUpdateF();}
+function edCommit(){const d=cleanCustom(edDraft,edSlot);setCustom(edSlot,d);edSaved=true;saveCustoms();edUpdateF();}
+function edUpdateF() {
+  const f=edF,t=f.t||0;resetFighter(f,0);applyLook(f,customLook(cleanCustom(edDraft,edSlot)));f.style=BUILTIN_N+edSlot;
+  f.x=0;f.y=terrainY(0);f.px=f.x;f.py=f.y;f.face=1;f.active=true;f.t=t;
+}
+// Vorschau jeden Frame (eine Figur, nur bei offenem Editor): atmet, blinzelt; Ansicht SUPER zeigt die Super-Farben
+function drawEditorPic(dt) {
+  const f=edF;f.t+=Math.min(dt,.05);f.superTime=edSuper?5:0;
+  const pc=edPic.getContext('2d');pc.setTransform(1,0,0,1,0,0);pc.clearRect(0,0,edPic.width,edPic.height);
+  const sc=edPic.height/128,keep=ctx;ctx=pc;
+  try{ctx.setTransform(sc,0,0,sc,edPic.width/2,edPic.height-10*sc-f.y*sc);drawFighter(f,1);}finally{ctx=keep;}
+}
+function edValHTML(list,v) {
+  const sw=c=>'<i class="ed-sw" style="background:'+c+'"></i>',col=(c,t)=>'<b style="color:'+c+'">'+t+'</b>';
+  const x=list==='pal'?sw(PAL[v]):list==='hair'?sw(HAIR_PAL[v]):list==='sup'?col(SUP_SETS[v]?SUP_SETS[v][0]:'#ffe66d',TXT.edSups[v]):
+    list==='spec'?TXT.specNames[v]:list==='beam'?col(CHARS[v].beam[1],TXT.beamNames[v]):TXT[list][v];
+  return '◀ '+x+' ▶';
+}
+function renderEditor() {
+  edSlotBtn.textContent='◀ '+fmt(TXT.edSlot,{n:edSlot+1})+(customs[edSlot]?'':TXT.edNew)+' ▶';
+  if(document.activeElement!==edNameIn)edNameIn.value=edDraft.n;
+  edViewBtn.textContent='◀ '+TXT.edViews[edSuper?1:0]+' ▶';
+  for(let c=1;c<3;c++)for(const cell of edGrid[c])if(cell.list)cell.val.innerHTML=edValHTML(cell.list,edDraft[cell.k]);
+  const arm=edDelT>0&&performance.now()-edDelT<3000;
+  edBtns[1].el.textContent=arm?TXT.edSure:TXT.edDelete;edBtns[1].el.classList.toggle('off',!customs[edSlot]);
+  const cur=edGrid[edCol][edRow];
+  for(const col of edGrid)for(const cell of col)cell.el.classList.toggle('pad-focus',cell===cur);
+}
+function openEditor(){editorOpen=true;editorLayer.hidden=false;edCol=0;edRow=0;edSuper=false;loadDraft();renderEditor();}
+function closeEditor(){if(document.activeElement===edNameIn)edNameIn.blur();editorOpen=false;editorLayer.hidden=true;}
+function edMove(dx,dy) {
+  const atBtn=edRow===edGrid[edCol].length-1;
+  if(dx){edCol=(edCol+dx+3)%3;edRow=atBtn?edGrid[edCol].length-1:Math.min(edRow,edGrid[edCol].length-2);}
+  else edRow=(edRow+dy+edGrid[edCol].length)%edGrid[edCol].length;
+  renderEditor();
+}
+function edFocusCell(cell){for(let c=0;c<3;c++){const r=edGrid[c].indexOf(cell);if(r>=0){edCol=c;edRow=r;}}}
+function deleteCustom() {
+  setCustom(edSlot,null);saveCustoms();
+  for(const m of ['free','bot','local'])fixTeams(settings.teams[m],m);  // Teams mit dem gelöschten Kämpfer bekommen die nächste freie Figur
+  saveSettings();loadDraft();
+}
+function edButton(k) {
+  if(k==='edRandom'){edDraft=randomCustom();edCommit();}
+  else if(k==='edDelete'&&customs[edSlot]) {
+    if(edDelT>0&&performance.now()-edDelT<3000)deleteCustom();
+    else{edDelT=performance.now();setTimeout(()=>{if(editorOpen)renderEditor();},3050);}  // zweiter Druck innerhalb 3 s löscht
+  }
+  else if(k==='edDone'){if(!edSaved)edCommit();closeEditor();return;}
+}
+// Wert der aktuellen Zelle ändern (d = ±1); key = Tastatur (auf dem Namen: Eingabefeld öffnen statt Zufallsname)
+function edChange(d,key) {
+  const cell=edGrid[edCol][edRow];
+  if(cell.k==='slot'){edSlot=(edSlot+d+CUSTOM_MAX)%CUSTOM_MAX;loadDraft();}
+  else if(cell.k==='name'){if(key){edNameIn.focus();return;}edDraft.n=rndName();edCommit();}
+  else if(cell.k==='view')edSuper=!edSuper;
+  else if(cell.list){const n=ED_N[cell.k];edDraft[cell.k]=(edDraft[cell.k]+d+n)%n;edCommit();}
+  else if(d>0){edButton(cell.k);if(!editorOpen)return;}
+  renderEditor();
+}
+for(const col of edGrid)for(const cell of col) {
+  if(cell.val)cell.val.addEventListener('click',e=>{edFocusCell(cell);const r=cell.val.getBoundingClientRect();edChange(e.clientX&&e.clientX<r.left+r.width/2?-1:1);});
+  else if(!cell.list&&cell.k!=='name')cell.el.addEventListener('click',()=>{edFocusCell(cell);edChange(1);});
+  cell.el.addEventListener('pointerdown',()=>{if(cell.k!=='name'&&document.activeElement===edNameIn)edNameIn.blur();});
+}
+edNameIn.addEventListener('focus',()=>{edCol=0;edRow=1;renderEditor();});
+edNameIn.addEventListener('input',()=>{const v=cleanName(edNameIn.value);if(v!==edNameIn.value)edNameIn.value=v;edDraft.n=v.trim();edCommit();edSlotBtn.textContent='◀ '+fmt(TXT.edSlot,{n:edSlot+1})+' ▶';});
+edNameIn.addEventListener('blur',()=>{if(customs[edSlot])edDraft.n=customs[edSlot].n;if(editorOpen)renderEditor();});
+edDice.addEventListener('click',e=>{e.stopPropagation();edFocusCell(edGrid[0][1]);edDraft.n=rndName();edCommit();renderEditor();});
 function setPauseFocus(i){pauseFocus=(i+pauseButtons.length)%pauseButtons.length;for(let k=0;k<pauseButtons.length;k++)pauseButtons[k].classList.toggle('pad-focus',k===pauseFocus);}
 function setMenuFocus(i) {
   menuFocus=(i+modeButtons.length)%modeButtons.length;
@@ -1315,6 +1491,15 @@ function handlePadUI() {
     if(helpOpen) {
       if(dirY)guideEl.scrollTop+=dirY*6;
       if(padPressed(st,0)||padPressed(st,1)||padPressed(st,9)){closeHelp();return;}
+      continue;
+    }
+    if(editorOpen) {
+      // Editor: Steuerkreuz bewegt, ✕ nächster Wert, □/L1 voriger, R1 nächster, ○/Options fertig (alles ist schon gespeichert)
+      if(document.activeElement===edNameIn)continue;
+      if(navY)edMove(0,navY);else if(nav)edMove(nav,0);
+      else if(padPressed(st,0)||padPressed(st,5))edChange(1);
+      else if(padPressed(st,2)||padPressed(st,4))edChange(-1);
+      else if(padPressed(st,1)||padPressed(st,9)){closeEditor();return;}
       continue;
     }
     if(settingsOpen) {
@@ -3222,8 +3407,8 @@ function drawFighter(f,alpha) {
   ctx.moveTo(-3,hipY+1);ctx.quadraticCurveTo(-7-wind*5,hipY+3+wave*.6,-10-wind*9,hipY+7+lift*.4-wave);ctx.stroke();
   const gore=f.wounds?settings.gore:0,woundMax=gore===2?5:3;
   if(gore) drawWounds(f,false,hipY,neckX,neckY,0,0,woundMax,gore);
-  if(spId==='blade'&&L.sword) {
-    // Klingenwelle: Schwert in der vorderen Hand (verlängert den Unterarm), heller Bogen beim Hieb
+  if(spId==='blade') {
+    // Klingenwelle: Schwert in der vorderen Hand (auch bei eigenen Kämpfern ohne Schwert auf dem Rücken) (verlängert den Unterarm), heller Bogen beim Hieb
     const dx=fhX-feX,dy=fhY-feY,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,tx=fhX+ux*30,ty=fhY+uy*30;
     if(spA>.18&&spA<.62){ctx.globalAlpha=(1-(spA-.18)/.44)*.7;ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(sx,sy,Math.hypot(tx-sx,ty-sy),-1.9,Math.atan2(ty-sy,tx-sx));ctx.stroke();ctx.globalAlpha=1;}
     ctx.strokeStyle='#060a14';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(fhX-ux*5,fhY-uy*5);ctx.lineTo(tx,ty);ctx.stroke();
@@ -3655,11 +3840,20 @@ function frame(now) {
   autoGfx(rawDt);
   pollPads();
   updateCornerUI();
+  if(editorOpen)drawEditorPic(rawDt);
   while(accumulator>=DT){update(DT);accumulator-=DT;}
   updateChargeSounds();
   render(accumulator/DT);requestAnimationFrame(frame);
 }
 window.addEventListener('keydown',e=>{
+  if(editorOpen) {
+    // Editor per Tastatur: im Namensfeld tippen (Enter/Esc schließt das Feld), sonst Pfeile bewegen, Enter ändert, Esc zurück, M stumm
+    if(e.target===edNameIn){if(e.code==='Enter'||e.code==='Escape'){e.preventDefault();edNameIn.blur();}return;}
+    e.preventDefault();if(e.repeat&&!e.code.startsWith('Arrow'))return;
+    if(e.code==='ArrowUp')edMove(0,-1);else if(e.code==='ArrowDown')edMove(0,1);else if(e.code==='ArrowLeft')edMove(-1,0);else if(e.code==='ArrowRight')edMove(1,0);
+    else if(e.code==='Enter'||e.code==='Space')edChange(1,true);else if(e.code==='Backspace')edChange(-1,true);else if(e.code==='Escape')closeEditor();else if(e.code==='KeyM')toggleMute();
+    return;
+  }
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
   if(e.code==='KeyM'&&!e.repeat&&(state==='menu'||state==='paused')){toggleMute();return;}
   if(helpOpen) {
@@ -3710,11 +3904,19 @@ setInterval(()=>{document.documentElement.classList.toggle('hide-cursor',state==
 document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>openSelect(button.dataset.mode)));
 document.getElementById('resume').addEventListener('click',resumeGame);
 document.getElementById('backMenu').addEventListener('click',backToMenu);
+// Eigene Kämpfer: Spezialangriff, Strahl, Namen, Siegerpose und Sprüche zeigen auf die gewählten Einträge (Kampf-Code liest alles über f.style)
+function linkCustom(i) {
+  const k=BUILTIN_N+i,d=customs[i];
+  SPECIALS[k]=d?SPECIALS[d.sp]:null;BEAMS[k]=d?BEAMS[d.bm]:BEAMS[0];WIN_POSE[k]=d?d.w+1:1;
+  TXT.specNames[k]=d?TXT.specNames[d.sp]:'';TXT.beamNames[k]=d?TXT.beamNames[d.bm]:'';TXT.winQuotes[k]=TXT.customQuotes;
+}
+customLinked=true;for(let i=0;i<CUSTOM_MAX;i++)linkCustom(i);
 // Start: gespeicherte Einstellungen anwenden, Schnellstart-Fokus auf zuletzt gespielten Modus
 applyGfx();
 setMenuFocus(Math.max(0,modeButtons.findIndex(b=>b.dataset.mode===settings.lastMode)));setPauseFocus(0);refreshInputTexts();
 document.getElementById('menuSettings').addEventListener('click',openSettings);
 document.getElementById('menuHelp').addEventListener('click',openHelp);
+document.getElementById('menuEditor').addEventListener('click',openEditor);
 document.getElementById('helpBack').addEventListener('click',closeHelp);
 document.getElementById('pauseSettings').addEventListener('click',openSettings);
 document.getElementById('touchPause').addEventListener('click',()=>{if(state==='playing')pauseGame();});
@@ -3745,6 +3947,7 @@ window.addEventListener('popstate',()=>{
   if(helpOpen)closeHelp();
   else if(settingsOpen)closeSettings();
   else if(selectOpen)closeSelect();
+  else if(editorOpen)closeEditor();
   else if(state==='playing')pauseGame();
   else if(state==='over')backToMenu();
 });
