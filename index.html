@@ -139,7 +139,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-27c</p>
+        <p class="version">v2026-11-28</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -1386,7 +1386,7 @@ function selActivate() {
   if(cell===SEL_SIZE)changeSize(1,true);else if(cell===SEL_ARENA)changeArena(1);else if(cell===SEL_GO)startFromSelect();else if(cell===SEL_BACK)closeSelect();
   else if(cell.k==='char')changeChar(cell.sl,1);else cycleCtrl(cell.sl);
 }
-function selCharStep(d){const cell=selCell();if(cell.k==='char')changeChar(cell.sl,d);}  // □ zurück, L1/R1 blättern
+function selCharStep(d){const cell=selCell();if(cell.k==='char')changeChar(cell.sl,d);else if(cell===SEL_SIZE)changeSize(d,false);else if(cell===SEL_ARENA)changeArena(d);}  // □ zurück, L1/R1 blättern (Figur, Team-Größe, Arena)
 selSizeBtn.addEventListener('click',()=>{focusSelCell(SEL_SIZE);changeSize(1,true);});
 selArenaBtn.addEventListener('click',()=>{focusSelCell(SEL_ARENA);changeArena(1);});
 selGo.addEventListener('click',startFromSelect);selBack.addEventListener('click',closeSelect);
