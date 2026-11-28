@@ -139,7 +139,7 @@ html.touch-ui .touch:not([hidden]){display:block}
     <canvas id="game" data-ta="ariaCanvas"></canvas>
     <div class="menu" id="menu">
       <div class="intro">
-        <p class="version">v2026-11-28</p>
+        <p class="version">v2026-11-28b</p>
         <h1>STICKBALL<span>Z</span></h1>
         <div class="modes">
           <button class="mode primary" data-mode="free" data-t="modeFree"></button>
@@ -1299,7 +1299,7 @@ const selectLayer=document.getElementById('select'),selSizeRow=document.getEleme
 const selGo=document.getElementById('selGo'),selBack=document.getElementById('selBack'),selSlots=[];
 const selArenaRow=document.getElementById('selArenaRow'),selArenaBtn=document.getElementById('selArena');
 let selectOpen=false,selMode='bot',selRow=0,selCol=0,selSlotLen=4,selGrid=[];
-const SEL_SIZE={k:'size',el:selSizeRow},SEL_ARENA={k:'arena',el:selArenaRow},SEL_GO={k:'go',el:selGo},SEL_BACK={k:'back',el:selBack},SEL_BTNS=[SEL_GO,SEL_BACK],SEL_ALL=[SEL_SIZE,SEL_ARENA,SEL_GO,SEL_BACK];
+const SEL_SIZE={k:'size',el:selSizeRow},SEL_ARENA={k:'arena',el:selArenaRow},SEL_GO={k:'go',el:selGo},SEL_BACK={k:'back',el:selBack},SEL_BTNS=[SEL_GO,SEL_BACK],SEL_TOP=[SEL_SIZE,SEL_ARENA],SEL_ALL=[SEL_SIZE,SEL_ARENA,SEL_GO,SEL_BACK];
 const portraitF=Object.assign({},fighters[0]);  // Vorschau-Figur (eigene Kopie, nie im Spiel)
 function drawPortrait(pic,c) {
   const key=c+':'+(CHARS[c].v||0);  // v: eigener Kämpfer geändert -> neu zeichnen
@@ -1345,7 +1345,7 @@ function renderSelect() {
     drawPortrait(sl.pic,c);
   }
   // Fokus-Raster: oben Größe, je Platz eine Zeile [T1 Figur, T1 Steuerung, T2 Figur, T2 Steuerung], unten LOS/ZURÜCK
-  selSlotLen=solo?2:4;selGrid=[[SEL_SIZE],[SEL_ARENA]];
+  selSlotLen=solo?2:4;selGrid=[SEL_TOP];
   for(let s=0;s<cfg.size;s++){const row=[];for(let t=0;t<(solo?1:2);t++)row.push(...selSlots[t*4+s].cells);selGrid.push(row);}
   selGrid.push(SEL_BTNS);
   selRow=clamp(selRow,0,selGrid.length-1);selCol=clamp(selCol,0,selSlotLen-1);
@@ -1353,9 +1353,9 @@ function renderSelect() {
   for(const c of SEL_ALL)c.el.classList.toggle('pad-focus',c===cur);
 }
 // Aktuelle Zelle; in der Knopfzeile entscheidet die Spalte: linke Hälfte LOS, rechte ZURÜCK
-function selCell(){const row=selGrid[selRow];return row.length===1?row[0]:row===SEL_BTNS?row[selCol*2>=selSlotLen?1:0]:row[selCol];}
+function selCell(){const row=selGrid[selRow];return row.length===1?row[0]:row===SEL_BTNS||row===SEL_TOP?row[selCol*2>=selSlotLen?1:0]:row[selCol];}
 function focusSelCell(cell){
-  for(let r=0;r<selGrid.length;r++){const c=selGrid[r].indexOf(cell);if(c<0)continue;selRow=r;if(selGrid[r]===SEL_BTNS)selCol=c?selSlotLen/2:0;else if(selGrid[r].length>1)selCol=c;return;}
+  for(let r=0;r<selGrid.length;r++){const c=selGrid[r].indexOf(cell);if(c<0)continue;selRow=r;if(selGrid[r]===SEL_BTNS||selGrid[r]===SEL_TOP)selCol=c?selSlotLen/2:0;else if(selGrid[r].length>1)selCol=c;return;}
 }
 function openSelect(m){selMode=m;selectOpen=true;selectLayer.hidden=false;selRow=99;selCol=0;renderSelect();}
 function closeSelect(){selectOpen=false;selectLayer.hidden=true;}
@@ -1377,9 +1377,7 @@ function cycleCtrl(sl){
 function moveSelFocus(d){selRow=(selRow+d+selGrid.length)%selGrid.length;renderSelect();selCell().el.scrollIntoView({block:'nearest'});}
 function selLeftRight(d) {
   const cell=selCell();
-  if(cell===SEL_SIZE)changeSize(d,false);
-  else if(cell===SEL_ARENA)changeArena(d);
-  else{selCol=cell===SEL_GO?selSlotLen/2:cell===SEL_BACK?0:(selCol+d+selSlotLen)%selSlotLen;renderSelect();}
+  {selCol=cell===SEL_GO||cell===SEL_SIZE?selSlotLen/2:cell===SEL_BACK||cell===SEL_ARENA?0:(selCol+d+selSlotLen)%selSlotLen;renderSelect();}
 }
 function selActivate() {
   const cell=selCell();
